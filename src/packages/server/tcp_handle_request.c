@@ -1,5 +1,8 @@
 #include "tcp_handle_request.h"
 
-void TcpHandleRequest(const int *client_socket){
-    
+void* TcpHandleRequest(void *arg)
+{
+    const int *client_socket = (const int *)arg;
+
+    return NULL;
 }

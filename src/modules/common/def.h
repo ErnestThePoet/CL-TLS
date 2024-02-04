@@ -9,14 +9,14 @@
 #define SUCCESS 0
 #define FAILURE 1
 
-#define EXIT_FAILURE exit(FAILURE)
+enum LogLevel
+{
+    LOG_LEVEL_ERROR,
+    LOG_LEVEL_WARNING,
+    LOG_LEVEL_INFO
+};
 
-#define PRINT_ERROR(F, M)    \
-    do                       \
-    {                        \
-        fprintf(stderr, "%s error: %s\n",F,M); \
-    \ 
-} while (0)
+#define PRINT_ERROR(F, M) do{fprintf(stderr, "%s error: %s\n",F,M);} while (0)
 
 #define STR_ERRNO strerror(errno)
 

@@ -9,6 +9,6 @@
 
 #include "common/def.h"
 
-void TcpHandleRequest(const int *client_socket);
+void* TcpHandleRequest(void *arg);
 
 #endif

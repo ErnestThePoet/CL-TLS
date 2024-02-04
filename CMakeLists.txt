@@ -31,11 +31,11 @@ set(PACKAGES client server)
 foreach(PACKAGE ${PACKAGES})
     file(GLOB_RECURSE SRC_PACKAGE "src/packages/${PACKAGE}/*.c" "src/packages/${PACKAGE}/*.h")
 
-    add_executable(cltls_${PACKAGES} ${SRC_MODULES} ${SRC_PACKAGE})
+    add_executable(cltls_${PACKAGE} ${SRC_MODULES} ${SRC_PACKAGE})
 
-    target_link_libraries(cltls_${PACKAGES} PRIVATE crypto_aead_ascon128av12_opt64_${LIB_SUFFIX})
-    target_link_libraries(cltls_${PACKAGES} PRIVATE crypto_hash_asconxofav12_opt64_${LIB_SUFFIX})
-    target_link_libraries(cltls_${PACKAGES} PRIVATE crypto_boringssl_${LIB_SUFFIX})
+    target_link_libraries(cltls_${PACKAGE} PRIVATE crypto_aead_ascon128av12_opt64_${LIB_SUFFIX})
+    target_link_libraries(cltls_${PACKAGE} PRIVATE crypto_hash_asconxofav12_opt64_${LIB_SUFFIX})
+    target_link_libraries(cltls_${PACKAGE} PRIVATE crypto_boringssl_${LIB_SUFFIX})
 endforeach()
 
 set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=c99 -O2 -Wall")

@@ -3,7 +3,7 @@
 void TcpRunServer(const int server_socket)
 {
     struct sockaddr_in client_sockaddr;
-    int sockaddr_size = sizeof(struct sockaddr_in);
+    socklen_t sockaddr_size = sizeof(struct sockaddr_in);
 
     while (true)
     {
