@@ -4,7 +4,7 @@ else
     ARCH="$1"
 fi
 
-rm -rf build
+# rm -rf build
 mkdir -p build
 cmake -DARCH=$ARCH . -Bbuild
 cd build 
