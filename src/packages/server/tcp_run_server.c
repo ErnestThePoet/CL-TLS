@@ -12,7 +12,7 @@ void TcpRunServer(const int server_socket)
         if (client_socket == -1)
         {
             close(client_socket);
-            PRINT_ERROR("accept()", strerror(errno));
+            fprintf(stderr, "accept() error: %s\n",STR_ERRNO);
             continue;
         }
 
@@ -20,7 +20,7 @@ void TcpRunServer(const int server_socket)
         if (pthread_create(&client_thread, NULL, TcpHandleRequest, &client_socket))
         {
             close(client_socket);
-            PRINT_ERROR("pthread_create()", strerror(errno));
+            fprintf(stderr, "pthread_create() error: %s\n",STR_ERRNO);
             continue;
         }
 

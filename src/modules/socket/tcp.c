@@ -5,7 +5,7 @@ bool TcpSend(const int fd, const char *buffer, const size_t send_size)
     const ssize_t sent_size = send(fd, buffer, send_size, 0);
     if (sent_size < 0)
     {
-        PRINT_ERROR("send()", STR_ERRNO);
+        fprintf(stderr, "send() error: %s\n", STR_ERRNO);
         return false;
     }
 
@@ -23,7 +23,7 @@ bool TcpRecv(const int fd, char *buffer, const size_t recv_size)
             fd, buffer + received_size, remaining_receive_size, 0);
         if (current_receive_size < 0)
         {
-            PRINT_ERROR("recv()", STR_ERRNO);
+            fprintf(stderr, "recv() error: %s\n", STR_ERRNO);
             return false;
         }
 

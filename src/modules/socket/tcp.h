@@ -1,6 +1,7 @@
 #ifndef TCP_H_
 #define TCP_H_
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <sys/socket.h>

@@ -6,7 +6,7 @@ bool ConnectToServer(
     const int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == -1)
     {
-        PRINT_ERROR("socket()", strerror(errno));
+        fprintf(stderr, "socket() error: %s\n",STR_ERRNO);
         return false;
     }
 
@@ -15,7 +15,7 @@ bool ConnectToServer(
     if (server_addr == (in_addr_t)-1)
     {
         close(server_socket);
-        PRINT_ERROR("inet_addr()", strerror(errno));
+        fprintf(stderr, "inet_addr() error: %s\n",STR_ERRNO);
         return false;
     }
 
@@ -28,7 +28,7 @@ bool ConnectToServer(
                 sizeof(struct sockaddr_in)) == -1)
     {
         close(server_socket);
-        PRINT_ERROR("connect()", strerror(errno));
+        fprintf(stderr, "connect() error: %s\n",STR_ERRNO);
         return false;
     }
 

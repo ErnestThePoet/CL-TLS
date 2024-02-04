@@ -5,7 +5,7 @@ bool TcpCreateServer(int port, int *server_socket_ret)
     const int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0)
     {
-        PRINT_ERROR("socket()", strerror(errno));
+        fprintf(stderr, "socket() error: %s\n",STR_ERRNO);
         return false;
     }
 
@@ -19,14 +19,14 @@ bool TcpCreateServer(int port, int *server_socket_ret)
              sizeof(struct sockaddr_in)) < 0)
     {
         close(server_socket);
-        PRINT_ERROR("bind()", strerror(errno));
+        fprintf(stderr, "bind() error: %s\n",STR_ERRNO);
         return false;
     }
 
     if (listen(server_socket, SOMAXCONN) < 0)
     {
         close(server_socket);
-        PRINT_ERROR("listen()", strerror(errno));
+        fprintf(stderr, "listen() error: %s\n",STR_ERRNO);
         return false;
     }
 
