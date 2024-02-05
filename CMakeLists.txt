@@ -26,9 +26,9 @@ endif()
 
 file(GLOB_RECURSE SRC_MODULES "src/modules/*.c" "src/modules/*.h")
 
-set(PACKAGES client server)
+set(PACKAGE_LIST client server)
 
-foreach(PACKAGE ${PACKAGES})
+foreach(PACKAGE ${PACKAGE_LIST})
     file(GLOB_RECURSE SRC_PACKAGE "src/packages/${PACKAGE}/*.c" "src/packages/${PACKAGE}/*.h")
 
     add_executable(cltls_${PACKAGE} ${SRC_MODULES} ${SRC_PACKAGE})
