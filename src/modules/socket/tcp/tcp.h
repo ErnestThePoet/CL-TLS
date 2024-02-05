@@ -36,7 +36,7 @@ bool TcpCreateServer(uint16_t port,
                      int *server_socket_fd_ret);
 
 // TcpHandleRequest is responsible for freeing the TcpServerHandlerCtx* arg.
-void TcpRunServer(const int server_socket_fd_ret,
+void TcpRunServer(const int server_socket_fd,
                   void *(*TcpServerHandler)(void *),
                   void *ctx_extra);
 
