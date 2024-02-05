@@ -17,7 +17,7 @@ typedef struct
 {
     int client_socket_fd;
     void *extra;
-} TcpServerHandlerCtx;
+} TcpRequestHandlerCtx;
 
 bool TcpSend(const int client_socket_fd,
              const char *buffer,
@@ -37,7 +37,7 @@ bool TcpCreateServer(uint16_t port,
 
 // TcpHandleRequest is responsible for freeing the TcpServerHandlerCtx* arg.
 void TcpRunServer(const int server_socket_fd,
-                  void *(*TcpServerHandler)(void *),
+                  void *(*TcpRequestHandler)(void *),
                   void *ctx_extra);
 
 #endif
