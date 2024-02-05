@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
 #include <errno.h>
@@ -12,15 +13,31 @@
 
 #include "common/def.h"
 
-bool TcpSend(const int socket_fd, const char *buffer, const size_t send_size);
-bool TcpRecv(const int socket_fd, char *buffer, const size_t recv_size);
+typedef struct
+{
+    int client_socket_fd;
+    void *extra;
+} TcpServerHandlerCtx;
 
-bool TcpConnectToServer(
-    const char *ip4_address, const uint16_t port, int *socket_fd_ret);
+bool TcpSend(const int client_socket_fd,
+             const char *buffer,
+             const size_t send_size);
+bool TcpRecv(const int server_socket_fd,
+             char *buffer,
+             const size_t recv_size);
+
+bool TcpConnectToServer(const char *ip4_address,
+                        const uint16_t port,
+                        int *server_socket_fd_ret);
+
 void TcpClose(const int socket_fd);
 
-bool TcpCreateServer(uint16_t port, int *socket_fd_ret);
+bool TcpCreateServer(uint16_t port,
+                     int *server_socket_fd_ret);
 
-void TcpRunServer(const int socket_fd, void *(*TcpHandleRequest)(void *));
+// TcpHandleRequest is responsible for freeing the TcpServerHandlerCtx* arg.
+void TcpRunServer(const int server_socket_fd_ret,
+                  void *(*TcpServerHandler)(void *),
+                  void *ctx_extra);
 
 #endif
