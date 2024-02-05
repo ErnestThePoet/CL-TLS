@@ -117,7 +117,7 @@ bool TcpCreateServer(uint16_t port,
 }
 
 void TcpRunServer(const int server_socket_fd,
-                  void *(*TcpHandleRequest)(void *),
+                  void *(*TcpServerHandler)(void *),
                   void *ctx_extra)
 {
     struct sockaddr_in client_sockaddr;
@@ -146,7 +146,7 @@ void TcpRunServer(const int server_socket_fd,
         ctx->extra = ctx_extra;
 
         pthread_t client_thread;
-        if (pthread_create(&client_thread, NULL, TcpHandleRequest, ctx))
+        if (pthread_create(&client_thread, NULL, TcpServerHandler, ctx))
         {
             close(client_socket_fd);
             fprintf(stderr, "pthread_create() error: %s\n", STR_ERRNO);
