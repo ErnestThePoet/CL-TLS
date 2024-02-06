@@ -19,9 +19,11 @@ include_directories(src/modules)
 link_directories(libs)
 
 if(ARCH_LOWER STREQUAL arm32)
-    set(LIB_SUFFIX eabi)
+    set(LIB_SUFFIX_ASCON opt32_eabi)
+    set(LIB_SUFFIX_BORINGSSL eabi)
 elseif(ARCH_LOWER STREQUAL x86_64)
-    set(LIB_SUFFIX x64)
+    set(LIB_SUFFIX_ASCON opt64_x64)
+    set(LIB_SUFFIX_BORINGSSL x64)
 endif()
 
 file(GLOB_RECURSE SRC_MODULES "src/modules/*.c" "src/modules/*.h")
@@ -33,9 +35,9 @@ foreach(PACKAGE ${PACKAGE_LIST})
 
     add_executable(cltls_${PACKAGE} ${SRC_MODULES} ${SRC_PACKAGE})
 
-    target_link_libraries(cltls_${PACKAGE} PRIVATE crypto_aead_ascon128av12_opt64_${LIB_SUFFIX})
-    target_link_libraries(cltls_${PACKAGE} PRIVATE crypto_hash_asconxofav12_opt64_${LIB_SUFFIX})
-    target_link_libraries(cltls_${PACKAGE} PRIVATE crypto_boringssl_${LIB_SUFFIX})
+    target_link_libraries(cltls_${PACKAGE} PRIVATE crypto_aead_ascon128av12_${LIB_SUFFIX_ASCON})
+    target_link_libraries(cltls_${PACKAGE} PRIVATE crypto_hash_asconhashav12_${LIB_SUFFIX_ASCON})
+    target_link_libraries(cltls_${PACKAGE} PRIVATE crypto_boringssl_${LIB_SUFFIX_BORINGSSL})
 endforeach()
 
 set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=c99 -O2 -Wall")
