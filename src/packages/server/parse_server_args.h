@@ -6,7 +6,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "common/def.h"
+#include <common/def.h>
+
 #include "server_args.h"
 
 typedef enum

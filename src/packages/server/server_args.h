@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "common/def.h"
+#include <common/def.h>
 
 typedef struct{
     uint16_t listen_port;
