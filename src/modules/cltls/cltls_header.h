@@ -13,7 +13,7 @@
 #define MSG_TYPE_ERROR_STOP_NOTIFY 0xFF
 
 // Key Negotiation and Digital Signature schemes are fixed
-// in CL-TLS(X25519 and ED25519); 
+// in CL-TLS(X25519 and ED25519);
 // only Encryption and Hash schemes can be specified
 
 #define CIPHER_ASCON128A_ASCONHASHA256 0x00
