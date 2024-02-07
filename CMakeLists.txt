@@ -40,8 +40,8 @@ foreach(PACKAGE ${PACKAGE_LIST})
     target_link_libraries(cltls_${PACKAGE} PRIVATE crypto_boringssl_${LIB_SUFFIX_BORINGSSL})
 endforeach()
 
-set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=c99 -O2 -Wall")
-
 if(ARCH_LOWER STREQUAL arm32)
-    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-static")
+    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=c99 -O2 -Wall -static")
+else()
+    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=c99 -O2 -Wall")
 endif()
