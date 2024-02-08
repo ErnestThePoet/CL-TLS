@@ -1,25 +1,33 @@
 #ifndef CLTLS_HEADER_H_
 #define CLTLS_HEADER_H_
 
-#include <stdint.h>
-
-#define MSG_TYPE_CLIENT_HELLO 0x00
-#define MSG_TYPE_SERVER_HELLO 0x01
-#define MSG_TYPE_SERVER_PUBKEY 0x02
-#define MSG_TYPE_SERVER_PUBKEY_VERIFY 0x03
-#define MSG_TYPE_SERVER_HANDSHAKE_FINISHED 0x04
-#define MSG_TYPE_CLIENT_HANDSHAKE_FINISHED 0x05
-#define MSG_TYPE_APPLICATION_DATA 0x06
-#define MSG_TYPE_ERROR_STOP_NOTIFY 0xFF
+#define CLTLS_MSG_TYPE_CLIENT_HELLO 0x00
+#define CLTLS_MSG_TYPE_SERVER_HELLO 0x01
+#define CLTLS_MSG_TYPE_SERVER_PUBKEY 0x10
+#define CLTLS_MSG_TYPE_SERVER_PUBKEY_VERIFY 0x11
+#define CLTLS_MSG_TYPE_SERVER_HANDSHAKE_FINISHED 0x12
+#define CLTLS_MSG_TYPE_CLIENT_PUBKEY 0x20
+#define CLTLS_MSG_TYPE_CLIENT_PUBKEY_VERIFY 0x21
+#define CLTLS_MSG_TYPE_CLIENT_HANDSHAKE_FINISHED 0x22
+#define CLTLS_MSG_TYPE_APPLICATION_DATA 0xA0
+#define CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY 0xFF
 
 // Key Negotiation and Digital Signature schemes are fixed
 // in CL-TLS(X25519 and ED25519);
 // only Encryption and Hash schemes can be specified
 
-#define CIPHER_ASCON128A_ASCONHASHA256 0x00
-#define CIPHER_ASCON128A_SHA256 0x01
-#define CIPHER_AES128GCM_ASCONHASHA256 0x10
-#define CIPHER_AES128GCM_SHA256 0x11
+#define CLTLS_CIPHER_ASCON128A_ASCONHASHA 0x00
+#define CLTLS_CIPHER_ASCON128A_SHA256 0x01
+#define CLTLS_CIPHER_AES128GCM_ASCONHASHA 0x10
+#define CLTLS_CIPHER_AES128GCM_SHA256 0x11
+
+// MQTT protocol
+#define CLTLS_PROTOCOL_MQTT 0x00
+// New user key generation request to PKG.
+// When this protocol is used, steps
+// CLIENT_PUBKEY, CLIENT_PUBKEY_VERIFY and CLIENT_HANDSHAKE_FINISHED
+// are omitted.
+#define CLTLS_PROTOCOL_KEYGEN 0x10
 
 /******************************************************
  * Client Hello
@@ -60,7 +68,7 @@
  ******************************************************/
 
 /******************************************************
- * Server Pubkey
+ * Server Public Key
  *
  * ---------------------------------------
  * | Message Type                        |  1B
@@ -77,7 +85,7 @@
  ******************************************************/
 
 /******************************************************
- * Server Pubkey Verify
+ * Server Public Key Verify
  *
  * ---------------------------------------
  * | Message Type                        |  1B

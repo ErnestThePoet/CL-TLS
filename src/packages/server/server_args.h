@@ -5,7 +5,15 @@
 
 #include <common/def.h>
 
-typedef struct{
+typedef enum
+{
+    SERVER_MODE_PKG,
+    SERVER_MODE_PROXY
+} ServerMode;
+
+typedef struct
+{
+    ServerMode mode;
     uint16_t listen_port;
     char forward_ip[50];
     uint16_t forward_port;

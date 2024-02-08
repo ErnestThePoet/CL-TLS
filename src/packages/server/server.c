@@ -1,18 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <common/def.h>
+#include <socket/tcp/tcp.h>
+
 #include "server_args.h"
 #include "parse_server_args.h"
-#include "tcp_create_server.h"
-#include "tcp_run_server.h"
-
-#include "common/def.h"
+#include "server_tcp_request_handler.h"
 
 void PrintUsage()
 {
     const char *kUsageHint = "Usage:\n"
-                             "cltls_server --port <listen-port> --forward <forward-ip>:<forward-port> [OPTION]...\n"
+                             "cltls_server -pkg|-proxy --port <listen-port> [OPTION]...\n"
                              "Where possible OPTIONS are:\n"
+                             "--forward <ip>:<port>      Set proxy pass destination,\n"
+                             "                           required in PROXY mode\n"
                              "--log <ERROR|WARN|INFO>    Set log level, defaults to WARN\n"
                              "Use 'cltls_server --help' to show this summary\n";
 
@@ -25,10 +27,16 @@ int main(int argc, char *argv[])
     if (!ParseServerArgs(argc, argv, &server_args))
     {
         PrintUsage();
-        exit(FAILURE);
+        return FAILURE;
     }
 
-    printf("%u %s %u %d\n", server_args.listen_port, server_args.forward_ip, server_args.forward_port, server_args.log_level);
+    int server_socket_fd = 0;
+    if (!TcpCreateServer(server_args.listen_port, &server_socket_fd))
+    {
+        return FAILURE;
+    }
+
+    TcpRunServer(server_socket_fd, ServerTcpRequestHandler, &server_args);
 
     return SUCCESS;
 }
