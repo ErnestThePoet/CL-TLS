@@ -5,7 +5,8 @@
 #define CLTLS_MSG_TYPE_SERVER_HELLO 0x01
 #define CLTLS_MSG_TYPE_SERVER_PUBKEY 0x10
 #define CLTLS_MSG_TYPE_SERVER_PUBKEY_VERIFY 0x11
-#define CLTLS_MSG_TYPE_SERVER_HANDSHAKE_FINISHED 0x12
+#define CLTLS_MSG_TYPE_SERVER_PUBKEY_REQUEST 0x12
+#define CLTLS_MSG_TYPE_SERVER_HANDSHAKE_FINISHED 0x13
 #define CLTLS_MSG_TYPE_CLIENT_PUBKEY 0x20
 #define CLTLS_MSG_TYPE_CLIENT_PUBKEY_VERIFY 0x21
 #define CLTLS_MSG_TYPE_CLIENT_HANDSHAKE_FINISHED 0x22
@@ -97,6 +98,17 @@
  * | |------------------------------|    |
  * | | Traffic Signature            |    |
  * | |------------------------------|    |
+ * ---------------------------------------
+ *
+ ******************************************************/
+
+/******************************************************
+ * Server Public Key Request
+ *
+ * ---------------------------------------
+ * | Message Type                        |  1B
+ * ---------------------------------------
+ * | Remaining Length(0)                 |  2B
  * ---------------------------------------
  *
  ******************************************************/
