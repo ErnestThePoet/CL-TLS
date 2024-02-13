@@ -23,7 +23,7 @@ void ParseServerArgs(
             OPT_STRING('\0', "fwd-ip", &forward_ip, "proxy forward ip", NULL, 0, 0),
             OPT_INTEGER('\0', "fwd-port", &forward_port, "proxy forward port", NULL, 0, 0),
             OPT_GROUP("Optional options"),
-            OPT_STRING('l', "log", &log_level, "log level(ERROR|WARN|INFO), defaults to 'ERROR'", NULL, 0, 0),
+            OPT_STRING('l', "log", &log_level, "log level(ERROR|WARN|INFO), defaults to 'WARN'", NULL, 0, 0),
             OPT_END(),
         };
 
@@ -86,13 +86,13 @@ void ParseServerArgs(
         server_args_ret->forward_port = forward_port;
     }
 
-    if (log_level == NULL || !strcmp(log_level, "ERROR"))
-    {
-        server_args_ret->log_level = LOG_LEVEL_ERROR;
-    }
-    else if (!strcmp(log_level, "WARN"))
+    if (log_level == NULL || !strcmp(log_level, "WARN"))
     {
         server_args_ret->log_level = LOG_LEVEL_WARN;
+    }
+    else if (!strcmp(log_level, "ERROR"))
+    {
+        server_args_ret->log_level = LOG_LEVEL_ERROR;
     }
     else if (!strcmp(log_level, "INFO"))
     {
