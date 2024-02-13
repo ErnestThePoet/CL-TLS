@@ -4,9 +4,6 @@
 #include <string.h>
 #include <errno.h>
 
-#define SUCCESS 0
-#define FAILURE 1
-
 typedef enum
 {
     LOG_LEVEL_ERROR,

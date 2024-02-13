@@ -27,16 +27,16 @@ int main(int argc, char *argv[])
     if (!ParseServerArgs(argc, argv, &server_args))
     {
         PrintUsage();
-        return FAILURE;
+        return EXIT_FAILURE;
     }
 
     int server_socket_fd = 0;
     if (!TcpCreateServer(server_args.listen_port, &server_socket_fd))
     {
-        return FAILURE;
+        return EXIT_FAILURE;
     }
 
     TcpRunServer(server_socket_fd, ServerTcpRequestHandler, &server_args);
 
-    return SUCCESS;
+    return EXIT_SUCCESS;
 }

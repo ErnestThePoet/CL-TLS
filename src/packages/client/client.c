@@ -1,7 +1,9 @@
+#include <stdlib.h>
+
 #include <common/def.h>
 
 int main(int argc,char* argv[]){
     printf("Hello client");
 
-    return SUCCESS;
+    return EXIT_SUCCESS;
 }
