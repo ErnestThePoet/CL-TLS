@@ -139,7 +139,7 @@ void TcpRunServer(const int server_socket_fd,
         {
             close(client_socket_fd);
             fprintf(stderr, "Memory allocation for TcpServerHandlerCtx failed\n");
-            exit(FAILURE);
+            exit(EXIT_FAILURE);
         }
 
         ctx->client_socket_fd = client_socket_fd;
