@@ -5,9 +5,11 @@
 
 #include <common/def.h>
 
+#include <argparse/argparse.h>
+
 typedef enum
 {
-    SERVER_MODE_PKG,
+    SERVER_MODE_KGC,
     SERVER_MODE_PROXY
 } ServerMode;
 
