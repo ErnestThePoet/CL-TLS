@@ -14,12 +14,17 @@ int main(int argc, char *argv[])
     ParseServerArgs(argc, argv, &server_args);
 
     int server_socket_fd = 0;
-    if (!TcpCreateServer(server_args.listen_port, &server_socket_fd))
+    if (!TcpCreateServer(server_args.listen_port,
+                         &server_socket_fd,
+                         server_args.log_level))
     {
         return EXIT_FAILURE;
     }
 
-    TcpRunServer(server_socket_fd, ServerTcpRequestHandler, &server_args);
+    TcpRunServer(server_socket_fd,
+                 ServerTcpRequestHandler,
+                 &server_args,
+                 server_args.log_level);
 
     return EXIT_SUCCESS;
 }
