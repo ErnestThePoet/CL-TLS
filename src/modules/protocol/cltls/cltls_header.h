@@ -1,6 +1,7 @@
 #ifndef CLTLS_HEADER_H_
 #define CLTLS_HEADER_H_
 
+////////// Message Types
 #define CLTLS_MSG_TYPE_CLIENT_HELLO 0x00
 #define CLTLS_MSG_TYPE_SERVER_HELLO 0x01
 #define CLTLS_MSG_TYPE_SERVER_PUBKEY 0x10
@@ -11,24 +12,27 @@
 #define CLTLS_MSG_TYPE_CLIENT_PUBKEY_VERIFY 0x21
 #define CLTLS_MSG_TYPE_CLIENT_HANDSHAKE_FINISHED 0x22
 #define CLTLS_MSG_TYPE_APPLICATION_DATA 0xA0
+#define CLTLS_MSG_TYPE_CLOSE_CONNECTION 0xB0
 #define CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY 0xF0
 
+////////// Cipher Suites
 // Key Negotiation and Digital Signature schemes are fixed
 // in CL-TLS(X25519 and ED25519);
 // only Encryption and Hash schemes can be specified
-
 #define CLTLS_CIPHER_ASCON128A_ASCONHASHA 0x00
 #define CLTLS_CIPHER_ASCON128A_SHA256 0x01
 #define CLTLS_CIPHER_AES128GCM_ASCONHASHA 0x10
 #define CLTLS_CIPHER_AES128GCM_SHA256 0x11
 
+////////// Application Layer Protocols
 // MQTT protocol
 #define CLTLS_PROTOCOL_MQTT 0x00
-// New user key generation request to PKG.
-// When this protocol is used, steps
-// CLIENT_PUBKEY, CLIENT_PUBKEY_VERIFY and CLIENT_HANDSHAKE_FINISHED
-// are omitted.
-#define CLTLS_PROTOCOL_KEYGEN 0x10
+// For communications with PKG.
+// When this protocol is used, client pubkey is not requested.
+#define CLTLS_PROTOCOL_KGC 0x10
+
+////////// Error Codes
+#define CLTLS_ERROR_IDENTITY_NOT_PERMITTED 0x10
 
 /******************************************************
  * Client Hello
@@ -39,6 +43,8 @@
  * | Remaining Length                    |  2B
  * ---------------------------------------
  * | Application Layer Protocol          |  1B
+ * ---------------------------------------
+ * | Client Identity                     |  32B
  * ---------------------------------------
  * | Cipher Suite Count                  |  1B
  * ---------------------------------------
@@ -163,14 +169,25 @@
  ******************************************************/
 
 /******************************************************
+ * Close Connection
+ *
+ * ---------------------------------------
+ * | Message Type                        |  1B
+ * ---------------------------------------
+ * | Remaining Length(0)                 |  2B
+ * ---------------------------------------
+ *
+ ******************************************************/
+
+/******************************************************
  * Error Stop Notify
  *
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length(2)                 |  2B
+ * | Remaining Length(1)                 |  2B
  * ---------------------------------------
- * | Error Code                          |  2B
+ * | Error Code                          |  1B
  * ---------------------------------------
  *
  ******************************************************/

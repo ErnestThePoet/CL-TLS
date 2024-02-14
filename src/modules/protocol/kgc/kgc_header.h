@@ -1,16 +1,24 @@
 #ifndef KGC_HEADER_H_
 #define KGC_HEADER_H_
 
-#define KGC_MSG_TYPE_SERVER_REGISTER_REQUEST 0x00
-#define KGC_MSG_TYPE_CLIENT_REGISTER_REQUEST 0x10
-#define KGC_MSG_TYPE_SIGNATURE_DELIVERY 0x20
-#define KGC_MSG_TYPE_ERROR_STOP_NOTIFY 0xF0
+////////// Message Types
+#define KGC_MSG_TYPE_REGISTER_REQUEST 0x00
+#define KGC_MSG_TYPE_RESIGTER_RESPONSE 0x10
+
+////////// Entity Types
+#define KGC_ENTITY_TYPE_CLIENT 0x00
+#define KGC_ENTITY_TYPE_SERVER 0x10
+
+////////// Register Response Status Codes
+#define KGC_REGISTER_STATUS_SUCCESS 0x00
 
 /******************************************************
- * Server Register Request
+ * Register Request(Server)
  *
  * ---------------------------------------
  * | Message Type                        |  1B
+ * ---------------------------------------
+ * | Entity Type                         |  1B
  * ---------------------------------------
  * | Identity                            |  32B
  * ---------------------------------------
@@ -22,10 +30,12 @@
  ******************************************************/
 
 /******************************************************
- * Client Register Request
+ * Register Request(Client)
  *
  * ---------------------------------------
  * | Message Type                        |  1B
+ * ---------------------------------------
+ * | Entity Type                         |  1B
  * ---------------------------------------
  * | Identity                            |  32B
  * ---------------------------------------
@@ -41,10 +51,12 @@
  ******************************************************/
 
 /******************************************************
- * Signature Delivery
+ * Register Request(Success)
  *
  * ---------------------------------------
  * | Message Type                        |  1B
+ * ---------------------------------------
+ * | Status Code                         |  1B
  * ---------------------------------------
  * | Signature  Length                   |  2B
  * ---------------------------------------
@@ -54,10 +66,12 @@
  ******************************************************/
 
 /******************************************************
- * Error Stop Notify
+ * Register Request(Failure)
  *
  * ---------------------------------------
  * | Message Type                        |  1B
+ * ---------------------------------------
+ * | Status Code                         |  1B
  * ---------------------------------------
  *
  ******************************************************/
