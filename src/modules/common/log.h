@@ -16,9 +16,21 @@
 #define STYLE_WHT "\x1B[37m"
 #define STYLE_BOLD "\x1B[1m"
 
-void Log(const LogType log_type,
-         const LogLevel log_level,
-         const char *format,
-         ...);
+static void VLog(const LogType log_type,
+                 const LogLevel log_level,
+                 const char *format,
+                 va_list args);
+
+void LogError(const LogLevel log_level,
+              const char *format,
+              ...);
+
+void LogWarn(const LogLevel log_level,
+             const char *format,
+             ...);
+
+void LogInfo(const LogLevel log_level,
+             const char *format,
+             ...);
 
 #endif
