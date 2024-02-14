@@ -4,6 +4,8 @@
 ////////// Message Types
 #define KGC_MSG_TYPE_REGISTER_REQUEST 0x00
 #define KGC_MSG_TYPE_RESIGTER_RESPONSE 0x10
+#define KGC_MSG_TYPE_ADD_CLIENT_REQUEST 0x20
+#define KGC_MSG_TYPE_ADD_CLIENT_RESPONSE 0x30
 
 ////////// Entity Types
 #define KGC_ENTITY_TYPE_CLIENT 0x00
@@ -11,6 +13,9 @@
 
 ////////// Register Response Status Codes
 #define KGC_REGISTER_STATUS_SUCCESS 0x00
+
+////////// Add Client Response Status Codes
+#define KGC_ADD_CLIENT_STATUS_SUCCESS 0x00
 
 /******************************************************
  * Register Request(Server)
@@ -51,7 +56,7 @@
  ******************************************************/
 
 /******************************************************
- * Register Request(Success)
+ * Register Response(Success)
  *
  * ---------------------------------------
  * | Message Type                        |  1B
@@ -66,7 +71,29 @@
  ******************************************************/
 
 /******************************************************
- * Register Request(Failure)
+ * Register Response(Failure)
+ *
+ * ---------------------------------------
+ * | Message Type                        |  1B
+ * ---------------------------------------
+ * | Status Code                         |  1B
+ * ---------------------------------------
+ *
+ ******************************************************/
+
+/******************************************************
+ * Add Client Request
+ *
+ * ---------------------------------------
+ * | Message Type                        |  1B
+ * ---------------------------------------
+ * | Identity                            |  32B
+ * ---------------------------------------
+ *
+ ******************************************************/
+
+/******************************************************
+ * Add Client Response
  *
  * ---------------------------------------
  * | Message Type                        |  1B

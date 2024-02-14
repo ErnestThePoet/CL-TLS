@@ -27,8 +27,9 @@
 ////////// Application Layer Protocols
 // MQTT protocol
 #define CLTLS_PROTOCOL_MQTT 0x00
-// For communications with PKG.
-// When this protocol is used, client pubkey is not requested.
+// For communications with KGC.
+// When KGC message type is REGISTER_REQUEST, 
+// client pubkey is not requested.
 #define CLTLS_PROTOCOL_KGC 0x10
 
 ////////// Error Codes
