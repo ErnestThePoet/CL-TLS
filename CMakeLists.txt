@@ -16,6 +16,7 @@ else()
 endif()
 
 include_directories(src/modules)
+include_directories(src/modules/ctl)
 link_directories(libs)
 
 if(ARCH_LOWER STREQUAL arm32)
