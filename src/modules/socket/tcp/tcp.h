@@ -11,7 +11,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#include "common/def.h"
+#include <common/def.h>
+#include <common/log.h>
 
 typedef struct
 {
@@ -21,23 +22,29 @@ typedef struct
 
 bool TcpSend(const int client_socket_fd,
              const char *buffer,
-             const size_t send_size);
+             const size_t send_size,
+             const LogLevel log_level);
 bool TcpRecv(const int server_socket_fd,
              char *buffer,
-             const size_t recv_size);
+             const size_t recv_size,
+             const LogLevel log_level);
 
 bool TcpConnectToServer(const char *ip4_address,
                         const uint16_t port,
-                        int *server_socket_fd_ret);
+                        int *server_socket_fd_ret,
+                        const LogLevel log_level);
 
-void TcpClose(const int socket_fd);
+void TcpClose(const int socket_fd,
+              const LogLevel log_level);
 
 bool TcpCreateServer(uint16_t port,
-                     int *server_socket_fd_ret);
+                     int *server_socket_fd_ret,
+                     const LogLevel log_level);
 
 // TcpHandleRequest is responsible for freeing the TcpServerHandlerCtx* arg.
 void TcpRunServer(const int server_socket_fd,
                   void *(*TcpRequestHandler)(void *),
-                  void *ctx_extra);
+                  void *ctx_extra,
+                  const LogLevel log_level);
 
 #endif
