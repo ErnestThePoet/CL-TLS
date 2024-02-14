@@ -11,16 +11,22 @@ static void VLog(const LogType log_type,
         {
         case LOG_TYPE_ERROR:
             fputs(STYLE_RED, stderr);
+            fputs(stderr, "Error: ");
             vfprintf(stderr, format, args);
+            fputc('\n', stderr);
             fputs(STYLE_NRM, stderr);
             break;
         case LOG_TYPE_WARN:
             fputs(STYLE_YEL, stdout);
+            fputs(stderr, "Warn: ");
             vfprintf(stdout, format, args);
+            fputc('\n', stdout);
             fputs(STYLE_NRM, stdout);
             break;
         default:
+            fputs(stderr, "Info: ");
             vfprintf(stdout, format, args);
+            fputc('\n', stdout);
             break;
         }
     }
