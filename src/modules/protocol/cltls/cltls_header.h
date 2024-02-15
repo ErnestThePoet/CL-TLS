@@ -1,6 +1,8 @@
 #ifndef CLTLS_HEADER_H_
 #define CLTLS_HEADER_H_
 
+#include <arpa/inet.h>
+
 ////////// Message Types
 #define CLTLS_MSG_TYPE_CLIENT_HELLO 0x00
 #define CLTLS_MSG_TYPE_SERVER_HELLO 0x01
@@ -28,12 +30,17 @@
 // MQTT protocol
 #define CLTLS_PROTOCOL_MQTT 0x00
 // For communications with KGC.
-// When KGC message type is REGISTER_REQUEST, 
+// When KGC message type is REGISTER_REQUEST,
 // client pubkey is not requested.
 #define CLTLS_PROTOCOL_KGC 0x10
 
 ////////// Error Codes
 #define CLTLS_ERROR_IDENTITY_NOT_PERMITTED 0x10
+
+////////// Helper Macros
+#define CLTLS_COMMON_HEADER_LENGTH 3
+#define CLTLS_MSG_TYPE(H) (H[0])
+#define CLTLS_REMAINING_LENGTH(H) (ntohs(*(uint16_t *)(H + 1)))
 
 /******************************************************
  * Client Hello
@@ -192,5 +199,7 @@
  * ---------------------------------------
  *
  ******************************************************/
+
+const char *GetCltlsErrorMessage(const uint8_t error_code);
 
 #endif
