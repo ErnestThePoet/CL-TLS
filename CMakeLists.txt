@@ -27,7 +27,7 @@ elseif(ARCH_LOWER STREQUAL x86_64)
     set(LIB_SUFFIX_BORINGSSL x64)
 endif()
 
-file(GLOB_RECURSE SRC_MODULES "src/modules/*.c" "src/modules/*.h")
+file(GLOB_RECURSE SRC_MODULES "src/modules/*.c")
 
 set(PACKAGE_LIST client server)
 
