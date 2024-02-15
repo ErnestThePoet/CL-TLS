@@ -10,6 +10,8 @@
 
 #include <argparse/argparse.h>
 
+#include <protocol/cltls/cltls_header.h>
+
 #include "server_args.h"
 
 #define PRINT_ERROR_REQUIRED_OPTION_NOT_PROVIDED(NAME)                \

@@ -8,6 +8,7 @@ void ParseServerArgs(
     const char *forward_ip = NULL;
     int forward_port = -1;
     const char *log_level = NULL;
+    const char *preferred_cipher_suite = NULL;
 
     const char *usages[] = {
         "cltls_server [options]",
@@ -24,6 +25,7 @@ void ParseServerArgs(
             OPT_INTEGER('\0', "fwd-port", &forward_port, "proxy forward port", NULL, 0, 0),
             OPT_GROUP("Optional options"),
             OPT_STRING('l', "log", &log_level, "log level(ERROR|WARN|INFO), defaults to 'WARN'", NULL, 0, 0),
+            OPT_STRING('\0', "cipher", &preferred_cipher_suite, "preferred cipher suite(ASCON128A_ASCONHASHA|ASCON128A_SHA256|AES128GCM_ASCONHASHA|AES128GCM_SHA256), defaults to 'ASCON128A_ASCONHASHA'", NULL, 0, 0),
             OPT_END(),
         };
 
@@ -101,5 +103,27 @@ void ParseServerArgs(
     else
     {
         PRINT_ERROR_INVALID_OPTION_VALUE("%s", log_level, "'log'('l')");
+    }
+
+    if (preferred_cipher_suite == NULL ||
+        !strcmp(preferred_cipher_suite, "ASCON128A_ASCONHASHA"))
+    {
+        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_ASCON128A_ASCONHASHA;
+    }
+    else if (!strcmp(preferred_cipher_suite, "ASCON128A_ASCONHASHA"))
+    {
+        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_ASCON128A_SHA256;
+    }
+    else if (!strcmp(preferred_cipher_suite, "AES128GCM_ASCONHASHA"))
+    {
+        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_AES128GCM_ASCONHASHA;
+    }
+    else if (!strcmp(preferred_cipher_suite, "AES128GCM_SHA256"))
+    {
+        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_AES128GCM_SHA256;
+    }
+    else
+    {
+        PRINT_ERROR_INVALID_OPTION_VALUE("%s", preferred_cipher_suite, "'cipher'");
     }
 }
