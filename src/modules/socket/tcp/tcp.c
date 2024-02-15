@@ -141,6 +141,12 @@ void TcpRunServer(const int server_socket_fd,
             continue;
         }
 
+        struct sockaddr_in *client_sockaddr_in = (struct sockaddr_in *)&client_sockaddr;
+        char client_ip[INET_ADDRSTRLEN] = {0};
+        inet_ntop(AF_INET, &client_sockaddr_in->sin_addr, client_ip, INET_ADDRSTRLEN);
+
+        LogInfo(log_level, "Got connection from %s", client_ip);
+
         TcpRequestHandlerCtx *ctx = malloc(sizeof(TcpRequestHandlerCtx));
         if (ctx == NULL)
         {
