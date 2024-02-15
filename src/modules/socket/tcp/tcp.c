@@ -2,13 +2,12 @@
 
 bool TcpSend(const int client_socket_fd,
              const char *buffer,
-             const size_t send_size,
-             const LogLevel log_level)
+             const size_t send_size)
 {
     const ssize_t sent_size = send(client_socket_fd, buffer, send_size, 0);
     if (sent_size < 0)
     {
-        LogError(log_level, "send() error: %s", STR_ERRNO);
+        LogError("send() error: %s", STR_ERRNO);
         return false;
     }
 
@@ -17,8 +16,7 @@ bool TcpSend(const int client_socket_fd,
 
 bool TcpRecv(const int server_socket_fd,
              char *buffer,
-             const size_t recv_size,
-             const LogLevel log_level)
+             const size_t recv_size)
 {
     size_t received_size = 0;
 
@@ -29,7 +27,7 @@ bool TcpRecv(const int server_socket_fd,
             server_socket_fd, buffer + received_size, remaining_receive_size, 0);
         if (current_receive_size < 0)
         {
-            LogError(log_level, "recv() error: %s", STR_ERRNO);
+            LogError("recv() error: %s", STR_ERRNO);
             return false;
         }
 
@@ -41,13 +39,12 @@ bool TcpRecv(const int server_socket_fd,
 
 bool TcpConnectToServer(const char *ip4_address,
                         const uint16_t port,
-                        int *server_socket_fd_ret,
-                        const LogLevel log_level)
+                        int *server_socket_fd_ret)
 {
     const int server_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket_fd == -1)
     {
-        LogError(log_level, "socket() error: %s", STR_ERRNO);
+        LogError("socket() error: %s", STR_ERRNO);
         return false;
     }
 
@@ -56,7 +53,7 @@ bool TcpConnectToServer(const char *ip4_address,
     if (server_addr == (in_addr_t)-1)
     {
         close(server_socket_fd);
-        LogError(log_level, "inet_addr() error: %s", STR_ERRNO);
+        LogError("inet_addr() error: %s", STR_ERRNO);
         return false;
     }
 
@@ -69,7 +66,7 @@ bool TcpConnectToServer(const char *ip4_address,
                 sizeof(struct sockaddr_in)) == -1)
     {
         close(server_socket_fd);
-        LogError(log_level, "connect() error: %s", STR_ERRNO);
+        LogError("connect() error: %s", STR_ERRNO);
         return false;
     }
 
@@ -78,21 +75,18 @@ bool TcpConnectToServer(const char *ip4_address,
     return true;
 }
 
-void TcpClose(const int socket_fd,
-              const LogLevel log_level)
+void TcpClose(const int socket_fd)
 {
-    (void)log_level;
     close(socket_fd);
 }
 
 bool TcpCreateServer(uint16_t port,
-                     int *server_socket_fd_ret,
-                     const LogLevel log_level)
+                     int *server_socket_fd_ret)
 {
     const int server_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket_fd < 0)
     {
-        LogError(log_level, "socket() error: %s", STR_ERRNO);
+        LogError("socket() error: %s", STR_ERRNO);
         return false;
     }
 
@@ -106,14 +100,14 @@ bool TcpCreateServer(uint16_t port,
              sizeof(struct sockaddr_in)) < 0)
     {
         close(server_socket_fd);
-        LogError(log_level, "bind() error: %s", STR_ERRNO);
+        LogError("bind() error: %s", STR_ERRNO);
         return false;
     }
 
     if (listen(server_socket_fd, SOMAXCONN) < 0)
     {
         close(server_socket_fd);
-        LogError(log_level, "listen() error: %s", STR_ERRNO);
+        LogError("listen() error: %s", STR_ERRNO);
         return false;
     }
 
@@ -124,8 +118,7 @@ bool TcpCreateServer(uint16_t port,
 
 void TcpRunServer(const int server_socket_fd,
                   void *(*TcpRequestHandler)(void *),
-                  void *ctx_extra,
-                  const LogLevel log_level)
+                  void *ctx_extra)
 {
     struct sockaddr_in client_sockaddr;
     socklen_t sockaddr_size = sizeof(struct sockaddr_in);
@@ -137,7 +130,7 @@ void TcpRunServer(const int server_socket_fd,
         if (client_socket_fd == -1)
         {
             close(client_socket_fd);
-            LogError(log_level, "accept() error: %s", STR_ERRNO);
+            LogError("accept() error: %s", STR_ERRNO);
             continue;
         }
 
@@ -145,13 +138,13 @@ void TcpRunServer(const int server_socket_fd,
         char client_ip[INET_ADDRSTRLEN] = {0};
         inet_ntop(AF_INET, &client_sockaddr_in->sin_addr, client_ip, INET_ADDRSTRLEN);
 
-        LogInfo(log_level, "Got connection from %s", client_ip);
+        LogInfo("Got connection from %s", client_ip);
 
         TcpRequestHandlerCtx *ctx = malloc(sizeof(TcpRequestHandlerCtx));
         if (ctx == NULL)
         {
             close(client_socket_fd);
-            LogError(log_level, "Memory allocation for TcpServerHandlerCtx failed");
+            LogError("Memory allocation for TcpServerHandlerCtx failed");
             exit(EXIT_FAILURE);
         }
 
@@ -162,7 +155,7 @@ void TcpRunServer(const int server_socket_fd,
         if (pthread_create(&client_thread, NULL, TcpRequestHandler, ctx))
         {
             close(client_socket_fd);
-            LogError(log_level, "pthread_create() error: %s", STR_ERRNO);
+            LogError("pthread_create() error: %s", STR_ERRNO);
             continue;
         }
 

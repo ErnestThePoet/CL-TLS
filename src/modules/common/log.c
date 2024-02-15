@@ -1,11 +1,10 @@
 #include "log.h"
 
 static void VLog(const LogType log_type,
-                 const LogLevel log_level,
                  const char *format,
                  va_list args)
 {
-    if (log_level >= log_type)
+    if (kLogLevel >= log_type)
     {
         switch (log_type)
         {
@@ -31,42 +30,38 @@ static void VLog(const LogType log_type,
 }
 
 void Log(const LogType log_type,
-         const LogLevel log_level,
          const char *format,
          ...)
 {
     va_list args;
     va_start(args, format);
-    VLog(log_type, log_level, format, args);
+    VLog(log_type, format, args);
     va_end(args);
 }
 
-void LogError(const LogLevel log_level,
-              const char *format,
+void LogError(const char *format,
               ...)
 {
     va_list args;
     va_start(args, format);
-    VLog(LOG_TYPE_ERROR, log_level, format, args);
+    VLog(LOG_TYPE_ERROR, format, args);
     va_end(args);
 }
 
-void LogWarn(const LogLevel log_level,
-             const char *format,
+void LogWarn(const char *format,
              ...)
 {
     va_list args;
     va_start(args, format);
-    VLog(LOG_TYPE_WARN, log_level, format, args);
+    VLog(LOG_TYPE_WARN, format, args);
     va_end(args);
 }
 
-void LogInfo(const LogLevel log_level,
-             const char *format,
+void LogInfo(const char *format,
              ...)
 {
     va_list args;
     va_start(args, format);
-    VLog(LOG_TYPE_INFO, log_level, format, args);
+    VLog(LOG_TYPE_INFO, format, args);
     va_end(args);
 }

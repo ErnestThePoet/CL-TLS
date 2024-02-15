@@ -17,20 +17,16 @@
 #define STYLE_BOLD "\x1B[1m"
 
 void Log(const LogType log_type,
-         const LogLevel log_level,
          const char *format,
          ...);
 
-void LogError(const LogLevel log_level,
-              const char *format,
+void LogError(const char *format,
               ...);
 
-void LogWarn(const LogLevel log_level,
-             const char *format,
+void LogWarn(const char *format,
              ...);
 
-void LogInfo(const LogLevel log_level,
-             const char *format,
+void LogInfo(const char *format,
              ...);
 
 #endif

@@ -90,15 +90,15 @@ void ParseServerArgs(
 
     if (log_level == NULL || !strcmp(log_level, "WARN"))
     {
-        server_args_ret->log_level = LOG_LEVEL_WARN;
+        kLogLevel = LOG_LEVEL_WARN;
     }
     else if (!strcmp(log_level, "ERROR"))
     {
-        server_args_ret->log_level = LOG_LEVEL_ERROR;
+        kLogLevel = LOG_LEVEL_ERROR;
     }
     else if (!strcmp(log_level, "INFO"))
     {
-        server_args_ret->log_level = LOG_LEVEL_INFO;
+        kLogLevel = LOG_LEVEL_INFO;
     }
     else
     {

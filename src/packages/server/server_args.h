@@ -19,7 +19,6 @@ typedef struct
     uint16_t listen_port;
     char forward_ip[50];
     uint16_t forward_port;
-    LogLevel log_level;
     uint8_t preferred_cipher_suite;
 } ServerArgs;
 

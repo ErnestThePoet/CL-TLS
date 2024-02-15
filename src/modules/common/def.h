@@ -19,6 +19,8 @@ typedef enum
     LOG_TYPE_INFO
 } LogType;
 
+LogLevel kLogLevel = LOG_LEVEL_WARN;
+
 #define STR_ERRNO strerror(errno)
 
 #endif
