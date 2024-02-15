@@ -21,10 +21,11 @@
 // Key Negotiation and Digital Signature schemes are fixed
 // in CL-TLS(X25519 and ED25519);
 // only Encryption and Hash schemes can be specified
-#define CLTLS_CIPHER_ASCON128A_ASCONHASHA 0x00
-#define CLTLS_CIPHER_ASCON128A_SHA256 0x01
-#define CLTLS_CIPHER_AES128GCM_ASCONHASHA 0x10
-#define CLTLS_CIPHER_AES128GCM_SHA256 0x11
+#define CLTLS_CIPHER_NONE 0x00
+#define CLTLS_CIPHER_ASCON128A_ASCONHASHA 0x10
+#define CLTLS_CIPHER_ASCON128A_SHA256 0x11
+#define CLTLS_CIPHER_AES128GCM_ASCONHASHA 0x20
+#define CLTLS_CIPHER_AES128GCM_SHA256 0x21
 
 ////////// Application Layer Protocols
 // MQTT protocol
@@ -41,6 +42,13 @@
 #define CLTLS_COMMON_HEADER_LENGTH 3
 #define CLTLS_MSG_TYPE(H) (H[0])
 #define CLTLS_REMAINING_LENGTH(H) (ntohs(*(uint16_t *)(H + 1)))
+
+#define CLTLS_IDENTITY_LENGTH 32
+#define CLTLS_KE_PUBKEY_LENGTH X25519_PUBLIC_VALUE_LEN
+#define CLTLS_KE_PRIVKEY_LENGTH X25519_PRIVATE_KEY_LEN
+#define CLTLS_KE_RANDOM_LENGTH 32
+#define CLTLS_CIPHER_SUITE_LENGTH 1
+#define CLTLS_ERROR_CODE_LENGTH 1
 
 /******************************************************
  * Client Hello
@@ -81,6 +89,11 @@
  * ---------------------------------------
  *
  ******************************************************/
+#define CLTLS_SERVER_HELLO_HEADER_LENGTH \
+    (CLTLS_COMMON_HEADER_LENGTH +        \
+     CLTLS_CIPHER_SUITE_LENGTH +         \
+     CLTLS_KE_PUBKEY_LENGTH +            \
+     CLTLS_KE_RANDOM_LENGTH)
 
 /******************************************************
  * Server Public Key
@@ -126,6 +139,7 @@
  * ---------------------------------------
  *
  ******************************************************/
+#define CLTLS_SERVER_PUBKEY_REQUEST_HEADER_LENGTH CLTLS_COMMON_HEADER_LENGTH
 
 /******************************************************
  * Server Handshake Finished
@@ -186,6 +200,7 @@
  * ---------------------------------------
  *
  ******************************************************/
+#define CLTLS_CLOSE_CONNECTION_HEADER_LENGTH CLTLS_COMMON_HEADER_LENGTH
 
 /******************************************************
  * Error Stop Notify
@@ -199,6 +214,9 @@
  * ---------------------------------------
  *
  ******************************************************/
+#define CLTLS_CLOSE_CONNECTION_HEADER_LENGTH \
+    (CLTLS_COMMON_HEADER_LENGTH +            \
+     CLTLS_ERROR_CODE_LENGTH)
 
 const char *GetCltlsErrorMessage(const uint8_t error_code);
 
