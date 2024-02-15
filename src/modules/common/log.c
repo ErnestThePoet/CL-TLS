@@ -10,21 +10,19 @@ static void VLog(const LogType log_type,
         switch (log_type)
         {
         case LOG_TYPE_ERROR:
-            fputs(STYLE_RED, stderr);
-            fputs(stderr, "Error: ");
+            fputs(stderr, STYLE_RED STYLE_BOLD "Error: " STYLE_NRM STYLE_RED);
             vfprintf(stderr, format, args);
             fputc('\n', stderr);
             fputs(STYLE_NRM, stderr);
             break;
         case LOG_TYPE_WARN:
-            fputs(STYLE_YEL, stdout);
-            fputs(stderr, "Warn: ");
+            fputs(stderr, STYLE_YEL STYLE_BOLD "Warn: " STYLE_NRM STYLE_YEL);
             vfprintf(stdout, format, args);
             fputc('\n', stdout);
             fputs(STYLE_NRM, stdout);
             break;
         default:
-            fputs(stderr, "Info: ");
+            fputs(stderr, STYLE_BOLD "Info: " STYLE_NRM);
             vfprintf(stdout, format, args);
             fputc('\n', stdout);
             break;
