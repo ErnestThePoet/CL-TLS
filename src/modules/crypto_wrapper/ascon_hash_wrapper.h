@@ -13,7 +13,7 @@ int AsconHashAFinal(void *ctx, uint8_t *out);
 void AsconHashAFreeCtx(void *ctx);
 int AsconHashAHash(const uint8_t *in, size_t inlen, uint8_t *out);
 
-HashScheme kHashSchemeAsconHashA_ = {
+const HashScheme kHashSchemeAsconHashA_ = {
     .Init = AsconHashAInit,
     .Update = AsconHashAUpdate,
     .Final = AsconHashAFinal,
@@ -21,6 +21,6 @@ HashScheme kHashSchemeAsconHashA_ = {
     .Hash = AsconHashAHash,
     .hash_size = ASCON_HASHA_OUTPUT_SIZE};
 
-HashScheme *kHashSchemeAsconHashA = &kHashSchemeAsconHashA_;
+const HashScheme *kHashSchemeAsconHashA = &kHashSchemeAsconHashA_;
 
 #endif

@@ -14,7 +14,7 @@ int Sha256Final(void *ctx, uint8_t *out);
 void Sha256FreeCtx(void *ctx);
 int Sha256Hash(const uint8_t *in, size_t inlen, uint8_t *out);
 
-HashScheme kHashSchemeSha256_ = {
+const HashScheme kHashSchemeSha256_ = {
     .Init = Sha256Init,
     .Update = Sha256Update,
     .Final = Sha256Final,
@@ -22,6 +22,6 @@ HashScheme kHashSchemeSha256_ = {
     .Hash = Sha256Hash,
     .hash_size = SHA256_DIGEST_LENGTH};
 
-HashScheme *kHashSchemeSha256 = &kHashSchemeSha256_;
+const HashScheme *kHashSchemeSha256 = &kHashSchemeSha256_;
 
 #endif

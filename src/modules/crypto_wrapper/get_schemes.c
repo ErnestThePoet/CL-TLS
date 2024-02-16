@@ -1,9 +1,9 @@
 #include "get_schemes.h"
 
 void GetCryptoSchemes(const uint8_t cipher_suite,
-                      HashScheme **hash_ret,
-                      AeadScheme **aead_ret,
-                      EVP_MD **hmac_hkdf_md_ret)
+                      const HashScheme **hash_ret,
+                      const AeadScheme **aead_ret,
+                      const EVP_MD **hmac_hkdf_md_ret)
 {
     switch (cipher_suite)
     {
