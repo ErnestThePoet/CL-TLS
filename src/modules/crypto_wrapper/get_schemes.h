@@ -5,6 +5,7 @@
 
 #include <ascon/ascon_hash.h>
 #include <openssl/evp.h>
+#include <openssl/digest.h>
 
 #include <protocol/cltls/cltls_header.h>
 
