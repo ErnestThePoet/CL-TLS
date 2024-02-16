@@ -25,7 +25,8 @@ int Ascon128ADecrypt(const uint8_t *c, size_t clen,
 
 static AeadScheme kAeadSchemeAscon128A_ = {
     .Encrypt = Ascon128AEncrypt,
-    .Decrypt = Ascon128ADecrypt};
+    .Decrypt = Ascon128ADecrypt,
+    .key_size = 16};
 
 AeadScheme *kAeadSchemeAscon128A = &kAeadSchemeAscon128A_;
 

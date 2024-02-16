@@ -29,6 +29,7 @@ typedef struct
                    const uint8_t *k,
                    void *extra1,
                    void *extra2);
+    size_t key_size;
 } AeadScheme;
 
 #endif
