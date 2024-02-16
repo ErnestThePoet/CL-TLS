@@ -19,7 +19,8 @@ HashScheme kHashSchemeSha256_ = {
     .Update = Sha256Update,
     .Final = Sha256Final,
     .FreeCtx = Sha256FreeCtx,
-    .Hash = Sha256Hash};
+    .Hash = Sha256Hash,
+    .hash_size = SHA256_DIGEST_LENGTH};
 
 HashScheme *kHashSchemeSha256 = &kHashSchemeSha256_;
 

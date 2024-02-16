@@ -18,7 +18,8 @@ HashScheme kHashSchemeAsconHashA_ = {
     .Update = AsconHashAUpdate,
     .Final = AsconHashAFinal,
     .FreeCtx = AsconHashAFreeCtx,
-    .Hash = AsconHashAHash};
+    .Hash = AsconHashAHash,
+    .hash_size = ASCON_HASHA_OUTPUT_SIZE};
 
 HashScheme *kHashSchemeAsconHashA = &kHashSchemeAsconHashA_;
 

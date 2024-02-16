@@ -12,6 +12,7 @@ typedef struct
     int (*Final)(void *ctx, uint8_t *out);
     void (*FreeCtx)(void *ctx);
     int (*Hash)(const uint8_t *in, size_t inlen, uint8_t *out);
+    size_t hash_size;
 } HashScheme;
 
 typedef struct
