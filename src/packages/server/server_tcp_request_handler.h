@@ -8,6 +8,7 @@
 
 #include <common/def.h>
 #include <common/log.h>
+#include <common/util.h>
 #include <socket/tcp/tcp.h>
 #include <protocol/cltls/cltls_header.h>
 
@@ -23,7 +24,7 @@
 #include "server_args.h"
 #include "server_globals.h"
 
-#define CLOSE_FREE_RETURN                \
+#define CLOSE_FREE_ARG_RETURN            \
     do                                   \
     {                                    \
         TcpClose(ctx->client_socket_fd); \
@@ -31,7 +32,7 @@
         return NULL;                     \
     } while (false)
 
-#define CLOSE_FREE2_RETURN               \
+#define CLOSE_FREE_ARG_BUF_RETURN        \
     do                                   \
     {                                    \
         TcpClose(ctx->client_socket_fd); \
@@ -48,7 +49,7 @@
         {                                                                      \
             LogError("The other party send ERROR_STOP_NOTIFY: %s",             \
                      GetCltlsErrorMessage(receive_remaining[0]));              \
-            CLOSE_FREE2_RETURN;                                                \
+            CLOSE_FREE_ARG_BUF_RETURN;                                         \
         }                                                                      \
     } while (false)
 
@@ -63,7 +64,7 @@
         TcpSend(ctx->client_socket_fd,                                                    \
                 error_stop_notify_send_data,                                              \
                 CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH);                                   \
-        CLOSE_FREE2_RETURN;                                                               \
+        CLOSE_FREE_ARG_BUF_RETURN;                                                        \
     } while (false)
 
 void *ServerTcpRequestHandler(void *arg);
