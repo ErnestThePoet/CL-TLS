@@ -12,10 +12,12 @@ int AsconHashAUpdate(void *ctx, const uint8_t *in, size_t inlen);
 int AsconHashAFinal(void *ctx, uint8_t *out);
 void AsconHashAFreeCtx(void *ctx);
 
-HashScheme kHashSchemeAsconHashA = {
+HashScheme kHashSchemeAsconHashA_ = {
     .Init = AsconHashAInit,
     .Update = AsconHashAUpdate,
     .Final = AsconHashAFinal,
     .FreeCtx = AsconHashAFreeCtx};
+
+HashScheme *kHashSchemeAsconHashA = &kHashSchemeAsconHashA_;
 
 #endif

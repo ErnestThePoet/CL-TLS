@@ -33,8 +33,10 @@ int Aes128GcmDecrypt(const uint8_t *c, size_t clen,
                      void *extra1,
                      void *extra2);
 
-AeadScheme kAeadSchemeAes128Gcm = {
+AeadScheme kAeadSchemeAes128Gcm_ = {
     .Encrypt = Aes128GcmEncrypt,
     .Decrypt = Aes128GcmDecrypt};
+
+AeadScheme *kAeadSchemeAes128Gcm = &kAeadSchemeAes128Gcm_;
 
 #endif
