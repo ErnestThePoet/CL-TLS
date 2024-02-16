@@ -1,6 +1,8 @@
 #ifndef CLTLS_HEADER_H_
 #define CLTLS_HEADER_H_
 
+#include <stdint.h>
+#include <stdbool.h>
 #include <arpa/inet.h>
 
 ////////// Message Types
@@ -36,12 +38,20 @@
 #define CLTLS_PROTOCOL_KGC 0x10
 
 ////////// Error Codes
-#define CLTLS_ERROR_IDENTITY_NOT_PERMITTED 0x10
+#define CLTLS_ERROR_INTERNAL_EXECUTION_ERROR 0x10
+#define CLTLS_ERROR_IDENTITY_NOT_PERMITTED 0x11
+#define CLTLS_ERROR_NO_SUPPORTED_CIPHER_SUITE 0x12
 
 ////////// Helper Macros
 #define CLTLS_COMMON_HEADER_LENGTH 3
 #define CLTLS_MSG_TYPE(H) (H[0])
 #define CLTLS_REMAINING_LENGTH(H) (ntohs(*(uint16_t *)(H + 1)))
+#define CLTLS_SET_COMMON_HEADER(H, MT, RL) \
+    do                                     \
+    {                                      \
+        H[0] = (MT);                       \
+        *(uint16_t *)(H + 1) = htons(RL);  \
+    } while (false)
 
 #define CLTLS_IDENTITY_LENGTH 32
 #define CLTLS_KE_PUBKEY_LENGTH X25519_PUBLIC_VALUE_LEN
@@ -214,8 +224,8 @@
  * ---------------------------------------
  *
  ******************************************************/
-#define CLTLS_CLOSE_CONNECTION_HEADER_LENGTH \
-    (CLTLS_COMMON_HEADER_LENGTH +            \
+#define CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH \
+    (CLTLS_COMMON_HEADER_LENGTH +             \
      CLTLS_ERROR_CODE_LENGTH)
 
 const char *GetCltlsErrorMessage(const uint8_t error_code);
