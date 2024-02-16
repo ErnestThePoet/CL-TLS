@@ -1,10 +1,14 @@
 #ifndef ASCON_HASH_H_
 #define ASCON_HASH_H_
 
+#include <stdint.h>
+
 #include <pthread.h>
 
 #include <openssl/evp.h>
 #include <openssl/extra/digest_internal.h>
+
+#define ASCON_HASHA_OUTPUT_SIZE 32
 
 typedef union
 {
@@ -22,6 +26,14 @@ typedef struct
 
 extern int crypto_hash(unsigned char *out, const unsigned char *in,
                        unsigned long long inlen);
+
+extern void ascon_hash_init(ascon_hash_state_t *s);
+extern void ascon_hash_update(ascon_hash_state_t *s,
+                              const uint8_t *in,
+                              uint64_t inlen);
+extern void ascon_hash_final(ascon_hash_state_t *s,
+                             uint8_t *out,
+                             uint64_t outlen);
 
 inline int AsconHash384(unsigned char *out, const unsigned char *in,
                         unsigned long long inlen)

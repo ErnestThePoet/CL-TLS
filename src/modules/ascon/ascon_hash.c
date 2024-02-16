@@ -1,13 +1,7 @@
 #include "ascon_hash.h"
 
-extern void ascon_hash_init(ascon_hash_state_t *s);
-extern void ascon_hash_update(ascon_hash_state_t *s,
-                              const uint8_t *in,
-                              uint64_t inlen);
-extern void ascon_hash_final(ascon_hash_state_t *s,
-                             uint8_t *out,
-                             uint64_t outlen);
-
+// These three functions are used to construct an EVP_MD 
+// for constructing HMAC and HKDF
 static void AsconHashInit(EVP_MD_CTX *ctx)
 {
     ascon_hash_init(ctx->md_data);
@@ -20,7 +14,7 @@ static void AsconHashUpdate(EVP_MD_CTX *ctx, const void *data, size_t count)
 
 static void AsconHashFinal(EVP_MD_CTX *ctx, uint8_t *md)
 {
-    ascon_hash_final(ctx->md_data, md, 32);
+    ascon_hash_final(ctx->md_data, md, ASCON_HASHA_OUTPUT_SIZE);
 }
 
 static EVP_MD kEvpAsconHash;
@@ -29,7 +23,7 @@ static pthread_once_t kEvpAsconHashOnce = PTHREAD_ONCE_INIT;
 static void InitEvpAsconHash()
 {
     kEvpAsconHash.type = NID_sha256; // disguise
-    kEvpAsconHash.md_size = 32;
+    kEvpAsconHash.md_size = ASCON_HASHA_OUTPUT_SIZE;
     kEvpAsconHash.flags = 0;
     kEvpAsconHash.init = AsconHashInit;
     kEvpAsconHash.update = AsconHashUpdate;
