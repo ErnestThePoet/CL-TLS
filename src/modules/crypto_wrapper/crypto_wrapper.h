@@ -30,6 +30,7 @@ typedef struct
                    void *extra1,
                    void *extra2);
     size_t key_size;
+    size_t npub_iv_size;
 } AeadScheme;
 
 #endif

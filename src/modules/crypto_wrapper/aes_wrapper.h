@@ -36,7 +36,8 @@ int Aes128GcmDecrypt(const uint8_t *c, size_t clen,
 const AeadScheme kAeadSchemeAes128Gcm_ = {
     .Encrypt = Aes128GcmEncrypt,
     .Decrypt = Aes128GcmDecrypt,
-    .key_size = 16};
+    .key_size = 16,
+    .npub_iv_size = 16};
 
 const AeadScheme *kAeadSchemeAes128Gcm = &kAeadSchemeAes128Gcm_;
 
