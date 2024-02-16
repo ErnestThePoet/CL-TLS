@@ -29,3 +29,9 @@ void Sha256FreeCtx(void *ctx)
         free(ctx);
     }
 }
+
+int Sha256Hash(const uint8_t *in, size_t inlen, uint8_t *out)
+{
+    SHA256(in, inlen, out);
+    return 1;
+}

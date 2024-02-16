@@ -11,6 +11,7 @@ typedef struct
     int (*Update)(void *ctx, const uint8_t *in, size_t inlen);
     int (*Final)(void *ctx, uint8_t *out);
     void (*FreeCtx)(void *ctx);
+    int (*Hash)(const uint8_t *in, size_t inlen, uint8_t *out);
 } HashScheme;
 
 typedef struct

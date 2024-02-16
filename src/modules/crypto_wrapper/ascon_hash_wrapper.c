@@ -31,3 +31,8 @@ void AsconHashAFreeCtx(void *ctx)
         free(ctx);
     }
 }
+
+int AsconHashAHash(const uint8_t *in, size_t inlen, uint8_t *out)
+{
+    return crypto_hash(out, in, inlen);
+}
