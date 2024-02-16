@@ -7,9 +7,10 @@
 
 #include <pthread.h>
 
+#include <common/log.h>
+
 #include <database/idip.h>
 #include <database/permitted_ids.h>
-#include <common/log.h>
 
 typedef struct
 {
