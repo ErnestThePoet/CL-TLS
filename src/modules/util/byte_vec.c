@@ -82,18 +82,31 @@ bool ByteVecCopyFromByteVec(ByteVec *dest_byte_vec,
     return ByteVecCopyBlock(dest_byte_vec, pos, src_byte_vec->data, src_byte_vec->size);
 }
 
-// Clear() sets size to 0 without freeing data.
 void Clear(ByteVec *byte_vec)
 {
     byte_vec->size = 0;
 }
 
-// ShrinkSize() sets size to a smaller one without freeing data.
-void ShrinkSize(ByteVec *byte_vec, const size_t new_size)
+bool Resize(ByteVec *byte_vec, const size_t new_size)
 {
+    if (new_size == byte_vec->size)
+    {
+        return true;
+    }
     if (new_size < byte_vec->size)
     {
         byte_vec->size = new_size;
+        return true;
+    }
+    else
+    {
+        if (!ByteVecEnsureCapacity(byte_vec, new_size))
+        {
+            return false;
+        }
+
+        byte_vec->size = new_size;
+        return true;
     }
 }
 

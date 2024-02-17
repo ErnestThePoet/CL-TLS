@@ -26,10 +26,10 @@ bool ByteVecAppendFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_ve
 bool ByteVecCopyBlock(ByteVec *byte_vec, const size_t pos, const uint8_t *src, const size_t count);
 bool ByteVecCopyFromByteVec(ByteVec *dest_byte_vec, const size_t pos, const ByteVec *src_byte_vec);
 
-// Clear() sets size to 0 without freeing data.
+// Clear() sets size to 0 without freeing extra capacity.
 void Clear(ByteVec *byte_vec);
-// ShrinkSize() sets size to a smaller one without freeing data.
-void ShrinkSize(ByteVec *byte_vec, const size_t new_size);
+// if new_size for Resize() is smaller, extra capacity is not freed.
+bool Resize(ByteVec *byte_vec, const size_t new_size);
 
 void ByteVecFree(ByteVec *byte_vec);
 
