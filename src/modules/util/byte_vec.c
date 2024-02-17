@@ -49,16 +49,18 @@ void ByteVecEnsureCapacity(ByteVec *byte_vec, const size_t capacity)
     byte_vec->data = data;
 }
 
-void ByteVecAppendBlock(ByteVec *byte_vec, const uint8_t *src, const size_t count)
+void ByteVecPushBack(ByteVec *byte_vec, const uint8_t value)
+{
+    ByteVecEnsureCapacity(byte_vec, byte_vec->size + 1);
+    byte_vec->data[byte_vec->size - 1] = value;
+}
+
+void ByteVecPushBackBlock(ByteVec *byte_vec, const uint8_t *src, const size_t count)
 {
     ByteVecCopyBlock(byte_vec, byte_vec->size, src, count);
 }
 
-void ByteVecPushBack(ByteVec *byte_vec, const uint8_t value)
-{
-}
-
-void ByteVecAppendFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_vec)
+void ByteVecPushBackBlockFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_vec)
 {
     ByteVecAppendBlock(dest_byte_vec, src_byte_vec->data, src_byte_vec->size);
 }

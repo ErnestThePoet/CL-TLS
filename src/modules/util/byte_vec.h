@@ -24,8 +24,8 @@ void ByteVecInitWithCapacity(ByteVec *byte_vec_ret, const size_t initial_capacit
 void ByteVecEnsureCapacity(ByteVec *byte_vec, const size_t capacity);
 
 void ByteVecPushBack(ByteVec *byte_vec, const uint8_t value);
-void ByteVecAppendBlock(ByteVec *byte_vec, const uint8_t *src, const size_t count);
-void ByteVecAppendFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_vec);
+void ByteVecPushBackBlock(ByteVec *byte_vec, const uint8_t *src, const size_t count);
+void ByteVecPushBackBlockFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_vec);
 void ByteVecCopyBlock(ByteVec *byte_vec, const size_t pos, const uint8_t *src, const size_t count);
 void ByteVecCopyFromByteVec(ByteVec *dest_byte_vec, const size_t pos, const ByteVec *src_byte_vec);
 
