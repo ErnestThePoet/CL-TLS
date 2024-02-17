@@ -9,6 +9,7 @@
 
 #include <common/def.h>
 #include <util/log.h>
+#include <util/util.h>
 
 #include <database/idip.h>
 #include <database/permitted_ids.h>
@@ -21,8 +22,8 @@ typedef struct
 #define T CipherSuite
 #include <set.h>
 
-uint8_t kServerIdentity[CLTLS_IDENTITY_LENGTH] = {0};
-uint8_t kKgcPublicKey[CLTLS_ENTITY_PUBLIC_KEY_KEY_LENGTH] = {0};
+uint8_t kServerIdentity[ENTITY_IDENTITY_LENGTH] = {0};
+uint8_t kKgcPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
 uint8_t kServerPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
 uint8_t kServerPrivateKey[CLTLS_ENTITY_PRIVATE_KEY_LENGTH] = {0};
 

@@ -17,7 +17,7 @@ bool InitializeGlobals(const char *config_file_path)
         return false;
     }
 
-    char server_id_hex[CLTLS_IDENTITY_LENGTH * 2 + 1] = {0};
+    char server_id_hex[ENTITY_IDENTITY_LENGTH * 2 + 1] = {0};
 
     if (fscanf(config_file_fp,
                "IDENTITY=%64s\n",
@@ -76,14 +76,11 @@ bool InitializeGlobals(const char *config_file_path)
     fclose(config_file_fp);
 
     // Load server identity
-    for (int i = 0; i < CLTLS_IDENTITY_LENGTH; i++)
+    if (!IdentityHex2Bin(server_id_hex, kServerIdentity))
     {
-        if (sscanf(server_id_hex + 2 * i, "%02hhX", kServerIdentity + i) != 1)
-        {
-            LogError("Error loading config file: invalid IDENTITY value");
-            fclose(config_file_fp);
-            return false;
-        }
+        LogError("Error loading config file: invalid IDENTITY value");
+        fclose(config_file_fp);
+        return false;
     }
 
     // Read KGC public key
@@ -94,8 +91,8 @@ bool InitializeGlobals(const char *config_file_path)
         return false;
     }
 
-    if (fread(kKgcPublicKey, 1, CLTLS_ENTITY_PUBLIC_KEY_KEY_LENGTH, key_fp) !=
-        CLTLS_ENTITY_PUBLIC_KEY_KEY_LENGTH)
+    if (fread(kKgcPublicKey, 1, CLTLS_ENTITY_PUBLIC_KEY_LENGTH, key_fp) !=
+        CLTLS_ENTITY_PUBLIC_KEY_LENGTH)
     {
         LogError("Failed to read a valid KGC public key from file %s",
                  kKgcPublicKeyPath);
@@ -112,8 +109,8 @@ bool InitializeGlobals(const char *config_file_path)
         return false;
     }
 
-    if (fread(kServerPublicKey, 1, CLTLS_ENTITY_PUBLIC_KEY_KEY_LENGTH, key_fp) !=
-        CLTLS_ENTITY_PUBLIC_KEY_KEY_LENGTH)
+    if (fread(kServerPublicKey, 1, CLTLS_ENTITY_PUBLIC_KEY_LENGTH, key_fp) !=
+        CLTLS_ENTITY_PUBLIC_KEY_LENGTH)
     {
         LogError("Failed to read a valid server public key from file %s",
                  kServerPublicKeyPath);
