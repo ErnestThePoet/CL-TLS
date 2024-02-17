@@ -12,17 +12,21 @@
 #include <socket/tcp/tcp.h>
 #include <protocol/cltls/cltls_header.h>
 
-#include <ascon/ascon_aead.h>
-#include <ascon/ascon_hash.h>
 #include <openssl/err.h>
 #include <openssl/bn.h>
 #include <openssl/curve25519.h>
-#include <openssl/aes.h>
-#include <openssl/sha.h>
-#include <openssl/mem.h>
+#include <openssl/hmac.h>
+#include <openssl/hkdf.h>
+#include <crypto_wrapper/crypto_wrapper.h>
+#include <crypto_wrapper/get_schemes.h>
 
 #include "server_args.h"
 #include "server_globals.h"
+
+#define INITIAL_TRAFFIC_CAPACITY 200
+#define MAX_HASH_LENGTH 64
+#define MAX_ENC_KEY_LENGTH 32
+#define MAX_NPUB_IV_LENGTH 16
 
 #define CLOSE_FREE_ARG_RETURN            \
     do                                   \
@@ -39,18 +43,19 @@
         free(arg);                       \
         free(receive_remaining);         \
         free(send_data);                 \
+        free(traffic);                   \
         return NULL;                     \
     } while (false)
 
-#define CHECK_ERROR_STOP_NOTIFY                                                \
-    do                                                                         \
-    {                                                                          \
-        if (CLTLS_MSG_TYPE(common_header) == CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY) \
-        {                                                                      \
-            LogError("The other party send ERROR_STOP_NOTIFY: %s",             \
-                     GetCltlsErrorMessage(receive_remaining[0]));              \
-            CLOSE_FREE_ARG_BUF_RETURN;                                         \
-        }                                                                      \
+#define CHECK_ERROR_STOP_NOTIFY                                                        \
+    do                                                                                 \
+    {                                                                                  \
+        if (CLTLS_MSG_TYPE(receive_common_header) == CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY) \
+        {                                                                              \
+            LogError("The other party send ERROR_STOP_NOTIFY: %s",                     \
+                     GetCltlsErrorMessage(receive_remaining[0]));                      \
+            CLOSE_FREE_ARG_BUF_RETURN;                                                 \
+        }                                                                              \
     } while (false)
 
 #define SEND_ERROR_STOP_NOTIFY_RETURN(ERROR_CODE)                                         \
@@ -65,6 +70,25 @@
                 error_stop_notify_send_data,                                              \
                 CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH);                                   \
         CLOSE_FREE_ARG_BUF_RETURN;                                                        \
+    } while (false)
+
+#define APPEND_TRAFFIC(D, S)                                          \
+    do                                                                \
+    {                                                                 \
+        if (traffic_length + S > traffic_capacity)                    \
+        {                                                             \
+            traffic = realloc(traffic, traffic_capacity * 2);         \
+            if (traffic == NULL)                                      \
+            {                                                         \
+                LogError("Memory reallocation for |traffic| failed"); \
+                free(receive_remaining);                              \
+                free(send_data);                                      \
+                CLOSE_FREE_ARG_RETURN;                                \
+            }                                                         \
+            traffic_capacity *= 2;                                    \
+        }                                                             \
+        memcpy(traffic + traffic_length, D, S);                       \
+        traffic_length += S;                                          \
     } while (false)
 
 void *ServerTcpRequestHandler(void *arg);
