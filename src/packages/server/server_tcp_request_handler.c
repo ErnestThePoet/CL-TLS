@@ -78,8 +78,8 @@ void *ServerTcpRequestHandler(void *arg)
     }
 
     // [Send] Server Hello
-    uint8_t server_ke_pubkey[CLTLS_KE_PUBKEY_LENGTH] = {0};
-    uint8_t server_ke_privkey[CLTLS_KE_PRIVKEY_LENGTH] = {0};
+    uint8_t server_ke_pubkey[CLTLS_KE_PUBLIC_KEY_LENGTH] = {0};
+    uint8_t server_ke_privkey[CLTLS_KE_PRIVATE_KEY_LENGTH] = {0};
     uint8_t server_ke_random[CLTLS_KE_RANDOM_LENGTH] = {0};
     X25519_keypair(server_ke_pubkey, server_ke_privkey);
 
@@ -141,7 +141,7 @@ void *ServerTcpRequestHandler(void *arg)
     GetCryptoSchemes(selected_cipher_suite, &hash, &aead, &md_hmac_hkdf);
 
     ByteVecPushBack(&send_buffer, selected_cipher_suite);
-    ByteVecPushBackBlock(&send_buffer, server_ke_pubkey, CLTLS_KE_PUBKEY_LENGTH);
+    ByteVecPushBackBlock(&send_buffer, server_ke_pubkey, CLTLS_KE_PUBLIC_KEY_LENGTH);
     ByteVecPushBackBlock(&send_buffer, server_ke_random, CLTLS_KE_RANDOM_LENGTH);
 
     if (!TcpSend(ctx->client_socket_fd,
@@ -160,7 +160,7 @@ void *ServerTcpRequestHandler(void *arg)
                 server_ke_privkey,
                 receive_buffer.data +
                     receive_buffer.size -
-                    CLTLS_KE_RANDOM_LENGTH - CLTLS_KE_PUBKEY_LENGTH))
+                    CLTLS_KE_RANDOM_LENGTH - CLTLS_KE_PUBLIC_KEY_LENGTH))
     {
         LogError("X25519() failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
@@ -262,6 +262,40 @@ void *ServerTcpRequestHandler(void *arg)
     }
 
     // [Send] Server Public Key
+    // Max encrypted size is plain text size + max enc block size
+    ByteVecResize(&send_buffer,
+                  CLTLS_COMMON_HEADER_LENGTH +
+                      CLTLS_ENTITY_PUBLIC_KEY_LENGTH +
+                      MAX_ENC_BLOCK_SIZE);
+
+    size_t encrypted_length = 0;
+    // Used for AES only
+    size_t iv_length = aead->npub_iv_size;
+
+    if (!aead->Encrypt(kServerPublicKey, CLTLS_ENTITY_PUBLIC_KEY_LENGTH,
+                       send_buffer.data, &encrypted_length,
+                       NULL, 0,
+                       server_handshake_key,
+                       server_handshake_npub_iv,
+                       &iv_length))
+    {
+        LogError("Encryption of |kServerPublicKey| failed");
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
+
+    CLTLS_SET_COMMON_HEADER(send_buffer.data,
+                            CLTLS_MSG_TYPE_SERVER_PUBKEY,
+                            encrypted_length);
+
+    if (!TcpSend(ctx->client_socket_fd,
+                 send_buffer.data,
+                 send_buffer.size))
+    {
+        LogError("Failed to send SERVER_HELLO to client");
+        CLOSE_FREE_RETURN;
+    }
 
     return NULL;
 }
