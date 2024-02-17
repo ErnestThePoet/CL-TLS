@@ -9,6 +9,7 @@ void ParseServerArgs(
     int forward_port = -1;
     const char *log_level = NULL;
     const char *preferred_cipher_suite = NULL;
+    const char *config_file_path = NULL;
 
     const char *usages[] = {
         "cltls_server [options]",
@@ -26,6 +27,7 @@ void ParseServerArgs(
             OPT_GROUP("Optional options"),
             OPT_STRING('l', "log", &log_level, "log level(ERROR|WARN|INFO), defaults to 'WARN'", NULL, 0, 0),
             OPT_STRING('\0', "cipher", &preferred_cipher_suite, "preferred cipher suite(ASCON128A_ASCONHASHA|ASCON128A_SHA256|AES128GCM_ASCONHASHA|AES128GCM_SHA256), defaults to 'ASCON128A_ASCONHASHA'", NULL, 0, 0),
+            OPT_STRING('c', "config", &config_file_path, "server config file path, defaults to 'config.conf'", NULL, 0, 0),
             OPT_END(),
         };
 
@@ -125,5 +127,18 @@ void ParseServerArgs(
     else
     {
         PRINT_ERROR_INVALID_OPTION_VALUE("%s", preferred_cipher_suite, "'cipher'");
+    }
+
+    if (config_file_path == NULL)
+    {
+        strcpy(server_args_ret->config_file_path, "config.conf");
+    }
+    else if (strlen(config_file_path) >= MAX_PATH_LENGTH)
+    {
+        PRINT_ERROR_INVALID_OPTION_VALUE("%s", config_file_path, "'config'('c')");
+    }
+    else
+    {
+        strcpy(server_args_ret->config_file_path, config_file_path);
     }
 }

@@ -20,6 +20,7 @@ typedef struct
     char forward_ip[50];
     uint16_t forward_port;
     uint8_t preferred_cipher_suite;
+    char config_file_path[MAX_PATH_LENGTH];
 } ServerArgs;
 
 #endif
