@@ -8,7 +8,7 @@
 #include <pthread.h>
 
 #include <common/def.h>
-#include <common/log.h>
+#include <util/log.h>
 
 #include <database/idip.h>
 #include <database/permitted_ids.h>

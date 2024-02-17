@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include <protocol/cltls/cltls_header.h>
-#include <common/log.h>
+#include <util/log.h>
 
 typedef struct
 {

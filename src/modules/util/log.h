@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "def.h"
+#include <common/def.h>
 
 #define STYLE_NRM "\x1B[0m"
 #define STYLE_RED "\x1B[31m"

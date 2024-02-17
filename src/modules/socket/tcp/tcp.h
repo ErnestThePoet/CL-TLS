@@ -12,7 +12,7 @@
 #include <arpa/inet.h>
 
 #include <common/def.h>
-#include <common/log.h>
+#include <util/log.h>
 
 typedef struct
 {
