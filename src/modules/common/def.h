@@ -21,6 +21,7 @@ typedef enum
 
 LogLevel kLogLevel = LOG_LEVEL_WARN;
 
+#define MAX_PATH_LENGTH 80
 #define STR_ERRNO strerror(errno)
 
 #endif
