@@ -57,13 +57,13 @@ void *ServerTcpRequestHandler(void *arg)
         memcpy(client_id.id,
                CLTLS_REMAINING_HEADER(receive_buffer.data) +
                    CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH,
-               CLTLS_IDENTITY_LENGTH);
-        char client_id_hex[CLTLS_IDENTITY_LENGTH * 2 + 1] = {0};
-        for (int i = 0; i < CLTLS_IDENTITY_LENGTH; i++)
+               ENTITY_IDENTITY_LENGTH);
+        char client_id_hex[ENTITY_IDENTITY_LENGTH * 2 + 1] = {0};
+        for (int i = 0; i < ENTITY_IDENTITY_LENGTH; i++)
         {
             sprintf(client_id_hex + i * 2, "%02hhX", client_id.id[i]);
         }
-        client_id_hex[CLTLS_IDENTITY_LENGTH * 2] = '\0';
+        client_id_hex[ENTITY_IDENTITY_LENGTH * 2] = '\0';
 
         if (set_Id_find(&kServerPermittedIdSet, client_id) ==
             set_Id_end(&kServerPermittedIdSet))
@@ -123,10 +123,10 @@ void *ServerTcpRequestHandler(void *arg)
     uint8_t selected_cipher_suite = ChooseCipherSuite(
         CLTLS_REMAINING_HEADER(receive_buffer.data)
             [CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH +
-             CLTLS_IDENTITY_LENGTH],
+             ENTITY_IDENTITY_LENGTH],
         CLTLS_REMAINING_HEADER(receive_buffer.data) +
             CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH +
-            CLTLS_IDENTITY_LENGTH +
+            ENTITY_IDENTITY_LENGTH +
             CLTLS_CIPHER_SUITE_COUNT_LENGTH,
         server_args->preferred_cipher_suite);
     if (selected_cipher_suite == CLTLS_CIPHER_NONE)
@@ -262,6 +262,7 @@ void *ServerTcpRequestHandler(void *arg)
     }
 
     // [Send] Server Public Key
+
     // Max encrypted size is plain text size + max enc block size
     ByteVecResize(&send_buffer,
                   CLTLS_COMMON_HEADER_LENGTH +
@@ -273,7 +274,7 @@ void *ServerTcpRequestHandler(void *arg)
     size_t iv_length = aead->npub_iv_size;
 
     if (!aead->Encrypt(kServerPublicKey, CLTLS_ENTITY_PUBLIC_KEY_LENGTH,
-                       send_buffer.data, &encrypted_length,
+                       CLTLS_REMAINING_HEADER(send_buffer.data), &encrypted_length,
                        NULL, 0,
                        server_handshake_key,
                        server_handshake_npub_iv,
@@ -293,9 +294,61 @@ void *ServerTcpRequestHandler(void *arg)
                  send_buffer.data,
                  send_buffer.size))
     {
-        LogError("Failed to send SERVER_HELLO to client");
+        LogError("Failed to send SERVER_PUBKEY to client");
         CLOSE_FREE_RETURN;
     }
+
+    ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
+
+    // [Send] Server Public Key Verify
+
+    // Reuse stack space
+    uint8_t *traffic_hash = early_secret_secret_salt;
+    uint8_t traffic_signature[CLTLS_TRAFFIC_SIGNATURE_LENGTH] = {0};
+
+    hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
+
+    if (!ED25519_sign(traffic_signature,
+                      traffic_hash,
+                      hash->hash_size,
+                      kServerPrivateKey))
+    {
+        LogError("ED25519_sign() for |traffic_hash| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    ByteVecResize(&send_buffer,
+                  CLTLS_COMMON_HEADER_LENGTH +
+                      CLTLS_TRAFFIC_SIGNATURE_LENGTH +
+                      MAX_ENC_BLOCK_SIZE);
+
+    if (!aead->Encrypt(traffic_signature, CLTLS_TRAFFIC_SIGNATURE_LENGTH,
+                       CLTLS_REMAINING_HEADER(send_buffer.data), &encrypted_length,
+                       NULL, 0,
+                       server_handshake_key,
+                       server_handshake_npub_iv,
+                       &iv_length))
+    {
+        LogError("Encryption of |traffic_signature| failed");
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
+
+    CLTLS_SET_COMMON_HEADER(send_buffer.data,
+                            CLTLS_MSG_TYPE_SERVER_PUBKEY_VERIFY,
+                            encrypted_length);
+
+    if (!TcpSend(ctx->client_socket_fd,
+                 send_buffer.data,
+                 send_buffer.size))
+    {
+        LogError("Failed to send SERVER_PUBKEY_VERIFY to client");
+        CLOSE_FREE_RETURN;
+    }
+
+    ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
 
     return NULL;
 }
