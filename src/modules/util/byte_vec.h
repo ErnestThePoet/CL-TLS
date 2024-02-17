@@ -22,7 +22,9 @@ bool ByteVecInitWithCapacity(ByteVec *byte_vec_ret, const size_t initial_capacit
 bool ByteVecEnsureCapacity(ByteVec *byte_vec, const size_t capacity);
 
 bool ByteVecAppendBlock(ByteVec *byte_vec, const uint8_t *src, const size_t count);
+bool ByteVecAppendFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_vec);
 bool ByteVecCopyBlock(ByteVec *byte_vec, const size_t pos, const uint8_t *src, const size_t count);
+bool ByteVecCopyFromByteVec(ByteVec *dest_byte_vec, const size_t pos, const ByteVec *src_byte_vec);
 
 // Clear() sets size to 0 without freeing data.
 void Clear(ByteVec *byte_vec);

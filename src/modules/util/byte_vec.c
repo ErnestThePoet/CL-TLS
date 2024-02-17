@@ -55,6 +55,11 @@ bool ByteVecAppendBlock(ByteVec *byte_vec, const uint8_t *src, const size_t coun
     return ByteVecCopyBlock(byte_vec, byte_vec->size, src, count);
 }
 
+bool ByteVecAppendFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_vec)
+{
+    return ByteVecAppendBlock(dest_byte_vec, src_byte_vec->data, src_byte_vec->size);
+}
+
 bool ByteVecCopyBlock(ByteVec *byte_vec,
                       const size_t pos,
                       const uint8_t *src,
@@ -68,6 +73,13 @@ bool ByteVecCopyBlock(ByteVec *byte_vec,
     memcpy(byte_vec->data + pos, src, count);
 
     return true;
+}
+
+bool ByteVecCopyFromByteVec(ByteVec *dest_byte_vec,
+                            const size_t pos,
+                            const ByteVec *src_byte_vec)
+{
+    return ByteVecCopyBlock(dest_byte_vec, pos, src_byte_vec->data, src_byte_vec->size);
 }
 
 // Clear() sets size to 0 without freeing data.
