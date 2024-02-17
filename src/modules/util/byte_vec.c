@@ -82,12 +82,12 @@ bool ByteVecCopyFromByteVec(ByteVec *dest_byte_vec,
     return ByteVecCopyBlock(dest_byte_vec, pos, src_byte_vec->data, src_byte_vec->size);
 }
 
-void Clear(ByteVec *byte_vec)
+void ByteVecClear(ByteVec *byte_vec)
 {
     byte_vec->size = 0;
 }
 
-bool Resize(ByteVec *byte_vec, const size_t new_size)
+bool ByteVecResize(ByteVec *byte_vec, const size_t new_size)
 {
     if (new_size == byte_vec->size)
     {
