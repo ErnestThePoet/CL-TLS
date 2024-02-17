@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
+#include <arpa/inet.h>
 
 // More severe the level, greater the value
 typedef enum
@@ -25,6 +26,7 @@ LogLevel kLogLevel = LOG_LEVEL_WARN;
 #define ENTITY_IDENTITY_LENGTH 32
 #define ENTITY_IDENTITY_HEX_LENGTH (ENTITY_IDENTITY_LENGTH * 2)
 #define ENTITY_IDENTITY_HEX_STR_LENGTH (ENTITY_IDENTITY_HEX_LENGTH + 1)
+#define IP_STR_LENGTH INET_ADDRSTRLEN
 #define MAX_PATH_LENGTH 80
 
 #define INITIAL_SOCKET_BUFFER_CAPACITY 200

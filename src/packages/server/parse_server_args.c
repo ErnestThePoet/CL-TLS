@@ -84,7 +84,7 @@ void ParseServerArgs(
             PRINT_ERROR_REQUIRED_OPTION_NOT_PROVIDED("'fwd-ip'");
         }
         // IP format is not checked here
-        else if (strlen(forward_ip) >= 50)
+        else if (strlen(forward_ip) >= IP_STR_LENGTH)
         {
             PRINT_ERROR_INVALID_OPTION_VALUE("%s", forward_ip, "'fwd-ip'");
         }

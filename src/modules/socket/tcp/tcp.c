@@ -135,8 +135,8 @@ void TcpRunServer(const int server_socket_fd,
         }
 
         struct sockaddr_in *client_sockaddr_in = (struct sockaddr_in *)&client_sockaddr;
-        char client_ip[INET_ADDRSTRLEN] = {0};
-        inet_ntop(AF_INET, &client_sockaddr_in->sin_addr, client_ip, INET_ADDRSTRLEN);
+        char client_ip[IP_STR_LENGTH] = {0};
+        inet_ntop(AF_INET, &client_sockaddr_in->sin_addr, client_ip, IP_STR_LENGTH);
 
         LogInfo("Got connection from %s", client_ip);
 
