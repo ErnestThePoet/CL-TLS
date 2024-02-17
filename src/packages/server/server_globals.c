@@ -9,6 +9,7 @@ static int CipherSuiteCmp(CipherSuite *a, CipherSuite *b)
 
 bool InitializeGlobals(const char *config_file_path)
 {
+    // Read config file
     FILE *config_file_fp = fopen(config_file_path, "r");
     if (config_file_fp == NULL)
     {
@@ -27,6 +28,54 @@ bool InitializeGlobals(const char *config_file_path)
         return false;
     }
 
+    if (fscanf(config_file_fp,
+               "PUBLIC_KEY=%79s\n",
+               kServerPublicKeyPath) != 1)
+    {
+        LogError("Error loading config file: failed to read PUBLIC_KEY");
+        fclose(config_file_fp);
+        return false;
+    }
+
+    if (fscanf(config_file_fp,
+               "PRIVATE_KEY=%79s\n",
+               kServerPrivateKeyPath) != 1)
+    {
+        LogError("Error loading config file: failed to read PRIVATE_KEY");
+        fclose(config_file_fp);
+        return false;
+    }
+
+    if (fscanf(config_file_fp,
+               "KGC_PUBLIC_KEY=%79s\n",
+               kKgcPublicKeyPath) != 1)
+    {
+        LogError("Error loading config file: failed to read KGC_PUBLIC_KEY");
+        fclose(config_file_fp);
+        return false;
+    }
+
+    if (fscanf(config_file_fp,
+               "IDIP_DATABASE=%79s\n",
+               kServerIdIpDatabasePath) != 1)
+    {
+        LogError("Error loading config file: failed to read IDIP_DATABASE");
+        fclose(config_file_fp);
+        return false;
+    }
+
+    if (fscanf(config_file_fp,
+               "PERMITTED_IDS_DATABASE=%79s\n",
+               kServerPermittedIdsDatabasePath) != 1)
+    {
+        LogError("Error loading config file: failed to read PERMITTED_IDS_DATABASE");
+        fclose(config_file_fp);
+        return false;
+    }
+
+    fclose(config_file_fp);
+
+    // Load server identity
     for (int i = 0; i < CLTLS_IDENTITY_LENGTH; i++)
     {
         if (sscanf(server_id_hex + 2 * i, "%02hhX", kServerIdentity + i) != 1)
@@ -37,36 +86,76 @@ bool InitializeGlobals(const char *config_file_path)
         }
     }
 
-    if (fscanf(config_file_fp,
-               "IDIP_DATABASE=%59s\n",
-               kServerIdIpDatabasePath) != 1)
+    // Read KGC public key
+    FILE *key_fp = fopen(kKgcPublicKeyPath, "rb");
+    if (key_fp == NULL)
     {
-        LogError("Error loading config file: failed to read IDIP_DATABASE");
-        fclose(config_file_fp);
+        LogError("Failed to open KGC public key file %s", kKgcPublicKeyPath);
         return false;
     }
 
+    if (fread(kKgcPublicKey, 1, CLTLS_ENTITY_PUBKEY_LENGTH, key_fp) !=
+        CLTLS_ENTITY_PUBKEY_LENGTH)
+    {
+        LogError("Failed to read a valid KGC public key from file %s",
+                 kKgcPublicKeyPath);
+        return false;
+    }
+
+    fclose(key_fp);
+
+    // Read server public key
+    key_fp = fopen(kServerPublicKeyPath, "rb");
+    if (key_fp == NULL)
+    {
+        LogError("Failed to open server public key file %s", kServerPublicKeyPath);
+        return false;
+    }
+
+    if (fread(kServerPublicKey, 1, CLTLS_ENTITY_PUBKEY_LENGTH, key_fp) !=
+        CLTLS_ENTITY_PUBKEY_LENGTH)
+    {
+        LogError("Failed to read a valid server public key from file %s",
+                 kServerPublicKeyPath);
+        return false;
+    }
+
+    fclose(key_fp);
+
+    // Read server private key
+    key_fp = fopen(kServerPrivateKeyPath, "rb");
+    if (key_fp == NULL)
+    {
+        LogError("Failed to open server private key file %s",
+                 kServerPrivateKeyPath);
+        return false;
+    }
+
+    if (fread(kServerPrivateKey, 1, CLTLS_ENTITY_PRIVKEY_LENGTH, key_fp) !=
+        CLTLS_ENTITY_PRIVKEY_LENGTH)
+    {
+        LogError("Failed to read a valid server private key from file %s",
+                 kServerPrivateKeyPath);
+        return false;
+    }
+
+    fclose(key_fp);
+
+    // Read ID/IP table
     if (!CreateIdIpTableFromFile(
             kServerIdIpDatabasePath, &kServerIdIpTable))
     {
         return false;
     }
 
-    if (fscanf(config_file_fp,
-               "PERMITTED_IDS_DATABASE=%59s\n",
-               kServerPermittedIdsDatabasePath) != 1)
-    {
-        LogError("Error loading config file: failed to read PERMITTED_IDS_DATABASE");
-        fclose(config_file_fp);
-        return false;
-    }
-
+    // Read permitted ID set
     if (!CreatePermittedIdSetFromFile(
             kServerPermittedIdsDatabasePath, &kServerPermittedIdSet))
     {
         return false;
     }
 
+    // Create supported cipher suite set
     kServerCipherSuiteSet = set_CipherSuite_init(CipherSuiteCmp);
     set_CipherSuite_insert(
         &kServerCipherSuiteSet,
