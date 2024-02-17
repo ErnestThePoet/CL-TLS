@@ -6,12 +6,13 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <common/def.h>
 #include <protocol/cltls/cltls_header.h>
 #include <util/log.h>
 
 typedef struct
 {
-    uint8_t id[CLTLS_IDENTITY_LENGTH];
+    uint8_t id[ENTITY_IDENTITY_LENGTH];
 } Id;
 #define P
 #define T Id

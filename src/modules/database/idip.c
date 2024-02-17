@@ -2,7 +2,7 @@
 
 static int IdIpCmp(IdIp *a, IdIp *b)
 {
-    return memcmp(a->id, b->id, CLTLS_IDENTITY_LENGTH);
+    return memcmp(a->id, b->id, ENTITY_IDENTITY_LENGTH);
 }
 
 bool CreateIdIpTableFromFile(const char *file_path, set_IdIp *table_ret)
@@ -32,7 +32,7 @@ bool CreateIdIpTableFromFile(const char *file_path, set_IdIp *table_ret)
             return false;
         }
 
-        for (int i = 0; i < CLTLS_IDENTITY_LENGTH - 1; i++)
+        for (int i = 0; i < ENTITY_IDENTITY_LENGTH - 1; i++)
         {
             if (fscanf(idip_database_fp, "%02hhX", current.id + 1 + i) != 1)
             {

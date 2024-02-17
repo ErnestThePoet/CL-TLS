@@ -1,6 +1,7 @@
 #ifndef DEF_H_
 #define DEF_H_
 
+#include <stdint.h>
 #include <string.h>
 #include <errno.h>
 
@@ -21,16 +22,54 @@ typedef enum
 
 LogLevel kLogLevel = LOG_LEVEL_WARN;
 
+#define ENTITY_IDENTITY_LENGTH 32
+#define ENTITY_IDENTITY_HEX_LENGTH (ENTITY_IDENTITY_LENGTH * 2)
+#define ENTITY_IDENTITY_HEX_STR_LENGTH (ENTITY_IDENTITY_HEX_LENGTH + 1)
 #define MAX_PATH_LENGTH 80
-// INITIAL_SOCKET_BUFFER_CAPACITY and INITIAL_TRAFFIC_BUFFER_CAPACITY
-// are guaranteed to be larger than CLTLS_COMMON_HEADER_LENGTH
+
 #define INITIAL_SOCKET_BUFFER_CAPACITY 200
 #define INITIAL_TRAFFIC_BUFFER_CAPACITY 500
+
 #define MAX_HASH_LENGTH 64
 #define MAX_ENC_KEY_LENGTH 32
 #define MAX_NPUB_IV_LENGTH 16
 #define MAX_ENC_BLOCK_SIZE 32
 
 #define STR_ERRNO strerror(errno)
+
+uint8_t kKgcIdentity[ENTITY_IDENTITY_LENGTH] = {
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+    0xEC,
+};
 
 #endif

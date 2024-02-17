@@ -7,12 +7,13 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+#include <common/def.h>
 #include <protocol/cltls/cltls_header.h>
 #include <util/log.h>
 
 typedef struct
 {
-    uint8_t id[CLTLS_IDENTITY_LENGTH];
+    uint8_t id[ENTITY_IDENTITY_LENGTH];
     char ip[INET_ADDRSTRLEN];
 } IdIp;
 
