@@ -94,8 +94,8 @@ bool InitializeGlobals(const char *config_file_path)
         return false;
     }
 
-    if (fread(kKgcPublicKey, 1, CLTLS_ENTITY_PUBKEY_LENGTH, key_fp) !=
-        CLTLS_ENTITY_PUBKEY_LENGTH)
+    if (fread(kKgcPublicKey, 1, CLTLS_ENTITY_PUBLIC_KEY_LENGTH, key_fp) !=
+        CLTLS_ENTITY_PUBLIC_KEY_LENGTH)
     {
         LogError("Failed to read a valid KGC public key from file %s",
                  kKgcPublicKeyPath);
@@ -112,8 +112,8 @@ bool InitializeGlobals(const char *config_file_path)
         return false;
     }
 
-    if (fread(kServerPublicKey, 1, CLTLS_ENTITY_PUBKEY_LENGTH, key_fp) !=
-        CLTLS_ENTITY_PUBKEY_LENGTH)
+    if (fread(kServerPublicKey, 1, CLTLS_ENTITY_PUBLIC_KEY_LENGTH, key_fp) !=
+        CLTLS_ENTITY_PUBLIC_KEY_LENGTH)
     {
         LogError("Failed to read a valid server public key from file %s",
                  kServerPublicKeyPath);
@@ -131,8 +131,8 @@ bool InitializeGlobals(const char *config_file_path)
         return false;
     }
 
-    if (fread(kServerPrivateKey, 1, CLTLS_ENTITY_PRIVKEY_LENGTH, key_fp) !=
-        CLTLS_ENTITY_PRIVKEY_LENGTH)
+    if (fread(kServerPrivateKey, 1, CLTLS_ENTITY_PRIVATE_KEY_LENGTH, key_fp) !=
+        CLTLS_ENTITY_PRIVATE_KEY_LENGTH)
     {
         LogError("Failed to read a valid server private key from file %s",
                  kServerPrivateKeyPath);

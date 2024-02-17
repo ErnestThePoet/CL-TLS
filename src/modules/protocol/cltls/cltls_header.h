@@ -57,11 +57,12 @@
 
 #define CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH 1
 #define CLTLS_IDENTITY_LENGTH 32
-#define CLTLS_ENTITY_PUBKEY_LENGTH 32
-#define CLTLS_ENTITY_PRIVKEY_LENGTH 32
-#define CLTLS_KE_PUBKEY_LENGTH X25519_PUBLIC_VALUE_LEN
-#define CLTLS_KE_PRIVKEY_LENGTH X25519_PRIVATE_KEY_LEN
+#define CLTLS_ENTITY_PUBLIC_KEY_LENGTH ED25519_PUBLIC_KEY_LEN
+#define CLTLS_ENTITY_PRIVATE_KEY_LENGTH ED25519_PRIVATE_KEY_LEN
+#define CLTLS_KE_PUBLIC_KEY_LENGTH X25519_PUBLIC_VALUE_LEN
+#define CLTLS_KE_PRIVATE_KEY_LENGTH X25519_PRIVATE_KEY_LEN
 #define CLTLS_KE_RANDOM_LENGTH 32
+#define CLTLS_SIGNATURE_LENGTH ED25519_SIGNATURE_LEN
 #define CLTLS_CIPHER_SUITE_COUNT_LENGTH 1
 #define CLTLS_CIPHER_SUITE_LENGTH 1
 #define CLTLS_ERROR_CODE_LENGTH 1
@@ -108,7 +109,7 @@
 #define CLTLS_SERVER_HELLO_HEADER_LENGTH \
     (CLTLS_COMMON_HEADER_LENGTH +        \
      CLTLS_CIPHER_SUITE_LENGTH +         \
-     CLTLS_KE_PUBKEY_LENGTH +            \
+     CLTLS_KE_PUBLIC_KEY_LENGTH +        \
      CLTLS_KE_RANDOM_LENGTH)
 
 /******************************************************
@@ -120,9 +121,7 @@
  * | Remaining Length                    |  2B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
- * | | Server Public Key Length     | 2B |
- * | |------------------------------|    |
- * | | Server Public Key            |    |
+ * | | Server Public Key            | 32B|
  * | |------------------------------|    |
  * ---------------------------------------
  *
@@ -137,9 +136,7 @@
  * | Remaining Length                    |  2B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
- * | | Traffic Signature Length     | 2B |
- * | |------------------------------|    |
- * | | Traffic Signature            |    |
+ * | | Traffic Signature            | 64B|
  * | |------------------------------|    |
  * ---------------------------------------
  *
@@ -166,8 +163,6 @@
  * | Remaining Length                    |  2B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
- * | | Traffic Hash Length          | 2B |
- * | |------------------------------|    |
  * | | Traffic Hash                 |    |
  * | |------------------------------|    |
  * ---------------------------------------
@@ -183,8 +178,6 @@
  * | Remaining Length                    |  2B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
- * | | Traffic Hash Length          | 2B |
- * | |------------------------------|    |
  * | | Traffic Hash                 |    |
  * | |------------------------------|    |
  * ---------------------------------------
