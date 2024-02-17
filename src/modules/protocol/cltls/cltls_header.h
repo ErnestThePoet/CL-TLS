@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <arpa/inet.h>
 
+#include <openssl/curve25519.h>
+
 ////////// Message Types
 #define CLTLS_MSG_TYPE_CLIENT_HELLO 0x00
 #define CLTLS_MSG_TYPE_SERVER_HELLO 0x01
@@ -33,9 +35,10 @@
 // MQTT protocol
 #define CLTLS_PROTOCOL_MQTT 0x00
 // For communications with KGC.
-// When KGC message type is REGISTER_REQUEST,
+// When message type is KGC_REGISTER_REQUEST,
 // client pubkey is not requested.
 #define CLTLS_PROTOCOL_KGC 0x10
+#define CLTLS_PROTOCOL_KGC_REGISTER_REQUEST 0x11
 
 ////////// Error Codes
 #define CLTLS_ERROR_INTERNAL_EXECUTION_ERROR 0x10
@@ -56,7 +59,6 @@
     } while (false)
 
 #define CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH 1
-#define CLTLS_IDENTITY_LENGTH 32
 #define CLTLS_ENTITY_PUBLIC_KEY_KEY_LENGTH ED25519_PUBLIC_KEY_LEN
 #define CLTLS_ENTITY_PUBLIC_KEY_SIGNATURE_LENGTH ED25519_SIGNATURE_LEN
 #define CLTLS_ENTITY_PUBLIC_KEY_LENGTH \

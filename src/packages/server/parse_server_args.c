@@ -3,6 +3,7 @@
 void ParseServerArgs(
     const int argc, char *argv[], ServerArgs *server_args_ret)
 {
+    int register_server = 0;
     const char *mode = NULL;
     int listen_port = -1;
     const char *forward_ip = NULL;
@@ -18,7 +19,9 @@ void ParseServerArgs(
     struct argparse_option options[] =
         {
             OPT_HELP(),
-            OPT_GROUP("Mandatory options"),
+            OPT_GROUP("Register server"),
+            OPT_BOOLEAN('r', "register", &register_server, "register the server from KGC", NULL, 0, 0),
+            OPT_GROUP("Mandatory options to run server"),
             OPT_STRING('m', "mode", &mode, "server mode(KGC|PROXY)", NULL, 0, 0),
             OPT_INTEGER('p', "port", &listen_port, "listen port", NULL, 0, 0),
             OPT_GROUP("Options required in PROXY mode"),
@@ -37,6 +40,16 @@ void ParseServerArgs(
                       "\nThe server implementation of CL-TLS which can run as a KGC or proxy.",
                       NULL);
     argparse_parse(&arg_parse, argc, (const char **)argv);
+
+    if (register_server)
+    {
+        server_args_ret->register_server = true;
+        return;
+    }
+    else
+    {
+        server_args_ret->register_server = false;
+    }
 
     if (mode == NULL)
     {

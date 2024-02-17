@@ -2,6 +2,7 @@
 #define SERVER_ARGS_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <common/def.h>
 
@@ -15,6 +16,7 @@ typedef enum
 
 typedef struct
 {
+    bool register_server;
     ServerMode mode;
     uint16_t listen_port;
     char forward_ip[50];

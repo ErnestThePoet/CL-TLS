@@ -19,6 +19,12 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    if (server_args.register_server)
+    {
+        // TODO Register server
+        return EXIT_SUCCESS;
+    }
+
     int server_socket_fd = 0;
     if (!TcpCreateServer(server_args.listen_port,
                          &server_socket_fd))
