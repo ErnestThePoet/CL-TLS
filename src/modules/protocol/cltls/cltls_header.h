@@ -39,18 +39,20 @@
 
 ////////// Error Codes
 #define CLTLS_ERROR_INTERNAL_EXECUTION_ERROR 0x10
-#define CLTLS_ERROR_IDENTITY_NOT_PERMITTED 0x11
-#define CLTLS_ERROR_NO_SUPPORTED_CIPHER_SUITE 0x12
+#define CLTLS_ERROR_UNEXPECTED_MSG_TYPE 0x11
+#define CLTLS_ERROR_IDENTITY_NOT_PERMITTED 0x12
+#define CLTLS_ERROR_NO_SUPPORTED_CIPHER_SUITE 0x13
 
 ////////// Helper Macros
 #define CLTLS_COMMON_HEADER_LENGTH 3
-#define CLTLS_MSG_TYPE(H) (H[0])
-#define CLTLS_REMAINING_LENGTH(H) (ntohs(*(uint16_t *)(H + 1)))
-#define CLTLS_SET_COMMON_HEADER(H, MT, RL) \
-    do                                     \
-    {                                      \
-        H[0] = (MT);                       \
-        *(uint16_t *)(H + 1) = htons(RL);  \
+#define CLTLS_MSG_TYPE(H) ((H)[0])
+#define CLTLS_REMAINING_LENGTH(H) (ntohs(*(uint16_t *)((H) + 1)))
+#define CLTLS_REMAINING_HEADER(H) ((H) + CLTLS_COMMON_HEADER_LENGTH)
+#define CLTLS_SET_COMMON_HEADER(H, MT, RL)  \
+    do                                      \
+    {                                       \
+        (H)[0] = (MT);                      \
+        *(uint16_t *)((H) + 1) = htons(RL); \
     } while (false)
 
 #define CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH 1
