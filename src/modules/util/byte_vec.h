@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "log.h"
 
@@ -30,8 +31,10 @@ void ByteVecCopyFromByteVec(ByteVec *dest_byte_vec, const size_t pos, const Byte
 
 // ByteVecClear() sets size to 0 without freeing extra capacity.
 void ByteVecClear(ByteVec *byte_vec);
-// if new_size for Resize() is smaller, extra capacity is not freed.
+// if new_size for ByteVecResize() is smaller, extra capacity is not freed.
 void ByteVecResize(ByteVec *byte_vec, const size_t new_size);
+// if diff for ByteVecResizeBy() is negative, extra capacity is not freed.
+void ByteVecResizeBy(ByteVec *byte_vec, const ssize_t diff);
 
 void ByteVecFree(ByteVec *byte_vec);
 

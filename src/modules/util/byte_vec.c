@@ -89,12 +89,24 @@ void ByteVecResize(ByteVec *byte_vec, const size_t new_size)
 {
     if (new_size <= byte_vec->size)
     {
-        return;
+        byte_vec->size = new_size;
     }
     else
     {
         ByteVecEnsureCapacity(byte_vec, new_size);
         byte_vec->size = new_size;
+    }
+}
+
+void ByteVecResizeBy(ByteVec *byte_vec, const ssize_t diff)
+{
+    if (diff < 0 && -diff > byte_vec->size)
+    {
+        ByteVecResize(byte_vec, 0);
+    }
+    else
+    {
+        ByteVecResize(byte_vec, byte_vec->size + diff);
     }
 }
 
