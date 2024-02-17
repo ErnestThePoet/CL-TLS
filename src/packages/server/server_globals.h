@@ -14,13 +14,7 @@
 #include <database/idip.h>
 #include <database/permitted_ids.h>
 
-typedef struct
-{
-    uint8_t cipher_suite;
-} CipherSuite;
-#define P
-#define T CipherSuite
-#include <set.h>
+#include <protocol/cltls/handshaker.h>
 
 uint8_t kServerIdentity[ENTITY_IDENTITY_LENGTH] = {0};
 uint8_t kKgcPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
