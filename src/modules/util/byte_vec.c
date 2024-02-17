@@ -1,35 +1,35 @@
 #include "byte_vec.h"
 
-bool ByteVecInit(ByteVec *byte_vec_ret)
+void ByteVecInit(ByteVec *byte_vec_ret)
 {
-    return ByteVecInitWithCapacity(byte_vec_ret, 10);
+    ByteVecInitWithCapacity(byte_vec_ret, 10);
 }
 
-bool ByteVecInitWithCapacity(ByteVec *byte_vec_ret, const size_t initial_capacity)
+void ByteVecInitWithCapacity(ByteVec *byte_vec_ret, const size_t initial_capacity)
 {
     uint8_t *data = malloc(initial_capacity);
     if (data == NULL)
     {
-        return false;
+        LogError("Failed to allocate memory in ByteVecInitWithCapacity()");
+        exit(EXIT_FAILURE);
     }
 
     byte_vec_ret->size = 0;
     byte_vec_ret->capacity = initial_capacity;
     byte_vec_ret->data = data;
-
-    return true;
 }
 
-bool ByteVecEnsureCapacity(ByteVec *byte_vec, const size_t capacity)
+void ByteVecEnsureCapacity(ByteVec *byte_vec, const size_t capacity)
 {
     if (byte_vec->data == NULL || byte_vec->capacity == 0)
     {
-        return false;
+        LogWarn("Calling ByteVecEnsureCapacity() with an uninitialized byte_vec");
+        return;
     }
 
     if (byte_vec->capacity >= capacity)
     {
-        return true;
+        return;
     }
 
     size_t new_capacity = byte_vec->capacity;
@@ -41,45 +41,43 @@ bool ByteVecEnsureCapacity(ByteVec *byte_vec, const size_t capacity)
     uint8_t *data = realloc(byte_vec->data, new_capacity);
     if (data == NULL)
     {
-        return false;
+        LogError("Failed to allocate memory in ByteVecEnsureCapacity()");
+        exit(EXIT_FAILURE);
     }
 
     byte_vec->capacity = new_capacity;
     byte_vec->data = data;
-
-    return true;
 }
 
-bool ByteVecAppendBlock(ByteVec *byte_vec, const uint8_t *src, const size_t count)
+void ByteVecAppendBlock(ByteVec *byte_vec, const uint8_t *src, const size_t count)
 {
-    return ByteVecCopyBlock(byte_vec, byte_vec->size, src, count);
+    ByteVecCopyBlock(byte_vec, byte_vec->size, src, count);
 }
 
-bool ByteVecAppendFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_vec)
+void ByteVecPushBack(ByteVec *byte_vec, const uint8_t value)
 {
-    return ByteVecAppendBlock(dest_byte_vec, src_byte_vec->data, src_byte_vec->size);
 }
 
-bool ByteVecCopyBlock(ByteVec *byte_vec,
+void ByteVecAppendFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_vec)
+{
+    ByteVecAppendBlock(dest_byte_vec, src_byte_vec->data, src_byte_vec->size);
+}
+
+void ByteVecCopyBlock(ByteVec *byte_vec,
                       const size_t pos,
                       const uint8_t *src,
                       const size_t count)
 {
-    if (!ByteVecEnsureCapacity(byte_vec, pos + count))
-    {
-        return false;
-    }
+    ByteVecEnsureCapacity(byte_vec, pos + count);
 
     memcpy(byte_vec->data + pos, src, count);
-
-    return true;
 }
 
-bool ByteVecCopyFromByteVec(ByteVec *dest_byte_vec,
+void ByteVecCopyFromByteVec(ByteVec *dest_byte_vec,
                             const size_t pos,
                             const ByteVec *src_byte_vec)
 {
-    return ByteVecCopyBlock(dest_byte_vec, pos, src_byte_vec->data, src_byte_vec->size);
+    ByteVecCopyBlock(dest_byte_vec, pos, src_byte_vec->data, src_byte_vec->size);
 }
 
 void ByteVecClear(ByteVec *byte_vec)
@@ -87,26 +85,16 @@ void ByteVecClear(ByteVec *byte_vec)
     byte_vec->size = 0;
 }
 
-bool ByteVecResize(ByteVec *byte_vec, const size_t new_size)
+void ByteVecResize(ByteVec *byte_vec, const size_t new_size)
 {
-    if (new_size == byte_vec->size)
+    if (new_size <= byte_vec->size)
     {
-        return true;
-    }
-    if (new_size < byte_vec->size)
-    {
-        byte_vec->size = new_size;
-        return true;
+        return;
     }
     else
     {
-        if (!ByteVecEnsureCapacity(byte_vec, new_size))
-        {
-            return false;
-        }
-
+        ByteVecEnsureCapacity(byte_vec, new_size);
         byte_vec->size = new_size;
-        return true;
     }
 }
 
