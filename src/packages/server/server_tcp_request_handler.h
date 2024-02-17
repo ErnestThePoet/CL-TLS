@@ -7,8 +7,8 @@
 #include <stdint.h>
 
 #include <common/def.h>
-#include <common/log.h>
-#include <common/util.h>
+#include <util/log.h>
+#include <util/byte_vec.h>
 #include <socket/tcp/tcp.h>
 #include <protocol/cltls/cltls_header.h>
 
@@ -23,72 +23,46 @@
 #include "server_args.h"
 #include "server_globals.h"
 
-#define INITIAL_TRAFFIC_CAPACITY 200
-#define MAX_HASH_LENGTH 64
-#define MAX_ENC_KEY_LENGTH 32
-#define MAX_NPUB_IV_LENGTH 16
+// Error handling principles:
+// - When memory allocation fails, exit with EXIT_FAILURE immediately.
+// - When TcpSend() or TcpRecv() fails, free buffers and return.
+// - In other cases, send an ERROR_STOP_NOTIFY then free buffers and return.
 
-#define CLOSE_FREE_ARG_RETURN            \
+#define CLOSE_FREE_RETURN                \
     do                                   \
     {                                    \
         TcpClose(ctx->client_socket_fd); \
         free(arg);                       \
+        ByteVecFree(&receive_buffer);    \
+        ByteVecFree(&send_buffer);       \
+        ByteVecFree(&traffic_buffer);    \
         return NULL;                     \
     } while (false)
 
-#define CLOSE_FREE_ARG_BUF_RETURN        \
-    do                                   \
-    {                                    \
-        TcpClose(ctx->client_socket_fd); \
-        free(arg);                       \
-        free(receive_remaining);         \
-        free(send_data);                 \
-        free(traffic);                   \
-        return NULL;                     \
+#define CHECK_ERROR_STOP_NOTIFY                                                      \
+    do                                                                               \
+    {                                                                                \
+        if (CLTLS_MSG_TYPE(receive_buffer.data) == CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY) \
+        {                                                                            \
+            LogError("The other party send ERROR_STOP_NOTIFY: %s",                   \
+                     GetCltlsErrorMessage(receive_buffer.data[0]));                  \
+            CLOSE_FREE_RETURN;                                                       \
+        }                                                                            \
     } while (false)
 
-#define CHECK_ERROR_STOP_NOTIFY                                                        \
-    do                                                                                 \
-    {                                                                                  \
-        if (CLTLS_MSG_TYPE(receive_common_header) == CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY) \
-        {                                                                              \
-            LogError("The other party send ERROR_STOP_NOTIFY: %s",                     \
-                     GetCltlsErrorMessage(receive_remaining[0]));                      \
-            CLOSE_FREE_ARG_BUF_RETURN;                                                 \
-        }                                                                              \
-    } while (false)
-
-#define SEND_ERROR_STOP_NOTIFY_RETURN(ERROR_CODE)                                         \
-    do                                                                                    \
-    {                                                                                     \
-        uint8_t error_stop_notify_send_data[CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH] = {0}; \
-        CLTLS_SET_COMMON_HEADER(error_stop_notify_send_data,                              \
-                                CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY,                         \
-                                2);                                                       \
-        error_stop_notify_send_data[3] = ERROR_CODE;                                      \
-        TcpSend(ctx->client_socket_fd,                                                    \
-                error_stop_notify_send_data,                                              \
-                CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH);                                   \
-        CLOSE_FREE_ARG_BUF_RETURN;                                                        \
-    } while (false)
-
-#define APPEND_TRAFFIC(D, S)                                          \
-    do                                                                \
-    {                                                                 \
-        if (traffic_length + S > traffic_capacity)                    \
-        {                                                             \
-            traffic = realloc(traffic, traffic_capacity * 2);         \
-            if (traffic == NULL)                                      \
-            {                                                         \
-                LogError("Memory reallocation for |traffic| failed"); \
-                free(receive_remaining);                              \
-                free(send_data);                                      \
-                CLOSE_FREE_ARG_RETURN;                                \
-            }                                                         \
-            traffic_capacity *= 2;                                    \
-        }                                                             \
-        memcpy(traffic + traffic_length, D, S);                       \
-        traffic_length += S;                                          \
+#define SEND_ERROR_STOP_NOTIFY(ERROR_CODE)                        \
+    do                                                            \
+    {                                                             \
+        uint8_t error_stop_notify_send_data                       \
+            [CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH] = {0};        \
+        CLTLS_SET_COMMON_HEADER(error_stop_notify_send_data,      \
+                                CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY, \
+                                2);                               \
+        error_stop_notify_send_data[3] = ERROR_CODE;              \
+        TcpSend(ctx->client_socket_fd,                            \
+                error_stop_notify_send_data,                      \
+                CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH);           \
+        CLOSE_FREE_RETURN;                                        \
     } while (false)
 
 void *ServerTcpRequestHandler(void *arg);

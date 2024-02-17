@@ -5,73 +5,58 @@ void *ServerTcpRequestHandler(void *arg)
     const TcpRequestHandlerCtx *ctx = (const TcpRequestHandlerCtx *)arg;
     const ServerArgs *server_args = (const ServerArgs *)ctx->extra;
 
+    ByteVec receive_buffer;
+    ByteVec send_buffer;
+    ByteVec traffic_buffer;
+
+    ByteVecInitWithCapacity(&receive_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
+    ByteVecInitWithCapacity(&send_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
+    ByteVecInitWithCapacity(&traffic_buffer, INITIAL_TRAFFIC_BUFFER_CAPACITY);
+
     // [Receive] Client Hello
-    uint8_t receive_common_header[CLTLS_COMMON_HEADER_LENGTH];
+    ByteVecResize(&receive_buffer, CLTLS_COMMON_HEADER_LENGTH);
+
     if (!TcpRecv(ctx->client_socket_fd,
-                 receive_common_header,
+                 receive_buffer.data,
                  CLTLS_COMMON_HEADER_LENGTH))
     {
         LogError("Failed to receive common header of CLIENT_HELLO");
-        CLOSE_FREE_ARG_RETURN;
+        CLOSE_FREE_RETURN;
     }
 
-    if (CLTLS_MSG_TYPE(receive_common_header) != CLTLS_MSG_TYPE_CLIENT_HELLO &&
-        CLTLS_MSG_TYPE(receive_common_header) != CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)
+    if (CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_CLIENT_HELLO &&
+        CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)
     {
         LogError("Invalid packet received, expecting CLIENT_HELLO");
-        CLOSE_FREE_ARG_RETURN;
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_UNEXPECTED_MSG_TYPE);
     }
 
-    size_t receive_remaining_length = CLTLS_REMAINING_LENGTH(receive_common_header);
+    size_t receive_remaining_length = CLTLS_REMAINING_LENGTH(receive_buffer.data);
 
-    uint8_t *receive_remaining = malloc(receive_remaining_length);
-    if (receive_remaining == NULL)
-    {
-        LogError("Memory allocation for |receive_remaining| failed");
-        CLOSE_FREE_ARG_RETURN;
-    }
-
-    size_t send_length = CLTLS_SERVER_HELLO_HEADER_LENGTH;
-    uint8_t *send_data = malloc(send_length);
-    if (send_data == NULL)
-    {
-        LogError("Memory allocation for |send_data| failed");
-        free(receive_remaining);
-        CLOSE_FREE_ARG_RETURN;
-    }
-
-    size_t traffic_capacity = INITIAL_TRAFFIC_CAPACITY;
-    size_t traffic_length = 0;
-    uint8_t *traffic = malloc(traffic_capacity);
-    if (traffic == NULL)
-    {
-        LogError("Memory allocation for |traffic| failed");
-        free(receive_remaining);
-        free(send_data);
-        CLOSE_FREE_ARG_RETURN;
-    }
+    ByteVecResizeBy(&receive_buffer, receive_remaining_length);
 
     if (!TcpRecv(ctx->client_socket_fd,
-                 receive_remaining,
+                 CLTLS_REMAINING_HEADER(receive_buffer.data),
                  receive_remaining_length))
     {
         LogError("Failed to receive remaining part of CLIENT_HELLO");
-        CLOSE_FREE_ARG_BUF_RETURN;
+        CLOSE_FREE_RETURN;
     }
 
     CHECK_ERROR_STOP_NOTIFY;
 
-    APPEND_TRAFFIC(receive_common_header, CLTLS_COMMON_HEADER_LENGTH);
-    APPEND_TRAFFIC(receive_remaining, receive_remaining_length);
+    ByteVecPushBackBlockFromByteVec(&traffic_buffer, &receive_buffer);
 
-    const uint8_t application_layer_protocol = receive_remaining[0];
+    const uint8_t application_layer_protocol =
+        CLTLS_REMAINING_HEADER(receive_buffer.data)[0];
 
     // In proxy mode, check client identity
     if (server_args->mode == SERVER_MODE_PROXY)
     {
         Id client_id;
         memcpy(client_id.id,
-               receive_remaining + CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH,
+               CLTLS_REMAINING_HEADER(receive_buffer.data) +
+                   CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH,
                CLTLS_IDENTITY_LENGTH);
         char client_id_hex[CLTLS_IDENTITY_LENGTH * 2 + 1] = {0};
         for (int i = 0; i < CLTLS_IDENTITY_LENGTH; i++)
@@ -84,7 +69,7 @@ void *ServerTcpRequestHandler(void *arg)
             set_Id_end(&kServerPermittedIdSet))
         {
             LogWarn("Unauthorized client: %s, connection refused", client_id_hex);
-            SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_IDENTITY_NOT_PERMITTED);
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_IDENTITY_NOT_PERMITTED);
         }
         else
         {
@@ -102,7 +87,7 @@ void *ServerTcpRequestHandler(void *arg)
     if (server_ke_random_bn == NULL)
     {
         LogError("Memory allocation for |server_ke_random_bn| failed");
-        CLOSE_FREE_ARG_BUF_RETURN;
+        exit(EXIT_FAILURE);
     }
 
     if (!BN_rand(server_ke_random_bn,
@@ -113,7 +98,7 @@ void *ServerTcpRequestHandler(void *arg)
         LogError("BN_rand() failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         BN_free(server_ke_random_bn);
-        SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     if (!BN_bn2bin_padded(server_ke_random,
@@ -123,20 +108,23 @@ void *ServerTcpRequestHandler(void *arg)
         LogError("BN_bn2bin_padded() failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         BN_free(server_ke_random_bn);
-        SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     BN_free(server_ke_random_bn);
 
+    ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH);
+
     CLTLS_SET_COMMON_HEADER(
-        send_data,
+        send_buffer.data,
         CLTLS_MSG_TYPE_SERVER_HELLO,
         (CLTLS_SERVER_HELLO_HEADER_LENGTH - CLTLS_COMMON_HEADER_LENGTH));
 
     uint8_t selected_cipher_suite = ChooseCipherSuite(
-        receive_remaining[CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH +
-                          CLTLS_IDENTITY_LENGTH],
-        receive_remaining +
+        CLTLS_REMAINING_HEADER(receive_buffer.data)
+            [CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH +
+             CLTLS_IDENTITY_LENGTH],
+        CLTLS_REMAINING_HEADER(receive_buffer.data) +
             CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH +
             CLTLS_IDENTITY_LENGTH +
             CLTLS_CIPHER_SUITE_COUNT_LENGTH,
@@ -144,7 +132,7 @@ void *ServerTcpRequestHandler(void *arg)
     if (selected_cipher_suite == CLTLS_CIPHER_NONE)
     {
         LogError("None of client's cipher suites is supported");
-        SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_NO_SUPPORTED_CIPHER_SUITE);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_NO_SUPPORTED_CIPHER_SUITE);
     }
 
     const HashScheme *hash = NULL;
@@ -152,38 +140,31 @@ void *ServerTcpRequestHandler(void *arg)
     const EVP_MD *md_hmac_hkdf = NULL;
     GetCryptoSchemes(selected_cipher_suite, &hash, &aead, &md_hmac_hkdf);
 
-    send_data[CLTLS_COMMON_HEADER_LENGTH] = selected_cipher_suite;
-    memcpy(send_data +
-               CLTLS_COMMON_HEADER_LENGTH +
-               CLTLS_CIPHER_SUITE_LENGTH,
-           server_ke_pubkey,
-           CLTLS_KE_PUBKEY_LENGTH);
-    memcpy(send_data +
-               CLTLS_COMMON_HEADER_LENGTH +
-               CLTLS_CIPHER_SUITE_LENGTH +
-               CLTLS_KE_PUBKEY_LENGTH,
-           server_ke_random,
-           CLTLS_KE_RANDOM_LENGTH);
+    ByteVecPushBack(&send_buffer, selected_cipher_suite);
+    ByteVecPushBackBlock(&send_buffer, server_ke_pubkey, CLTLS_KE_PUBKEY_LENGTH);
+    ByteVecPushBackBlock(&send_buffer, server_ke_random, CLTLS_KE_RANDOM_LENGTH);
 
-    if (!TcpSend(ctx->client_socket_fd, send_data, send_length))
+    if (!TcpSend(ctx->client_socket_fd,
+                 send_buffer.data,
+                 CLTLS_SERVER_HELLO_HEADER_LENGTH))
     {
         LogError("Failed to send SERVER_HELLO to client");
-        CLOSE_FREE_ARG_BUF_RETURN;
+        CLOSE_FREE_RETURN;
     }
 
-    APPEND_TRAFFIC(send_data, send_length);
+    ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
 
     // [Server Application Keys Calc]
     uint8_t shared_secret[32] = {0};
     if (!X25519(shared_secret,
                 server_ke_privkey,
-                receive_remaining +
-                    receive_remaining_length -
+                receive_buffer.data +
+                    receive_buffer.size -
                     CLTLS_KE_RANDOM_LENGTH - CLTLS_KE_PUBKEY_LENGTH))
     {
         LogError("X25519() failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
-        SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     // Used as both secret and salt
@@ -201,13 +182,13 @@ void *ServerTcpRequestHandler(void *arg)
     {
         LogError("HKDF() for |derived_secret| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
-        SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     uint8_t client_secret[MAX_HASH_LENGTH] = {0};
     uint8_t server_secret[MAX_HASH_LENGTH] = {0};
 
-    hash->Hash(traffic, traffic_length, secret_info + 12);
+    hash->Hash(traffic_buffer.data, traffic_buffer.size, secret_info + 12);
 
     memcpy(secret_info, "c hs traffic", 12);
 
@@ -219,7 +200,7 @@ void *ServerTcpRequestHandler(void *arg)
     {
         LogError("HKDF() for |client_secret| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
-        SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     memcpy(secret_info, "s hs traffic", 12);
@@ -232,7 +213,7 @@ void *ServerTcpRequestHandler(void *arg)
     {
         LogError("HKDF() for |server_secret| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
-        SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     uint8_t client_handshake_key[MAX_ENC_KEY_LENGTH] = {0};
@@ -247,7 +228,7 @@ void *ServerTcpRequestHandler(void *arg)
     {
         LogError("HKDF_expand() for |client_handshake_key| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
-        SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     if (!HKDF_expand(server_handshake_key, aead->key_size,
@@ -257,7 +238,7 @@ void *ServerTcpRequestHandler(void *arg)
     {
         LogError("HKDF_expand() for |client_handshake_key| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
-        SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     if (!HKDF_expand(client_handshake_npub_iv, aead->npub_iv_size,
@@ -267,7 +248,7 @@ void *ServerTcpRequestHandler(void *arg)
     {
         LogError("HKDF_expand() for |client_handshake_npub_iv| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
-        SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     if (!HKDF_expand(server_handshake_npub_iv, aead->npub_iv_size,
@@ -277,10 +258,10 @@ void *ServerTcpRequestHandler(void *arg)
     {
         LogError("HKDF_expand() for |server_handshake_npub_iv| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
-        SEND_ERROR_STOP_NOTIFY_RETURN(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
-    
+    // [Send] Server Public Key
 
     return NULL;
 }
