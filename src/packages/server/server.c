@@ -11,13 +11,13 @@
 
 int main(int argc, char *argv[])
 {
-    if (!InitializeGlobals("./server.conf"))
+    ServerArgs server_args;
+    ParseServerArgs(argc, argv, &server_args);
+
+    if (!InitializeGlobals(server_args.config_file_path))
     {
         return EXIT_FAILURE;
     }
-
-    ServerArgs server_args;
-    ParseServerArgs(argc, argv, &server_args);
 
     int server_socket_fd = 0;
     if (!TcpCreateServer(server_args.listen_port,
