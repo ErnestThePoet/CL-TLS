@@ -23,7 +23,7 @@ typedef struct
 
 uint8_t kServerIdentity[CLTLS_IDENTITY_LENGTH] = {0};
 uint8_t kKgcPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
-uint8_t kServerPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
+uint8_t kServerPublicKey[CLTLS_ENTITY_FULL_PUBLIC_KEY_LENGTH] = {0};
 uint8_t kServerPrivateKey[CLTLS_ENTITY_PRIVATE_KEY_LENGTH] = {0};
 
 set_CipherSuite kServerCipherSuiteSet;
