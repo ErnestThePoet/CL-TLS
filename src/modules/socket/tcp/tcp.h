@@ -2,6 +2,7 @@
 #define TCP_H_
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,10 +22,10 @@ typedef struct
 } TcpRequestHandlerCtx;
 
 bool TcpSend(const int client_socket_fd,
-             const char *buffer,
+             const uint8_t *buffer,
              const size_t send_size);
 bool TcpRecv(const int server_socket_fd,
-             char *buffer,
+             uint8_t *buffer,
              const size_t recv_size);
 
 bool TcpConnectToServer(const char *ip4_address,

@@ -1,7 +1,7 @@
 #include "tcp.h"
 
 bool TcpSend(const int client_socket_fd,
-             const char *buffer,
+             const uint8_t *buffer,
              const size_t send_size)
 {
     const ssize_t sent_size = send(client_socket_fd, buffer, send_size, 0);
@@ -15,7 +15,7 @@ bool TcpSend(const int client_socket_fd,
 }
 
 bool TcpRecv(const int server_socket_fd,
-             char *buffer,
+             uint8_t *buffer,
              const size_t recv_size)
 {
     size_t received_size = 0;
