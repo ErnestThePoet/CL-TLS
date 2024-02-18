@@ -8,6 +8,7 @@
 #include <openssl/evp.h>
 #include <openssl/extra/digest_internal.h>
 
+#define ASCON_HASH_RATE 8
 #define ASCON_HASHA_OUTPUT_SIZE 32
 
 typedef union

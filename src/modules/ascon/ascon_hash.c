@@ -1,6 +1,6 @@
 #include "ascon_hash.h"
 
-// These three functions are used to construct an EVP_MD 
+// These three functions are used to construct an EVP_MD
 // for constructing HMAC and HKDF
 static void AsconHashInit(EVP_MD_CTX *ctx)
 {
@@ -28,7 +28,7 @@ static void InitEvpAsconHash()
     kEvpAsconHash.init = AsconHashInit;
     kEvpAsconHash.update = AsconHashUpdate;
     kEvpAsconHash.final = AsconHashFinal;
-    kEvpAsconHash.block_size = 64;
+    kEvpAsconHash.block_size = ASCON_HASH_RATE;
     kEvpAsconHash.ctx_size = sizeof(ascon_hash_state_t);
 }
 
