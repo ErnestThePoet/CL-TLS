@@ -43,8 +43,9 @@
 ////////// Error Codes
 #define CLTLS_ERROR_INTERNAL_EXECUTION_ERROR 0x10
 #define CLTLS_ERROR_UNEXPECTED_MSG_TYPE 0x11
-#define CLTLS_ERROR_IDENTITY_NOT_PERMITTED 0x12
-#define CLTLS_ERROR_NO_SUPPORTED_CIPHER_SUITE 0x13
+#define CLTLS_ERROR_INVALID_APPLICATION_LAYER_PROTOCOL 0x12
+#define CLTLS_ERROR_IDENTITY_NOT_PERMITTED 0x13
+#define CLTLS_ERROR_NO_SUPPORTED_CIPHER_SUITE 0x14
 
 ////////// Helper Macros
 #define CLTLS_COMMON_HEADER_LENGTH 3
@@ -168,7 +169,7 @@
  * | Remaining Length                    |  2B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
- * | | Traffic Hash                 |    |
+ * | | Traffic HMAC Verify Data     |    |
  * | |------------------------------|    |
  * ---------------------------------------
  *
@@ -183,7 +184,7 @@
  * | Remaining Length                    |  2B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
- * | | Traffic Hash                 |    |
+ * | | Traffic HMAC Verify Data     |    |
  * | |------------------------------|    |
  * ---------------------------------------
  *

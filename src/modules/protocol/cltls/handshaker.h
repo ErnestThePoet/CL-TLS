@@ -9,6 +9,7 @@
 #include <common/def.h>
 #include <util/log.h>
 #include <util/byte_vec.h>
+#include <util/util.h>
 #include <socket/tcp/tcp.h>
 
 #include <openssl/err.h>

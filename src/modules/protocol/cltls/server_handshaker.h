@@ -45,7 +45,8 @@ typedef struct
         if (CLTLS_MSG_TYPE(receive_buffer.data) == CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY) \
         {                                                                            \
             LogError("The other party send ERROR_STOP_NOTIFY: %s",                   \
-                     GetCltlsErrorMessage(receive_buffer.data[0]));                  \
+                     GetCltlsErrorMessage(                                           \
+                         CLTLS_REMAINING_HEADER(receive_buffer.data[0])));           \
             CLOSE_FREE_RETURN;                                                       \
         }                                                                            \
     } while (false)
@@ -65,10 +66,7 @@ typedef struct
         CLOSE_FREE_RETURN;                                        \
     } while (false)
 
-bool ServerHandshake(const ServerHandshakeCtx *ctx);
-uint8_t ChooseCipherSuite(set_CipherSuite *server_cipher_suite_set,
-                          const uint8_t client_cipher_suite_count,
-                          const uint8_t *client_cipher_suites,
-                          const uint8_t preferred_cipher_suite);
+bool ServerHandshake(const ServerHandshakeCtx *ctx,
+                     HandshakeResult *handshake_result_ret);
 
 #endif

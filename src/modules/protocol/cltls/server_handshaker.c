@@ -1,6 +1,62 @@
 #include "server_handshaker.h"
 
-bool ServerHandshake(const ServerHandshakeCtx *ctx)
+static bool CheckApplicationLayerProtocol(const ServerMode server_mode,
+                                          const uint8_t application_layer_protocol)
+{
+    switch (server_mode)
+    {
+    case SERVER_MODE_PROXY:
+        return application_layer_protocol == CLTLS_PROTOCOL_KGC ||
+               application_layer_protocol == CLTLS_PROTOCOL_MQTT;
+    case SERVER_MODE_KGC:
+        return application_layer_protocol == CLTLS_PROTOCOL_KGC ||
+               application_layer_protocol == CLTLS_PROTOCOL_KGC_REGISTER_REQUEST;
+    default:
+        return false;
+    }
+}
+
+static uint8_t ChooseCipherSuite(set_CipherSuite *server_cipher_suite_set,
+                                 const uint8_t client_cipher_suite_count,
+                                 const uint8_t *client_cipher_suites,
+                                 const uint8_t preferred_cipher_suite)
+{
+    bool client_supports_preferred_cipher_suite = false;
+    for (int i = 0; i < client_cipher_suite_count; i++)
+    {
+        if (client_cipher_suites[i] == preferred_cipher_suite)
+        {
+            client_supports_preferred_cipher_suite = true;
+            break;
+        }
+    }
+
+    if (client_supports_preferred_cipher_suite &&
+        set_CipherSuite_find(
+            server_cipher_suite_set,
+            (CipherSuite){.cipher_suite = preferred_cipher_suite}) !=
+            set_CipherSuite_end(server_cipher_suite_set))
+    {
+        return preferred_cipher_suite;
+    }
+
+    // Return first cipher suite that both parties support
+    for (int i = 0; i < client_cipher_suite_count; i++)
+    {
+        if (set_CipherSuite_find(
+                server_cipher_suite_set,
+                (CipherSuite){.cipher_suite = client_cipher_suites[i]}) !=
+            set_CipherSuite_end(server_cipher_suite_set))
+        {
+            return client_cipher_suites[i];
+        }
+    }
+
+    return CLTLS_CIPHER_NONE;
+}
+
+bool ServerHandshake(const ServerHandshakeCtx *ctx,
+                     HandshakeResult *handshake_result_ret)
 {
     ByteVec receive_buffer;
     ByteVec send_buffer;
@@ -47,7 +103,14 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx)
     const uint8_t application_layer_protocol =
         CLTLS_REMAINING_HEADER(receive_buffer.data)[0];
 
-    // In proxy mode, check client identity
+    if (!CheckApplicationLayerProtocol(ctx->mode, application_layer_protocol))
+    {
+        LogError("Invalid application layer protocol 0x%02hhX",
+                 application_layer_protocol);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_APPLICATION_LAYER_PROTOCOL);
+    }
+
+    // In proxy mode, check KGC/client identity
     if (ctx->mode == SERVER_MODE_PROXY)
     {
         Id client_id;
@@ -55,22 +118,32 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx)
                CLTLS_REMAINING_HEADER(receive_buffer.data) +
                    CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH,
                ENTITY_IDENTITY_LENGTH);
-        char client_id_hex[ENTITY_IDENTITY_LENGTH * 2 + 1] = {0};
-        for (int i = 0; i < ENTITY_IDENTITY_LENGTH; i++)
-        {
-            sprintf(client_id_hex + i * 2, "%02hhX", client_id.id[i]);
-        }
-        client_id_hex[ENTITY_IDENTITY_LENGTH * 2] = '\0';
 
-        if (set_Id_find(ctx->server_permitted_id_set, client_id) ==
-            set_Id_end(ctx->server_permitted_id_set))
+        char client_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
+        IdentityBin2Hex(client_id.id, client_id_hex);
+
+        if (application_layer_protocol == CLTLS_PROTOCOL_KGC)
         {
-            LogWarn("Unauthorized client: %s, connection refused", client_id_hex);
-            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_IDENTITY_NOT_PERMITTED);
+            if (memcmp(kKgcIdentity,
+                       client_id.id,
+                       ENTITY_IDENTITY_LENGTH))
+            {
+                LogWarn("CLTLS_PROTOCOL_KGC message sender is not KGC (identity: %s), connection refused", client_id_hex);
+                SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_IDENTITY_NOT_PERMITTED);
+            }
         }
         else
         {
-            LogInfo("Authorized client: %s", client_id_hex);
+            if (set_Id_find(ctx->server_permitted_id_set, client_id) ==
+                set_Id_end(ctx->server_permitted_id_set))
+            {
+                LogWarn("Unauthorized client: %s, connection refused", client_id_hex);
+                SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_IDENTITY_NOT_PERMITTED);
+            }
+            else
+            {
+                LogInfo("Authorized client: %s", client_id_hex);
+            }
         }
     }
 
@@ -166,8 +239,14 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx)
     }
 
     // Used as both secret and salt
+    // Reused later as:
+    // traffic_hash
     uint8_t early_secret_secret_salt[MAX_HASH_LENGTH] = {0};
+    // Reused later as:
+    // HKDF-Expand secret_info in Server Handshake Finished
     uint8_t secret_info[MAX_HASH_LENGTH + 20] = "derived";
+    // Reused later as:
+    // finished_key in Server Handshake Finished
     uint8_t derived_secret[MAX_HASH_LENGTH] = {0};
 
     hash->Hash("", 0, secret_info + 7);
@@ -348,44 +427,87 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx)
 
     ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
 
+    // Only when application layer protocol is CLTLS_PROTOCOL_KGC_REGISTER_REQUEST
+    // will we omit Server Public Key Request
+    if (application_layer_protocol != CLTLS_PROTOCOL_KGC_REGISTER_REQUEST)
+    {
+        // [Send] Server Public Key Request
+        ByteVecResize(&send_buffer, CLTLS_SERVER_PUBKEY_REQUEST_HEADER_LENGTH);
+        CLTLS_SET_COMMON_HEADER(send_buffer.data,
+                                CLTLS_MSG_TYPE_SERVER_PUBKEY_REQUEST,
+                                0);
+
+        if (!TcpSend(ctx->client_socket_fd,
+                     send_buffer.data,
+                     CLTLS_SERVER_PUBKEY_REQUEST_HEADER_LENGTH))
+        {
+            LogError("Failed to send SERVER_PUBKEY_REQUEST to client");
+            CLOSE_FREE_RETURN;
+        }
+
+        ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
+    }
+
+    // [Send] Server Handshake Finished
+    memcpy(secret_info, "finished", 8);
+    uint8_t *finished_key = derived_secret;
+
+    if (!HKDF_expand(finished_key, hash->hash_size,
+                     md_hmac_hkdf,
+                     server_secret, hash->hash_size,
+                     secret_info, 8))
+    {
+        LogError("HKDF_expand() for |finished_key| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
+
+    uint8_t verify_data[MAX_HASH_LENGTH] = {0};
+    unsigned int verify_data_length = 0;
+
+    if (HMAC(md_hmac_hkdf,
+             finished_key, hash->hash_size,
+             traffic_hash, hash->hash_size,
+             verify_data, &verify_data_length) == NULL)
+    {
+        LogError("HMAC() for |verify_data| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    ByteVecResize(&send_buffer,
+                  CLTLS_COMMON_HEADER_LENGTH +
+                      verify_data_length +
+                      MAX_ENC_BLOCK_SIZE);
+
+    if (!aead->Encrypt(verify_data, verify_data_length,
+                       CLTLS_REMAINING_HEADER(send_buffer.data), &encrypted_length,
+                       NULL, 0,
+                       server_handshake_key,
+                       server_handshake_npub_iv,
+                       &iv_length))
+    {
+        LogError("Encryption of |verify_data| failed");
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
+
+    CLTLS_SET_COMMON_HEADER(send_buffer.data,
+                            CLTLS_MSG_TYPE_SERVER_HANDSHAKE_FINISHED,
+                            encrypted_length);
+
+    if (!TcpSend(ctx->client_socket_fd,
+                 send_buffer.data,
+                 send_buffer.size))
+    {
+        LogError("Failed to send SERVER_HANDSHAKE_FINISHED to client");
+        CLOSE_FREE_RETURN;
+    }
+
+    ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
+
     return true;
-}
-
-uint8_t ChooseCipherSuite(set_CipherSuite *server_cipher_suite_set,
-                          const uint8_t client_cipher_suite_count,
-                          const uint8_t *client_cipher_suites,
-                          const uint8_t preferred_cipher_suite)
-{
-    bool client_supports_preferred_cipher_suite = false;
-    for (int i = 0; i < client_cipher_suite_count; i++)
-    {
-        if (client_cipher_suites[i] == preferred_cipher_suite)
-        {
-            client_supports_preferred_cipher_suite = true;
-            break;
-        }
-    }
-
-    if (client_supports_preferred_cipher_suite &&
-        set_CipherSuite_find(
-            server_cipher_suite_set,
-            (CipherSuite){.cipher_suite = preferred_cipher_suite}) !=
-            set_CipherSuite_end(server_cipher_suite_set))
-    {
-        return preferred_cipher_suite;
-    }
-
-    // Return first cipher suite that both parties support
-    for (int i = 0; i < client_cipher_suite_count; i++)
-    {
-        if (set_CipherSuite_find(
-                server_cipher_suite_set,
-                (CipherSuite){.cipher_suite = client_cipher_suites[i]}) !=
-            set_CipherSuite_end(server_cipher_suite_set))
-        {
-            return client_cipher_suites[i];
-        }
-    }
-
-    return CLTLS_CIPHER_NONE;
 }
