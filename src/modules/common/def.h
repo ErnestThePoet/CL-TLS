@@ -36,6 +36,8 @@ LogLevel kLogLevel = LOG_LEVEL_WARN;
 #define MAX_ENC_KEY_LENGTH 16
 #define MAX_NPUB_IV_LENGTH 16
 #define MAX_ENC_BLOCK_SIZE 16
+#define MAX_ENC_TAG_SIZE 16
+#define MAX_ENC_EXTRA_SIZE (MAX_ENC_BLOCK_SIZE + MAX_ENC_TAG_SIZE)
 
 #define STR_ERRNO strerror(errno)
 
