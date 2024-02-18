@@ -206,6 +206,9 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     ByteVecPushBackBlock(&send_buffer, server_ke_pubkey, CLTLS_KE_PUBLIC_KEY_LENGTH);
     ByteVecPushBackBlock(&send_buffer, server_ke_random, CLTLS_KE_RANDOM_LENGTH);
 
+    // send_size convention:
+    // For fixed length header, use macro;
+    // Otherwise, use send_buffer.size
     if (!TcpSend(ctx->socket_fd,
                  send_buffer.data,
                  CLTLS_SERVER_HELLO_HEADER_LENGTH))
