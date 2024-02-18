@@ -205,7 +205,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
 
     // [Server Application Keys Calc]
-    uint8_t shared_secret[32] = {0};
+    uint8_t shared_secret[X25519_SHARED_KEY_LEN] = {0};
     if (!X25519(shared_secret,
                 server_ke_privkey,
                 receive_buffer.data +
@@ -219,15 +219,18 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     // Used as both secret and salt
     // Reused later as:
-    // traffic_hash
+    // all-zero secret in HKDF-Extract in Server Application Keys Calc
     uint8_t early_secret_secret_salt[MAX_HASH_LENGTH] = {0};
     // Reused later as:
     // HKDF-Expand secret_info in Server Handshake Finished
-    uint8_t secret_info[MAX_HASH_LENGTH + 20] = "derived";
+    // HKDF-Expand secret_info in Server Application Keys Calc
+    uint8_t secret_info[MAX_HASH_LENGTH + 20] = {0};
     // Reused later as:
     // finished_key in Server Handshake Finished
+    // derived_secret in Server Application Keys Calc
     uint8_t derived_secret[MAX_HASH_LENGTH] = {0};
 
+    memcpy(secret_info, "derived", 7);
     hash->Hash("", 0, secret_info + 7);
 
     if (!HKDF(derived_secret, hash->hash_size,
@@ -241,33 +244,51 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
         SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
+    // Do not reuse
+    uint8_t handshake_secret[MAX_HASH_LENGTH] = {0};
+
+    size_t hkdf_extract_out_length = 0; // No need to check
+    if (!HKDF_extract(handshake_secret, &hkdf_extract_out_length,
+                      md_hmac_hkdf,
+                      shared_secret, X25519_SHARED_KEY_LEN,
+                      derived_secret, hash->hash_size))
+    {
+        LogError("HKDF_extract() for |handshake_secret| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    // Do not reuse before Server Application Keys Calc
+    // Reused later as:
+    // client_secret in Server Application Keys Calc
     uint8_t client_secret[MAX_HASH_LENGTH] = {0};
+
+    // Do not reuse before Server Application Keys Calc
+    // Reused later as:
+    // server_secret in Server Application Keys Calc
     uint8_t server_secret[MAX_HASH_LENGTH] = {0};
 
     hash->Hash(traffic_buffer.data, traffic_buffer.size, secret_info + 12);
-
     memcpy(secret_info, "c hs traffic", 12);
 
-    if (!HKDF(client_secret, hash->hash_size,
-              md_hmac_hkdf,
-              shared_secret, 32, // Limited by X25519
-              derived_secret, hash->hash_size,
-              secret_info, hash->hash_size + 12))
+    if (!HKDF_expand(client_secret, hash->hash_size,
+                     md_hmac_hkdf,
+                     handshake_secret, hash->hash_size,
+                     secret_info, hash->hash_size + 12))
     {
-        LogError("HKDF() for |client_secret| failed: %s",
+        LogError("HKDF_expand() for |client_secret| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     memcpy(secret_info, "s hs traffic", 12);
 
-    if (!HKDF(server_secret, hash->hash_size,
-              md_hmac_hkdf,
-              shared_secret, 32,
-              derived_secret, hash->hash_size,
-              secret_info, hash->hash_size + 12))
+    if (!HKDF_expand(server_secret, hash->hash_size,
+                     md_hmac_hkdf,
+                     handshake_secret, hash->hash_size,
+                     secret_info, hash->hash_size + 12))
     {
-        LogError("HKDF() for |server_secret| failed: %s",
+        LogError("HKDF_expand() for |server_secret| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
@@ -292,7 +313,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                      server_secret, hash->hash_size,
                      "key", 3))
     {
-        LogError("HKDF_expand() for |client_handshake_key| failed: %s",
+        LogError("HKDF_expand() for |server_handshake_key| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
@@ -358,8 +379,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     // [Send] Server Public Key Verify
 
-    // Reuse stack space
-    uint8_t *traffic_hash = early_secret_secret_salt;
+    uint8_t traffic_hash[MAX_HASH_LENGTH] = {0};
     uint8_t traffic_signature[CLTLS_TRAFFIC_SIGNATURE_LENGTH] = {0};
 
     hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
@@ -438,7 +458,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                      server_secret, hash->hash_size,
                      secret_info, 8))
     {
-        LogError("HKDF_expand() for |finished_key| failed: %s",
+        LogError("HKDF_expand() for |server_finished_key| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
@@ -453,7 +473,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
              traffic_hash, hash->hash_size,
              verify_data, &verify_data_length) == NULL)
     {
-        LogError("HMAC() for |verify_data| failed: %s",
+        LogError("HMAC() for |server_verify_data| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
@@ -470,7 +490,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                        server_handshake_npub_iv,
                        &iv_length))
     {
-        LogError("Encryption of |verify_data| failed");
+        LogError("Encryption of |server_verify_data| failed");
         SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
@@ -490,12 +510,12 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
 
+    size_t decrypted_length = 0;
+
     if (should_request_public_key)
     {
         // [Receive] Client Public Key
         HANDSHAKE_RECEIVE(CLIENT_PUBKEY, true);
-
-        size_t decrypted_length = 0;
 
         // No need to precisely control the size of decryption_buffer
         // Ciphertext length always >= plaintext length
@@ -580,6 +600,157 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
             SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_TRAFFIC_SIGNATURE_VERIFY_FAILED);
         }
     }
+
+    // [Receive] Client Handshake Finished
+    HANDSHAKE_RECEIVE(CLIENT_HANDSHAKE_FINISHED, false);
+
+    if (!HKDF_expand(finished_key, hash->hash_size,
+                     md_hmac_hkdf,
+                     client_secret, hash->hash_size,
+                     secret_info, 8))
+    {
+        LogError("HKDF_expand() for |client_finished_key| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
+
+    // Append traffic after calculating traffic hash
+    ByteVecPushBackBlockFromByteVec(&traffic_buffer, &receive_buffer);
+
+    if (HMAC(md_hmac_hkdf,
+             finished_key, hash->hash_size,
+             traffic_hash, hash->hash_size,
+             verify_data, &verify_data_length) == NULL)
+    {
+        LogError("HMAC() for |client_verify_data| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    ByteVecResize(&decryption_buffer, receive_remaining_length);
+
+    if (!aead->Decrypt(CLTLS_REMAINING_HEADER(receive_buffer.data),
+                       receive_remaining_length,
+                       decryption_buffer.data, &decrypted_length,
+                       NULL, 0,
+                       client_handshake_key,
+                       client_handshake_npub_iv,
+                       &iv_length))
+    {
+        LogError("Decryption of |client_public_key_verify| failed");
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    if (decrypted_length != verify_data_length)
+    {
+        LogError("Client finished verify data length is %zu, expected %u",
+                 decrypted_length,
+                 verify_data_length);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_VERIFY_DATA_LENGTH);
+    }
+
+    if (memcmp(verify_data, decryption_buffer.data, verify_data_length))
+    {
+        LogError("Client finished verify data verification failed, is there an attack?");
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_VERIFY_DATA_VERIFY_FAILED);
+    }
+
+    // [Server Application Keys Calc]
+    uint8_t master_secret[MAX_HASH_LENGTH] = {0};
+
+    memcpy(secret_info, "derived", 7);
+    hash->Hash("", 0, secret_info + 7);
+
+    if (!HKDF_expand(derived_secret, hash->hash_size,
+                     md_hmac_hkdf,
+                     handshake_secret, hash->hash_size,
+                     secret_info, hash->hash_size + 7))
+    {
+        LogError("HKDF_expand() for |derived_secret| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    if (!HKDF_extract(master_secret, hash->hash_size,
+                      md_hmac_hkdf,
+                      early_secret_secret_salt, hash->hash_size,
+                      derived_secret, hash->hash_size))
+    {
+        LogError("HKDF_extract() for |master_secret| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    hash->Hash(traffic_buffer.data, traffic_buffer.size, secret_info + 12);
+    memcpy(secret_info, "c ap traffic", 12);
+
+    if (!HKDF_expand(client_secret, hash->hash_size,
+                     md_hmac_hkdf,
+                     master_secret, hash->hash_size,
+                     secret_info, hash->hash_size + 12))
+    {
+        LogError("HKDF_expand() for |client_secret| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    memcpy(secret_info, "s ap traffic", 12);
+
+    if (!HKDF_expand(server_secret, hash->hash_size,
+                     md_hmac_hkdf,
+                     master_secret, hash->hash_size,
+                     secret_info, hash->hash_size + 12))
+    {
+        LogError("HKDF_expand() for |server_secret| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    if (!HKDF_expand(handshake_result_ret->client_key, aead->key_size,
+                     md_hmac_hkdf,
+                     client_secret, hash->hash_size,
+                     "key", 3))
+    {
+        LogError("HKDF_expand() for |client_application_key| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    if (!HKDF_expand(handshake_result_ret->server_key, aead->key_size,
+                     md_hmac_hkdf,
+                     server_secret, hash->hash_size,
+                     "key", 3))
+    {
+        LogError("HKDF_expand() for |server_application_key| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    if (!HKDF_expand(handshake_result_ret->client_npub_iv, aead->npub_iv_size,
+                     md_hmac_hkdf,
+                     client_secret, hash->hash_size,
+                     "iv", 2))
+    {
+        LogError("HKDF_expand() for |client_application_npub_iv| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    if (!HKDF_expand(handshake_result_ret->server_npub_iv, aead->npub_iv_size,
+                     md_hmac_hkdf,
+                     server_secret, hash->hash_size,
+                     "iv", 2))
+    {
+        LogError("HKDF_expand() for |server_application_npub_iv| failed: %s",
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    handshake_result_ret->aead = aead;
+
+    LogInfo("Handshake successful");
 
     return true;
 }

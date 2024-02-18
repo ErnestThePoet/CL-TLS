@@ -22,6 +22,10 @@ const char *GetCltlsErrorMessage(const uint8_t error_code)
         return "ERROR_INVALID_TRAFFIC_SIGNATURE_LENGTH";
     case CLTLS_ERROR_TRAFFIC_SIGNATURE_VERIFY_FAILED:
         return "ERROR_TRAFFIC_SIGNATURE_VERIFY_FAILED";
+    case CLTLS_ERROR_INVALID_VERIFY_DATA_LENGTH:
+        return "ERROR_INVALID_VERIFY_DATA_LENGTH";
+    case CLTLS_ERROR_VERIFY_DATA_VERIFY_FAILED:
+        return "ERROR_VERIFY_DATA_VERIFY_FAILED";
     default:
         return "";
     }
