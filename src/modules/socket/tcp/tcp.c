@@ -25,7 +25,12 @@ bool TcpRecv(const int server_socket_fd,
         const size_t remaining_receive_size = recv_size - received_size;
         const ssize_t current_receive_size = recv(
             server_socket_fd, buffer + received_size, remaining_receive_size, 0);
-        if (current_receive_size < 0)
+        if (current_receive_size == 0)
+        {
+            LogError("recv() connection closed");
+            return false;
+        }
+        else if (current_receive_size < 0)
         {
             LogError("recv() error: %s", STR_ERRNO);
             return false;
@@ -131,7 +136,7 @@ void TcpRunServer(const int server_socket_fd,
         {
             close(client_socket_fd);
             LogError("accept() error: %s", STR_ERRNO);
-            continue;
+            break;
         }
 
         struct sockaddr_in *client_sockaddr_in = (struct sockaddr_in *)&client_sockaddr;
