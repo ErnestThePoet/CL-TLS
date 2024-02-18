@@ -61,44 +61,17 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     ByteVec receive_buffer;
     ByteVec send_buffer;
     ByteVec traffic_buffer;
+    ByteVec decryption_buffer;
 
     ByteVecInitWithCapacity(&receive_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
     ByteVecInitWithCapacity(&send_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
     ByteVecInitWithCapacity(&traffic_buffer, INITIAL_TRAFFIC_BUFFER_CAPACITY);
+    ByteVecInitWithCapacity(&decryption_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
+
+    size_t receive_remaining_length = 0;
 
     // [Receive] Client Hello
-    ByteVecResize(&receive_buffer, CLTLS_COMMON_HEADER_LENGTH);
-
-    if (!TcpRecv(ctx->client_socket_fd,
-                 receive_buffer.data,
-                 CLTLS_COMMON_HEADER_LENGTH))
-    {
-        LogError("Failed to receive common header of CLIENT_HELLO");
-        CLOSE_FREE_RETURN;
-    }
-
-    if (CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_CLIENT_HELLO &&
-        CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)
-    {
-        LogError("Invalid packet received, expecting CLIENT_HELLO");
-        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_UNEXPECTED_MSG_TYPE);
-    }
-
-    size_t receive_remaining_length = CLTLS_REMAINING_LENGTH(receive_buffer.data);
-
-    ByteVecResizeBy(&receive_buffer, receive_remaining_length);
-
-    if (!TcpRecv(ctx->client_socket_fd,
-                 CLTLS_REMAINING_HEADER(receive_buffer.data),
-                 receive_remaining_length))
-    {
-        LogError("Failed to receive remaining part of CLIENT_HELLO");
-        CLOSE_FREE_RETURN;
-    }
-
-    CHECK_ERROR_STOP_NOTIFY;
-
-    ByteVecPushBackBlockFromByteVec(&traffic_buffer, &receive_buffer);
+    HANDSHAKE_RECEIVE(CLIENT_HELLO, true);
 
     const uint8_t application_layer_protocol =
         CLTLS_REMAINING_HEADER(receive_buffer.data)[0];
@@ -109,6 +82,12 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                  application_layer_protocol);
         SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_APPLICATION_LAYER_PROTOCOL);
     }
+
+    uint8_t client_identity[ENTITY_IDENTITY_LENGTH] = {0};
+    memcpy(client_identity,
+           CLTLS_REMAINING_HEADER(receive_buffer.data) +
+               CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH,
+           ENTITY_IDENTITY_LENGTH);
 
     // In proxy mode, check KGC/client identity
     if (ctx->mode == SERVER_MODE_PROXY)
@@ -183,13 +162,6 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     BN_free(server_ke_random_bn);
 
-    ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH);
-
-    CLTLS_SET_COMMON_HEADER(
-        send_buffer.data,
-        CLTLS_MSG_TYPE_SERVER_HELLO,
-        (CLTLS_SERVER_HELLO_HEADER_LENGTH - CLTLS_COMMON_HEADER_LENGTH));
-
     uint8_t selected_cipher_suite = ChooseCipherSuite(
         ctx->server_cipher_suite_set,
         CLTLS_REMAINING_HEADER(receive_buffer.data)
@@ -211,11 +183,18 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     const EVP_MD *md_hmac_hkdf = NULL;
     GetCryptoSchemes(selected_cipher_suite, &hash, &aead, &md_hmac_hkdf);
 
+    ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH);
+
+    CLTLS_SET_COMMON_HEADER(
+        send_buffer.data,
+        CLTLS_MSG_TYPE_SERVER_HELLO,
+        (CLTLS_SERVER_HELLO_HEADER_LENGTH - CLTLS_COMMON_HEADER_LENGTH));
+
     ByteVecPushBack(&send_buffer, selected_cipher_suite);
     ByteVecPushBackBlock(&send_buffer, server_ke_pubkey, CLTLS_KE_PUBLIC_KEY_LENGTH);
     ByteVecPushBackBlock(&send_buffer, server_ke_random, CLTLS_KE_RANDOM_LENGTH);
 
-    if (!TcpSend(ctx->client_socket_fd,
+    if (!TcpSend(ctx->socket_fd,
                  send_buffer.data,
                  CLTLS_SERVER_HELLO_HEADER_LENGTH))
     {
@@ -344,7 +323,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     ByteVecResize(&send_buffer,
                   CLTLS_COMMON_HEADER_LENGTH +
                       CLTLS_ENTITY_PUBLIC_KEY_LENGTH +
-                      MAX_ENC_BLOCK_SIZE);
+                      MAX_ENC_EXTRA_SIZE);
 
     size_t encrypted_length = 0;
     // Used for AES only
@@ -367,7 +346,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                             CLTLS_MSG_TYPE_SERVER_PUBKEY,
                             encrypted_length);
 
-    if (!TcpSend(ctx->client_socket_fd,
+    if (!TcpSend(ctx->socket_fd,
                  send_buffer.data,
                  send_buffer.size))
     {
@@ -398,7 +377,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     ByteVecResize(&send_buffer,
                   CLTLS_COMMON_HEADER_LENGTH +
                       CLTLS_TRAFFIC_SIGNATURE_LENGTH +
-                      MAX_ENC_BLOCK_SIZE);
+                      MAX_ENC_EXTRA_SIZE);
 
     if (!aead->Encrypt(traffic_signature, CLTLS_TRAFFIC_SIGNATURE_LENGTH,
                        CLTLS_REMAINING_HEADER(send_buffer.data), &encrypted_length,
@@ -417,7 +396,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                             CLTLS_MSG_TYPE_SERVER_PUBKEY_VERIFY,
                             encrypted_length);
 
-    if (!TcpSend(ctx->client_socket_fd,
+    if (!TcpSend(ctx->socket_fd,
                  send_buffer.data,
                  send_buffer.size))
     {
@@ -429,7 +408,9 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     // Only when application layer protocol is CLTLS_PROTOCOL_KGC_REGISTER_REQUEST
     // will we omit Server Public Key Request
-    if (application_layer_protocol != CLTLS_PROTOCOL_KGC_REGISTER_REQUEST)
+    const bool should_request_public_key =
+        application_layer_protocol != CLTLS_PROTOCOL_KGC_REGISTER_REQUEST;
+    if (should_request_public_key)
     {
         // [Send] Server Public Key Request
         ByteVecResize(&send_buffer, CLTLS_SERVER_PUBKEY_REQUEST_HEADER_LENGTH);
@@ -437,7 +418,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                                 CLTLS_MSG_TYPE_SERVER_PUBKEY_REQUEST,
                                 0);
 
-        if (!TcpSend(ctx->client_socket_fd,
+        if (!TcpSend(ctx->socket_fd,
                      send_buffer.data,
                      CLTLS_SERVER_PUBKEY_REQUEST_HEADER_LENGTH))
         {
@@ -480,7 +461,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     ByteVecResize(&send_buffer,
                   CLTLS_COMMON_HEADER_LENGTH +
                       verify_data_length +
-                      MAX_ENC_BLOCK_SIZE);
+                      MAX_ENC_EXTRA_SIZE);
 
     if (!aead->Encrypt(verify_data, verify_data_length,
                        CLTLS_REMAINING_HEADER(send_buffer.data), &encrypted_length,
@@ -499,7 +480,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                             CLTLS_MSG_TYPE_SERVER_HANDSHAKE_FINISHED,
                             encrypted_length);
 
-    if (!TcpSend(ctx->client_socket_fd,
+    if (!TcpSend(ctx->socket_fd,
                  send_buffer.data,
                  send_buffer.size))
     {
@@ -508,6 +489,97 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     }
 
     ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
+
+    if (should_request_public_key)
+    {
+        // [Receive] Client Public Key
+        HANDSHAKE_RECEIVE(CLIENT_PUBKEY, true);
+
+        size_t decrypted_length = 0;
+
+        // No need to precisely control the size of decryption_buffer
+        // Ciphertext length always >= plaintext length
+        ByteVecResize(&decryption_buffer, receive_remaining_length);
+
+        if (!aead->Decrypt(CLTLS_REMAINING_HEADER(receive_buffer.data),
+                           receive_remaining_length,
+                           decryption_buffer.data, &decrypted_length,
+                           NULL, 0,
+                           client_handshake_key,
+                           client_handshake_npub_iv,
+                           &iv_length))
+        {
+            LogError("Decryption of |client_public_key| failed");
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        }
+
+        if (decrypted_length != CLTLS_ENTITY_PUBLIC_KEY_LENGTH)
+        {
+            LogError("Client public key length is %zu, expected %zu",
+                     decrypted_length,
+                     CLTLS_ENTITY_PUBLIC_KEY_LENGTH);
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_PUBLIC_KEY_LENGTH);
+        }
+
+        uint8_t client_public_key_pkf[CLTLS_ENTITY_PUBLIC_KEY_PKF_LENGTH] = {0};
+        memcpy(client_public_key_pkf,
+               decryption_buffer.data,
+               CLTLS_ENTITY_PUBLIC_KEY_PKF_LENGTH);
+
+        uint8_t client_binded_identity_pka[CLTLS_BINDED_IDENTITY_PKA_LENGTH] = {0};
+        BindIdentityPka(client_identity,
+                        decryption_buffer.data + CLTLS_ENTITY_PUBLIC_KEY_PKF_LENGTH,
+                        client_binded_identity_pka);
+        // Verify Public Key
+        if (!ED25519_verify(client_binded_identity_pka,
+                            CLTLS_BINDED_IDENTITY_PKA_LENGTH,
+                            decryption_buffer.data +
+                                CLTLS_ENTITY_PUBLIC_KEY_PKF_LENGTH +
+                                CLTLS_ENTITY_PUBLIC_KEY_PKA_LENGTH,
+                            ctx->kgc_public_key))
+        {
+            LogError("Client public key verification failed, is he an adversary?");
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_PUBLIC_KEY_VERIFY_FAILED);
+        }
+
+        // [Receive] Client Public Key Verify
+        HANDSHAKE_RECEIVE(CLIENT_PUBKEY_VERIFY, false);
+
+        ByteVecResize(&decryption_buffer, receive_remaining_length);
+
+        if (!aead->Decrypt(CLTLS_REMAINING_HEADER(receive_buffer.data),
+                           receive_remaining_length,
+                           decryption_buffer.data, &decrypted_length,
+                           NULL, 0,
+                           client_handshake_key,
+                           client_handshake_npub_iv,
+                           &iv_length))
+        {
+            LogError("Decryption of |client_public_key_verify| failed");
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        }
+
+        if (decrypted_length != CLTLS_TRAFFIC_SIGNATURE_LENGTH)
+        {
+            LogError("Client traffic signature length is %zu, expected %zu",
+                     decrypted_length,
+                     CLTLS_TRAFFIC_SIGNATURE_LENGTH);
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_TRAFFIC_SIGNATURE_LENGTH);
+        }
+
+        hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
+
+        // Append traffic after calculating traffic hash
+        ByteVecPushBackBlockFromByteVec(&traffic_buffer, &receive_buffer);
+
+        if (!ED25519_verify(traffic_hash, hash->hash_size,
+                            decryption_buffer.data,
+                            client_public_key_pkf))
+        {
+            LogError("Client traffic signature verification failed, is there an MiTM?");
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_TRAFFIC_SIGNATURE_VERIFY_FAILED);
+        }
+    }
 
     return true;
 }

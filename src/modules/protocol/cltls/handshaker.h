@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <common/def.h>
 #include <util/log.h>
@@ -41,5 +42,88 @@ typedef struct
     uint8_t client_npub_iv[MAX_NPUB_IV_LENGTH];
     uint8_t server_npub_iv[MAX_NPUB_IV_LENGTH];
 } HandshakeResult;
+
+// Error handling principles:
+// - When memory allocation fails, exit with EXIT_FAILURE immediately.
+// - When TcpSend() or TcpRecv() fails, free buffers and return.
+// - In other cases, send an ERROR_STOP_NOTIFY then free buffers and return.
+
+#define CLOSE_FREE_RETURN                \
+    do                                   \
+    {                                    \
+        TcpClose(ctx->socket_fd);        \
+        ByteVecFree(&receive_buffer);    \
+        ByteVecFree(&send_buffer);       \
+        ByteVecFree(&traffic_buffer);    \
+        ByteVecFree(&decryption_buffer); \
+        return false;                    \
+    } while (false)
+
+#define CHECK_ERROR_STOP_NOTIFY                                                      \
+    do                                                                               \
+    {                                                                                \
+        if (CLTLS_MSG_TYPE(receive_buffer.data) == CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY) \
+        {                                                                            \
+            LogError("The other party send ERROR_STOP_NOTIFY: %s",                   \
+                     GetCltlsErrorMessage(                                           \
+                         CLTLS_REMAINING_HEADER(receive_buffer.data[0])));           \
+            CLOSE_FREE_RETURN;                                                       \
+        }                                                                            \
+    } while (false)
+
+#define SEND_ERROR_STOP_NOTIFY(ERROR_CODE)                        \
+    do                                                            \
+    {                                                             \
+        uint8_t error_stop_notify_send_data                       \
+            [CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH] = {0};        \
+        CLTLS_SET_COMMON_HEADER(error_stop_notify_send_data,      \
+                                CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY, \
+                                2);                               \
+        error_stop_notify_send_data[3] = ERROR_CODE;              \
+        TcpSend(ctx->socket_fd,                                   \
+                error_stop_notify_send_data,                      \
+                CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH);           \
+        CLOSE_FREE_RETURN;                                        \
+    } while (false)
+
+#define HANDSHAKE_RECEIVE(MSG_TYPE, APPEND_TRAFFIC)                                    \
+    do                                                                                 \
+    {                                                                                  \
+        ByteVecResize(&receive_buffer, CLTLS_COMMON_HEADER_LENGTH);                    \
+                                                                                       \
+        if (!TcpRecv(ctx->socket_fd,                                                   \
+                     receive_buffer.data,                                              \
+                     CLTLS_COMMON_HEADER_LENGTH))                                      \
+        {                                                                              \
+            LogError("Failed to receive common header of " #MSG_TYPE);                 \
+            CLOSE_FREE_RETURN;                                                         \
+        }                                                                              \
+                                                                                       \
+        if (CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_##MSG_TYPE &&        \
+            CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)   \
+        {                                                                              \
+            LogError("Invalid packet received, expecting " #MSG_TYPE);                 \
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_UNEXPECTED_MSG_TYPE);                   \
+        }                                                                              \
+                                                                                       \
+        receive_remaining_length = CLTLS_REMAINING_LENGTH(receive_buffer.data); \
+                                                                                       \
+        ByteVecResizeBy(&receive_buffer, receive_remaining_length);                    \
+                                                                                       \
+        if (!TcpRecv(ctx->socket_fd,                                                   \
+                     CLTLS_REMAINING_HEADER(receive_buffer.data),                      \
+                     receive_remaining_length))                                        \
+        {                                                                              \
+            LogError("Failed to receive remaining part of " #MSG_TYPE);                \
+            CLOSE_FREE_RETURN;                                                         \
+        }                                                                              \
+                                                                                       \
+        CHECK_ERROR_STOP_NOTIFY;                                                       \
+                                                                                       \
+        if (APPEND_TRAFFIC)                                                            \
+        {                                                                              \
+            ByteVecPushBackBlockFromByteVec(&traffic_buffer, &receive_buffer);         \
+        }                                                                              \
+    } while (false)
 
 #endif
