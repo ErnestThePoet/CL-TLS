@@ -7,13 +7,13 @@ static int CipherSuiteCmp(CipherSuite *a, CipherSuite *b)
                : (a->cipher_suite > b->cipher_suite ? 1 : -1);
 }
 
-bool InitializeGlobals(const char *config_file_path)
+bool InitializeGlobals(const ServerArgs *server_args)
 {
     // Read config file
-    FILE *config_file_fp = fopen(config_file_path, "r");
+    FILE *config_file_fp = fopen(server_args->config_file_path, "r");
     if (config_file_fp == NULL)
     {
-        LogError("Failed to open config file %s", config_file_path);
+        LogError("Failed to open config file %s", server_args->config_file_path);
         return false;
     }
 
@@ -101,53 +101,56 @@ bool InitializeGlobals(const char *config_file_path)
 
     fclose(key_fp);
 
-    // Read server public key
-    key_fp = fopen(kServerPublicKeyPath, "rb");
-    if (key_fp == NULL)
+    if (!server_args->register_server)
     {
-        LogError("Failed to open server public key file %s", kServerPublicKeyPath);
-        return false;
+        // Read server public key
+        key_fp = fopen(kServerPublicKeyPath, "rb");
+        if (key_fp == NULL)
+        {
+            LogError("Failed to open server public key file %s", kServerPublicKeyPath);
+            return false;
+        }
+
+        if (fread(kServerPublicKey, 1, CLTLS_ENTITY_PUBLIC_KEY_LENGTH, key_fp) !=
+            CLTLS_ENTITY_PUBLIC_KEY_LENGTH)
+        {
+            LogError("Failed to read a valid server public key from file %s",
+                     kServerPublicKeyPath);
+            return false;
+        }
+
+        fclose(key_fp);
+
+        // Read server private key
+        key_fp = fopen(kServerPrivateKeyPath, "rb");
+        if (key_fp == NULL)
+        {
+            LogError("Failed to open server private key file %s",
+                     kServerPrivateKeyPath);
+            return false;
+        }
+
+        if (fread(kServerPrivateKey, 1, CLTLS_ENTITY_PRIVATE_KEY_LENGTH, key_fp) !=
+            CLTLS_ENTITY_PRIVATE_KEY_LENGTH)
+        {
+            LogError("Failed to read a valid server private key from file %s",
+                     kServerPrivateKeyPath);
+            return false;
+        }
+
+        fclose(key_fp);
+
+        // Read permitted ID set
+        if (!CreatePermittedIdSetFromFile(
+                kServerPermittedIdsDatabasePath, &kServerPermittedIdSet))
+        {
+            return false;
+        }
     }
-
-    if (fread(kServerPublicKey, 1, CLTLS_ENTITY_PUBLIC_KEY_LENGTH, key_fp) !=
-        CLTLS_ENTITY_PUBLIC_KEY_LENGTH)
-    {
-        LogError("Failed to read a valid server public key from file %s",
-                 kServerPublicKeyPath);
-        return false;
-    }
-
-    fclose(key_fp);
-
-    // Read server private key
-    key_fp = fopen(kServerPrivateKeyPath, "rb");
-    if (key_fp == NULL)
-    {
-        LogError("Failed to open server private key file %s",
-                 kServerPrivateKeyPath);
-        return false;
-    }
-
-    if (fread(kServerPrivateKey, 1, CLTLS_ENTITY_PRIVATE_KEY_LENGTH, key_fp) !=
-        CLTLS_ENTITY_PRIVATE_KEY_LENGTH)
-    {
-        LogError("Failed to read a valid server private key from file %s",
-                 kServerPrivateKeyPath);
-        return false;
-    }
-
-    fclose(key_fp);
 
     // Read ID/IP table
     if (!CreateIdIpTableFromFile(
             kServerIdIpDatabasePath, &kServerIdIpTable))
-    {
-        return false;
-    }
-
-    // Read permitted ID set
-    if (!CreatePermittedIdSetFromFile(
-            kServerPermittedIdsDatabasePath, &kServerPermittedIdSet))
     {
         return false;
     }

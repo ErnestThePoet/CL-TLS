@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     ServerArgs server_args;
     ParseServerArgs(argc, argv, &server_args);
 
-    if (!InitializeGlobals(server_args.config_file_path))
+    if (!InitializeGlobals(&server_args))
     {
         return EXIT_FAILURE;
     }
@@ -22,6 +22,8 @@ int main(int argc, char *argv[])
     if (server_args.register_server)
     {
         // TODO Register server
+
+        FreeGlobals();
         return EXIT_SUCCESS;
     }
 
@@ -29,6 +31,7 @@ int main(int argc, char *argv[])
     if (!TcpCreateServer(server_args.listen_port,
                          &server_socket_fd))
     {
+        FreeGlobals();
         return EXIT_FAILURE;
     }
 
@@ -36,5 +39,6 @@ int main(int argc, char *argv[])
                  ServerTcpRequestHandler,
                  &server_args);
 
+    FreeGlobals();
     return EXIT_SUCCESS;
 }

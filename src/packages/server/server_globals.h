@@ -16,6 +16,8 @@
 
 #include <protocol/cltls/handshaker.h>
 
+#include "server_args.h"
+
 uint8_t kServerIdentity[ENTITY_IDENTITY_LENGTH] = {0};
 uint8_t kKgcPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
 uint8_t kServerPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
@@ -36,7 +38,7 @@ char kServerPermittedIdsDatabasePath[MAX_PATH_LENGTH] = {0};
 
 pthread_mutex_t kServerPermittedIdsMutex;
 
-bool InitializeGlobals(const char *config_file_path);
+bool InitializeGlobals(const ServerArgs* server_args);
 void FreeGlobals();
 
 #endif
