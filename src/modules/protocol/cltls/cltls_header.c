@@ -26,6 +26,8 @@ const char *GetCltlsErrorMessage(const uint8_t error_code)
         return "ERROR_INVALID_VERIFY_DATA_LENGTH";
     case CLTLS_ERROR_VERIFY_DATA_VERIFY_FAILED:
         return "ERROR_VERIFY_DATA_VERIFY_FAILED";
+    case CLTLS_ERROR_SELECTED_CIPHER_SUITE_UNSUPPORTED:
+        return "ERROR_SELECTED_CIPHER_SUITE_UNSUPPORTED";
     default:
         return "";
     }
