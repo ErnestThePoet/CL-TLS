@@ -87,20 +87,24 @@ typedef struct
         CLOSE_FREE_RETURN;                                        \
     } while (false)
 
-#define HANDSHAKE_RECEIVE(MSG_TYPE, APPEND_TRAFFIC)                                  \
+#define HANDSHAKE_RECEIVE_COMMON_HEADER(MSG_TYPE)                          \
+    do                                                                     \
+    {                                                                      \
+        ByteVecResize(&receive_buffer, CLTLS_COMMON_HEADER_LENGTH);        \
+                                                                           \
+        if (!TcpRecv(ctx->socket_fd,                                       \
+                     receive_buffer.data,                                  \
+                     CLTLS_COMMON_HEADER_LENGTH))                          \
+        {                                                                  \
+            LogError("[%s] Failed to receive common header of " #MSG_TYPE, \
+                     current_stage);                                       \
+            CLOSE_FREE_RETURN;                                             \
+        }                                                                  \
+    } while (false)
+
+#define HANDSHAKE_RECEIVE_CHECK_MSG_TYPE(MSG_TYPE)                                   \
     do                                                                               \
     {                                                                                \
-        ByteVecResize(&receive_buffer, CLTLS_COMMON_HEADER_LENGTH);                  \
-                                                                                     \
-        if (!TcpRecv(ctx->socket_fd,                                                 \
-                     receive_buffer.data,                                            \
-                     CLTLS_COMMON_HEADER_LENGTH))                                    \
-        {                                                                            \
-            LogError("[%s] Failed to receive common header of " #MSG_TYPE,           \
-                     current_stage);                                                 \
-            CLOSE_FREE_RETURN;                                                       \
-        }                                                                            \
-                                                                                     \
         if (CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_##MSG_TYPE &&      \
             CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY) \
         {                                                                            \
@@ -108,26 +112,38 @@ typedef struct
                      current_stage);                                                 \
             SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_UNEXPECTED_MSG_TYPE);                 \
         }                                                                            \
-                                                                                     \
-        receive_remaining_length = CLTLS_REMAINING_LENGTH(receive_buffer.data);      \
-                                                                                     \
-        ByteVecResizeBy(&receive_buffer, receive_remaining_length);                  \
-                                                                                     \
-        if (!TcpRecv(ctx->socket_fd,                                                 \
-                     CLTLS_REMAINING_HEADER(receive_buffer.data),                    \
-                     receive_remaining_length))                                      \
-        {                                                                            \
-            LogError("[%s] Failed to receive remaining part of " #MSG_TYPE,          \
-                     current_stage);                                                 \
-            CLOSE_FREE_RETURN;                                                       \
-        }                                                                            \
-                                                                                     \
-        CHECK_ERROR_STOP_NOTIFY;                                                     \
-                                                                                     \
-        if (APPEND_TRAFFIC)                                                          \
-        {                                                                            \
-            ByteVecPushBackBlockFromByteVec(&traffic_buffer, &receive_buffer);       \
-        }                                                                            \
+    } while (false)
+
+#define HANDSHAKE_RECEIVE_REMAINING(MSG_TYPE, APPEND_TRAFFIC)                   \
+    do                                                                          \
+    {                                                                           \
+        receive_remaining_length = CLTLS_REMAINING_LENGTH(receive_buffer.data); \
+                                                                                \
+        ByteVecResizeBy(&receive_buffer, receive_remaining_length);             \
+                                                                                \
+        if (!TcpRecv(ctx->socket_fd,                                            \
+                     CLTLS_REMAINING_HEADER(receive_buffer.data),               \
+                     receive_remaining_length))                                 \
+        {                                                                       \
+            LogError("[%s] Failed to receive remaining part of " #MSG_TYPE,     \
+                     current_stage);                                            \
+            CLOSE_FREE_RETURN;                                                  \
+        }                                                                       \
+                                                                                \
+        CHECK_ERROR_STOP_NOTIFY;                                                \
+                                                                                \
+        if (APPEND_TRAFFIC)                                                     \
+        {                                                                       \
+            ByteVecPushBackBlockFromByteVec(&traffic_buffer, &receive_buffer);  \
+        }                                                                       \
+    } while (false)
+
+#define HANDSHAKE_RECEIVE(MSG_TYPE, APPEND_TRAFFIC)            \
+    do                                                         \
+    {                                                          \
+        HANDSHAKE_RECEIVE_COMMON_HEADER(MSG_TYPE);             \
+        HANDSHAKE_RECEIVE_CHECK_MSG_TYPE(MSG_TYPE);            \
+        HANDSHAKE_RECEIVE_REMAINING(MSG_TYPE, APPEND_TRAFFIC); \
     } while (false)
 
 #define GENERATE_KE_KEY_RANDOM                                                \
