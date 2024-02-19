@@ -599,6 +599,24 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     handshake_result_ret->aead = aead;
 
+    ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH);
+    CLTLS_SET_COMMON_HEADER(send_buffer.data, CLTLS_MSG_TYPE_HANDSHAKE_SUCCEED, 0);
+    if (!TcpSend(ctx->socket_fd,
+                 send_buffer.data,
+                 send_buffer.size))
+    {
+        LogError("[%s] Failed to send HANDSHAKE_SUCCEED",
+                 current_stage);
+        CLOSE_FREE_RETURN;
+    }
+
+    HANDSHAKE_RECEIVE(HANDSHAKE_SUCCEED, false);
+
+    ByteVecFree(&receive_buffer);
+    ByteVecFree(&send_buffer);
+    ByteVecFree(&traffic_buffer);
+    ByteVecFree(&decryption_buffer);
+
     LogInfo("Handshake successful");
 
     return true;

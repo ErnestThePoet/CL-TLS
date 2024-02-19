@@ -20,6 +20,7 @@
 #define CLTLS_MSG_TYPE_CLIENT_PUBKEY 0x20
 #define CLTLS_MSG_TYPE_CLIENT_PUBKEY_VERIFY 0x21
 #define CLTLS_MSG_TYPE_CLIENT_HANDSHAKE_FINISHED 0x22
+#define CLTLS_MSG_TYPE_HANDSHAKE_SUCCEED 0x90
 #define CLTLS_MSG_TYPE_APPLICATION_DATA 0xA0
 #define CLTLS_MSG_TYPE_CLOSE_CONNECTION 0xB0
 #define CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY 0xF0
@@ -232,6 +233,17 @@
  * | |------------------------------|    | (Encrypted)
  * | | Traffic HMAC Verify Data     |    |
  * | |------------------------------|    |
+ * ---------------------------------------
+ *
+ ******************************************************/
+
+/******************************************************
+ * Handshake Succeed
+ *
+ * ---------------------------------------
+ * | Message Type                        |  1B
+ * ---------------------------------------
+ * | Remaining Length(0)                 |  2B
  * ---------------------------------------
  *
  ******************************************************/
