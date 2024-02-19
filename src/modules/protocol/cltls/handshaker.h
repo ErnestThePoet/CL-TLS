@@ -130,6 +130,45 @@ typedef struct
         }                                                                            \
     } while (false)
 
+#define GENERATE_KE_KEY_RANDOM                                                \
+    do                                                                        \
+    {                                                                         \
+        X25519_keypair(self_ke_public_key, self_ke_private_key);              \
+                                                                              \
+        BIGNUM *self_ke_random_bn = BN_new();                                 \
+        if (self_ke_random_bn == NULL)                                        \
+        {                                                                     \
+            LogError("[%s] Memory allocation for |self_ke_random_bn| failed", \
+                     current_stage);                                          \
+            exit(EXIT_FAILURE);                                               \
+        }                                                                     \
+                                                                              \
+        if (!BN_rand(self_ke_random_bn,                                       \
+                     CLTLS_KE_RANDOM_LENGTH * 8,                              \
+                     BN_RAND_TOP_ANY,                                         \
+                     BN_RAND_BOTTOM_ANY))                                     \
+        {                                                                     \
+            LogError("[%s] BN_rand() failed: %s",                             \
+                     current_stage,                                           \
+                     ERR_error_string(ERR_get_error(), NULL));                \
+            BN_free(self_ke_random_bn);                                       \
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);     \
+        }                                                                     \
+                                                                              \
+        if (!BN_bn2bin_padded(self_ke_random,                                 \
+                              CLTLS_KE_RANDOM_LENGTH,                         \
+                              self_ke_random_bn))                             \
+        {                                                                     \
+            LogError("[%s] BN_bn2bin_padded() failed: %s",                    \
+                     current_stage,                                           \
+                     ERR_error_string(ERR_get_error(), NULL));                \
+            BN_free(self_ke_random_bn);                                       \
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);     \
+        }                                                                     \
+                                                                              \
+        BN_free(self_ke_random_bn);                                           \
+    } while (false)
+
 #define CALCULATE_HANDSHAKE_KEY                                                      \
     do                                                                               \
     {                                                                                \
