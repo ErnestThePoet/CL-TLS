@@ -242,15 +242,16 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     // [Send] Server Public Key
     current_stage = "SEND Server Public Key";
 
+    size_t encrypted_length = 0;
+    size_t decrypted_length = 0;
+    // Used for AES only
+    size_t iv_length = aead->npub_iv_size;
+
     // Max encrypted size is plain text size + max enc block size
     ByteVecResize(&send_buffer,
                   CLTLS_COMMON_HEADER_LENGTH +
                       CLTLS_ENTITY_PUBLIC_KEY_LENGTH +
                       MAX_ENC_EXTRA_SIZE);
-
-    size_t encrypted_length = 0;
-    // Used for AES only
-    size_t iv_length = aead->npub_iv_size;
 
     if (!aead->Encrypt(ctx->server_public_key, CLTLS_ENTITY_PUBLIC_KEY_LENGTH,
                        CLTLS_REMAINING_HEADER(send_buffer.data), &encrypted_length,
@@ -426,8 +427,6 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     }
 
     ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
-
-    size_t decrypted_length = 0;
 
     if (should_request_public_key)
     {
