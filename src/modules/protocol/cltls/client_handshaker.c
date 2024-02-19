@@ -46,7 +46,7 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
     {
         LogError("[%s] Failed to send CLIENT_HELLO",
                  current_stage);
-        CLOSE_FREE_RETURN;
+        FREE_RETURN_FALSE;
     }
 
     ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
@@ -340,7 +340,7 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
         {
             LogError("[%s] Failed to send CLIENT_PUBKEY",
                      current_stage);
-            CLOSE_FREE_RETURN;
+            FREE_RETURN_FALSE;
         }
 
         ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
@@ -390,7 +390,7 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
         {
             LogError("[%s] Failed to send CLIENT_PUBKEY_VERIFY",
                      current_stage);
-            CLOSE_FREE_RETURN;
+            FREE_RETURN_FALSE;
         }
 
         ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
@@ -454,7 +454,7 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
     {
         LogError("[%s] Failed to send CLIENT_HANDSHAKE_FINISHED",
                  current_stage);
-        CLOSE_FREE_RETURN;
+        FREE_RETURN_FALSE;
     }
 
     ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
@@ -476,7 +476,7 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
     {
         LogError("[%s] Failed to send HANDSHAKE_SUCCEED",
                  current_stage);
-        CLOSE_FREE_RETURN;
+        FREE_RETURN_FALSE;
     }
 
     HANDSHAKE_RECEIVE(HANDSHAKE_SUCCEED, false);

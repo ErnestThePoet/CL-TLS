@@ -48,7 +48,7 @@ typedef struct
 // - When TcpSend() or TcpRecv() fails, free buffers and return.
 // - In other cases, send an ERROR_STOP_NOTIFY then free buffers and return.
 
-#define CLOSE_FREE_RETURN                \
+#define FREE_RETURN_FALSE                \
     do                                   \
     {                                    \
         TcpClose(ctx->socket_fd);        \
@@ -68,7 +68,7 @@ typedef struct
                      current_stage,                                                  \
                      GetCltlsErrorMessage(                                           \
                          CLTLS_REMAINING_HEADER(receive_buffer.data[0])));           \
-            CLOSE_FREE_RETURN;                                                       \
+            FREE_RETURN_FALSE;                                                       \
         }                                                                            \
     } while (false)
 
@@ -84,7 +84,7 @@ typedef struct
         TcpSend(ctx->socket_fd,                                   \
                 error_stop_notify_send_data,                      \
                 CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH);           \
-        CLOSE_FREE_RETURN;                                        \
+        FREE_RETURN_FALSE;                                        \
     } while (false)
 
 #define HANDSHAKE_RECEIVE_COMMON_HEADER(MSG_TYPE)                          \
@@ -98,7 +98,7 @@ typedef struct
         {                                                                  \
             LogError("[%s] Failed to receive common header of " #MSG_TYPE, \
                      current_stage);                                       \
-            CLOSE_FREE_RETURN;                                             \
+            FREE_RETURN_FALSE;                                             \
         }                                                                  \
     } while (false)
 
@@ -127,7 +127,7 @@ typedef struct
         {                                                                       \
             LogError("[%s] Failed to receive remaining part of " #MSG_TYPE,     \
                      current_stage);                                            \
-            CLOSE_FREE_RETURN;                                                  \
+            FREE_RETURN_FALSE;                                                  \
         }                                                                       \
                                                                                 \
         CHECK_ERROR_STOP_NOTIFY;                                                \
