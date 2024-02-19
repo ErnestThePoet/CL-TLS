@@ -44,7 +44,7 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
                  send_buffer.data,
                  send_buffer.size))
     {
-        LogError("[%s] Failed to send CLIENT_HELLO to server",
+        LogError("[%s] Failed to send CLIENT_HELLO",
                  current_stage);
         CLOSE_FREE_RETURN;
     }
@@ -209,6 +209,7 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
     }
 
     uint8_t traffic_hash[MAX_HASH_LENGTH] = {0};
+    uint8_t traffic_signature[CLTLS_TRAFFIC_SIGNATURE_LENGTH] = {0};
 
     hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
 
@@ -224,10 +225,10 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
         SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_TRAFFIC_SIGNATURE_VERIFY_FAILED);
     }
 
-    const bool should_request_public_key =
+    const bool should_send_public_key =
         ShouldRequestClientPublicKey(ctx->application_layer_protocol);
 
-    if (should_request_public_key)
+    if (should_send_public_key)
     {
         // [Receive] Server Public Key Request
         current_stage = "RECEIVE Server Public Key Request";
@@ -303,6 +304,171 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
                  current_stage);
         SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_VERIFY_DATA_VERIFY_FAILED);
     }
+
+    if (should_send_public_key)
+    {
+        // [Send] Client Public Key
+        current_stage = "SEND Client Public Key";
+
+        // Max encrypted size is plain text size + max enc block size
+        ByteVecResize(&send_buffer,
+                      CLTLS_COMMON_HEADER_LENGTH +
+                          CLTLS_ENTITY_PUBLIC_KEY_LENGTH +
+                          MAX_ENC_EXTRA_SIZE);
+
+        if (!aead->Encrypt(ctx->client_public_key, CLTLS_ENTITY_PUBLIC_KEY_LENGTH,
+                           CLTLS_REMAINING_HEADER(send_buffer.data), &encrypted_length,
+                           NULL, 0,
+                           client_handshake_key,
+                           client_handshake_npub_iv,
+                           &iv_length))
+        {
+            LogError("[%s] Encryption of |client_public_key| failed",
+                     current_stage);
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        }
+
+        ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
+
+        CLTLS_SET_COMMON_HEADER(send_buffer.data,
+                                CLTLS_MSG_TYPE_SERVER_PUBKEY,
+                                encrypted_length);
+
+        if (!TcpSend(ctx->socket_fd,
+                     send_buffer.data,
+                     send_buffer.size))
+        {
+            LogError("[%s] Failed to send CLIENT_PUBKEY",
+                     current_stage);
+            CLOSE_FREE_RETURN;
+        }
+
+        ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
+
+        // [Send] Client Public Key Verify
+        current_stage = "SEND Client Public Key Verify";
+
+        hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
+
+        if (!ED25519_sign(traffic_signature,
+                          traffic_hash,
+                          hash->hash_size,
+                          ctx->client_private_key))
+        {
+            LogError("[%s] ED25519_sign() for |traffic_hash| failed: %s",
+                     current_stage,
+                     ERR_error_string(ERR_get_error(), NULL));
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        }
+
+        ByteVecResize(&send_buffer,
+                      CLTLS_COMMON_HEADER_LENGTH +
+                          CLTLS_TRAFFIC_SIGNATURE_LENGTH +
+                          MAX_ENC_EXTRA_SIZE);
+
+        if (!aead->Encrypt(traffic_signature, CLTLS_TRAFFIC_SIGNATURE_LENGTH,
+                           CLTLS_REMAINING_HEADER(send_buffer.data), &encrypted_length,
+                           NULL, 0,
+                           client_handshake_key,
+                           client_handshake_npub_iv,
+                           &iv_length))
+        {
+            LogError("[%s] Encryption of |traffic_signature| failed",
+                     current_stage);
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        }
+
+        ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
+
+        CLTLS_SET_COMMON_HEADER(send_buffer.data,
+                                CLTLS_MSG_TYPE_SERVER_PUBKEY_VERIFY,
+                                encrypted_length);
+
+        if (!TcpSend(ctx->socket_fd,
+                     send_buffer.data,
+                     send_buffer.size))
+        {
+            LogError("[%s] Failed to send CLIENT_PUBKEY_VERIFY",
+                     current_stage);
+            CLOSE_FREE_RETURN;
+        }
+
+        ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
+    }
+
+    // [Send] Client Handshake Finished
+    current_stage = "SEND Client Handshake Finished";
+
+    memcpy(secret_info, "finished", 8);
+
+    if (!HKDF_expand(finished_key, hash->hash_size,
+                     md_hmac_hkdf,
+                     client_secret, hash->hash_size,
+                     secret_info, 8))
+    {
+        LogError("[%s] HKDF_expand() for |client_finished_key| failed: %s",
+                 current_stage,
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
+
+    if (HMAC(md_hmac_hkdf,
+             finished_key, hash->hash_size,
+             traffic_hash, hash->hash_size,
+             verify_data, &verify_data_length) == NULL)
+    {
+        LogError("[%s] HMAC() for |client_verify_data| failed: %s",
+                 current_stage,
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    ByteVecResize(&send_buffer,
+                  CLTLS_COMMON_HEADER_LENGTH +
+                      verify_data_length +
+                      MAX_ENC_EXTRA_SIZE);
+
+    if (!aead->Encrypt(verify_data, verify_data_length,
+                       CLTLS_REMAINING_HEADER(send_buffer.data), &encrypted_length,
+                       NULL, 0,
+                       client_handshake_key,
+                       client_handshake_npub_iv,
+                       &iv_length))
+    {
+        LogError("[%s] Encryption of |client_verify_data| failed",
+                 current_stage);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
+
+    CLTLS_SET_COMMON_HEADER(send_buffer.data,
+                            CLTLS_MSG_TYPE_SERVER_HANDSHAKE_FINISHED,
+                            encrypted_length);
+
+    if (!TcpSend(ctx->socket_fd,
+                 send_buffer.data,
+                 send_buffer.size))
+    {
+        LogError("[%s] Failed to send CLIENT_HANDSHAKE_FINISHED",
+                 current_stage);
+        CLOSE_FREE_RETURN;
+    }
+
+    ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
+
+    // [Client Application Keys Calc]
+    current_stage = "Client Application Keys Calc";
+
+    uint8_t master_secret[MAX_HASH_LENGTH] = {0};
+
+    CALCULATE_HANDSHAKE_KEY;
+
+    handshake_result_ret->aead = aead;
+
+    LogInfo("Handshake successful");
 
     return true;
 }
