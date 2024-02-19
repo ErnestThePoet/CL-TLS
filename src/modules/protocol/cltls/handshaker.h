@@ -130,4 +130,105 @@ typedef struct
         }                                                                            \
     } while (false)
 
+#define CALCULATE_HANDSHAKE_KEY                                                      \
+    do                                                                               \
+    {                                                                                \
+        memcpy(secret_info, "derived", 7);                                           \
+        hash->Hash("", 0, secret_info + 7);                                          \
+                                                                                     \
+        if (!HKDF(derived_secret, hash->hash_size,                                   \
+                  md_hmac_hkdf,                                                      \
+                  early_secret_secret_salt, hash->hash_size,                         \
+                  early_secret_secret_salt, hash->hash_size,                         \
+                  secret_info, hash->hash_size + 7))                                 \
+        {                                                                            \
+            LogError("[%s] HKDF() for |derived_secret| failed: %s",                  \
+                     current_stage,                                                  \
+                     ERR_error_string(ERR_get_error(), NULL));                       \
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);            \
+        }                                                                            \
+                                                                                     \
+        if (!HKDF_extract(handshake_secret, &hkdf_extract_out_length,                \
+                          md_hmac_hkdf,                                              \
+                          shared_secret, X25519_SHARED_KEY_LEN,                      \
+                          derived_secret, hash->hash_size))                          \
+        {                                                                            \
+            LogError("[%s] HKDF_extract() for |handshake_secret| failed: %s",        \
+                     current_stage,                                                  \
+                     ERR_error_string(ERR_get_error(), NULL));                       \
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);            \
+        }                                                                            \
+                                                                                     \
+        hash->Hash(traffic_buffer.data, traffic_buffer.size, secret_info + 12);      \
+        memcpy(secret_info, "c hs traffic", 12);                                     \
+                                                                                     \
+        if (!HKDF_expand(client_secret, hash->hash_size,                             \
+                         md_hmac_hkdf,                                               \
+                         handshake_secret, hash->hash_size,                          \
+                         secret_info, hash->hash_size + 12))                         \
+        {                                                                            \
+            LogError("[%s] HKDF_expand() for |client_secret| failed: %s",            \
+                     current_stage,                                                  \
+                     ERR_error_string(ERR_get_error(), NULL));                       \
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);            \
+        }                                                                            \
+                                                                                     \
+        memcpy(secret_info, "s hs traffic", 12);                                     \
+                                                                                     \
+        if (!HKDF_expand(server_secret, hash->hash_size,                             \
+                         md_hmac_hkdf,                                               \
+                         handshake_secret, hash->hash_size,                          \
+                         secret_info, hash->hash_size + 12))                         \
+        {                                                                            \
+            LogError("[%s] HKDF_expand() for |server_secret| failed: %s",            \
+                     current_stage,                                                  \
+                     ERR_error_string(ERR_get_error(), NULL));                       \
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);            \
+        }                                                                            \
+                                                                                     \
+        if (!HKDF_expand(client_handshake_key, aead->key_size,                       \
+                         md_hmac_hkdf,                                               \
+                         client_secret, hash->hash_size,                             \
+                         "key", 3))                                                  \
+        {                                                                            \
+            LogError("[%s] HKDF_expand() for |client_handshake_key| failed: %s",     \
+                     current_stage,                                                  \
+                     ERR_error_string(ERR_get_error(), NULL));                       \
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);            \
+        }                                                                            \
+                                                                                     \
+        if (!HKDF_expand(server_handshake_key, aead->key_size,                       \
+                         md_hmac_hkdf,                                               \
+                         server_secret, hash->hash_size,                             \
+                         "key", 3))                                                  \
+        {                                                                            \
+            LogError("[%s] HKDF_expand() for |server_handshake_key| failed: %s",     \
+                     current_stage,                                                  \
+                     ERR_error_string(ERR_get_error(), NULL));                       \
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);            \
+        }                                                                            \
+                                                                                     \
+        if (!HKDF_expand(client_handshake_npub_iv, aead->npub_iv_size,               \
+                         md_hmac_hkdf,                                               \
+                         client_secret, hash->hash_size,                             \
+                         "iv", 2))                                                   \
+        {                                                                            \
+            LogError("[%s] HKDF_expand() for |client_handshake_npub_iv| failed: %s", \
+                     current_stage,                                                  \
+                     ERR_error_string(ERR_get_error(), NULL));                       \
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);            \
+        }                                                                            \
+                                                                                     \
+        if (!HKDF_expand(server_handshake_npub_iv, aead->npub_iv_size,               \
+                         md_hmac_hkdf,                                               \
+                         server_secret, hash->hash_size,                             \
+                         "iv", 2))                                                   \
+        {                                                                            \
+            LogError("[%s] HKDF_expand() for |server_handshake_npub_iv| failed: %s", \
+                     current_stage,                                                  \
+                     ERR_error_string(ERR_get_error(), NULL));                       \
+            SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);            \
+        }                                                                            \
+    } while (false)
+
 #endif
