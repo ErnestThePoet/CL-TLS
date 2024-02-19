@@ -335,10 +335,8 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
 
-    // Only when application layer protocol is CLTLS_PROTOCOL_KGC_REGISTER_REQUEST
-    // will we omit Server Public Key Request
     const bool should_request_public_key =
-        application_layer_protocol != CLTLS_PROTOCOL_KGC_REGISTER_REQUEST;
+        ShouldRequestClientPublicKey(application_layer_protocol);
     if (should_request_public_key)
     {
         // [Send] Server Public Key Request
@@ -531,6 +529,8 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     current_stage = "RECEIVE Client Handshake Finished";
 
     HANDSHAKE_RECEIVE(CLIENT_HANDSHAKE_FINISHED, false);
+
+    memcpy(secret_info, "finished", 8);
 
     if (!HKDF_expand(finished_key, hash->hash_size,
                      md_hmac_hkdf,
