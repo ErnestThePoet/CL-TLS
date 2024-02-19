@@ -123,5 +123,186 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
 
     CALCULATE_HANDSHAKE_KEY;
 
+    // [Receive] Server Public Key
+    current_stage = "RECEIVE Server Public Key";
+
+    HANDSHAKE_RECEIVE(SERVER_PUBKEY, true);
+
+    size_t encrypted_length = 0;
+    size_t decrypted_length = 0;
+    // Used for AES only
+    size_t iv_length = aead->npub_iv_size;
+
+    ByteVecResize(&decryption_buffer, receive_remaining_length);
+
+    if (!aead->Decrypt(CLTLS_REMAINING_HEADER(receive_buffer.data),
+                       receive_remaining_length,
+                       decryption_buffer.data, &decrypted_length,
+                       NULL, 0,
+                       server_handshake_key,
+                       server_handshake_npub_iv,
+                       &iv_length))
+    {
+        LogError("[%s] Decryption of |server_public_key| failed",
+                 current_stage);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    if (decrypted_length != CLTLS_ENTITY_PUBLIC_KEY_LENGTH)
+    {
+        LogError("[%s] Server public key length is %zu, expected %zu",
+                 current_stage,
+                 decrypted_length,
+                 CLTLS_ENTITY_PUBLIC_KEY_LENGTH);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_PUBLIC_KEY_LENGTH);
+    }
+
+    uint8_t server_public_key_pkf[CLTLS_ENTITY_PUBLIC_KEY_PKF_LENGTH] = {0};
+    memcpy(server_public_key_pkf,
+           decryption_buffer.data,
+           CLTLS_ENTITY_PUBLIC_KEY_PKF_LENGTH);
+
+    uint8_t server_binded_identity_pka[CLTLS_BINDED_IDENTITY_PKA_LENGTH] = {0};
+    BindIdentityPka(ctx->server_identity,
+                    decryption_buffer.data + CLTLS_ENTITY_PUBLIC_KEY_PKF_LENGTH,
+                    server_binded_identity_pka);
+    // Verify Public Key
+    if (!ED25519_verify(server_binded_identity_pka,
+                        CLTLS_BINDED_IDENTITY_PKA_LENGTH,
+                        decryption_buffer.data +
+                            CLTLS_ENTITY_PUBLIC_KEY_PKF_LENGTH +
+                            CLTLS_ENTITY_PUBLIC_KEY_PKA_LENGTH,
+                        ctx->kgc_public_key))
+    {
+        LogError("[%s] Server public key verification failed, is he an adversary?",
+                 current_stage);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_PUBLIC_KEY_VERIFY_FAILED);
+    }
+
+    // [Receive] Server Public Key Verify
+    current_stage = "RECEIVE Server Public Key Verify";
+
+    HANDSHAKE_RECEIVE(SERVER_PUBKEY_VERIFY, false);
+
+    ByteVecResize(&decryption_buffer, receive_remaining_length);
+
+    if (!aead->Decrypt(CLTLS_REMAINING_HEADER(receive_buffer.data),
+                       receive_remaining_length,
+                       decryption_buffer.data, &decrypted_length,
+                       NULL, 0,
+                       server_handshake_key,
+                       server_handshake_npub_iv,
+                       &iv_length))
+    {
+        LogError("[%s] Decryption of |server_public_key_verify| failed",
+                 current_stage);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    if (decrypted_length != CLTLS_TRAFFIC_SIGNATURE_LENGTH)
+    {
+        LogError("[%s] Server traffic signature length is %zu, expected %zu",
+                 current_stage,
+                 decrypted_length,
+                 CLTLS_TRAFFIC_SIGNATURE_LENGTH);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_TRAFFIC_SIGNATURE_LENGTH);
+    }
+
+    uint8_t traffic_hash[MAX_HASH_LENGTH] = {0};
+
+    hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
+
+    // Append traffic after calculating traffic hash
+    ByteVecPushBackBlockFromByteVec(&traffic_buffer, &receive_buffer);
+
+    if (!ED25519_verify(traffic_hash, hash->hash_size,
+                        decryption_buffer.data,
+                        server_public_key_pkf))
+    {
+        LogError("[%s] Server traffic signature verification failed, is there an MiTM?",
+                 current_stage);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_TRAFFIC_SIGNATURE_VERIFY_FAILED);
+    }
+
+    const bool should_request_public_key =
+        ShouldRequestClientPublicKey(ctx->application_layer_protocol);
+
+    if (should_request_public_key)
+    {
+        // [Receive] Server Public Key Request
+        current_stage = "RECEIVE Server Public Key Request";
+
+        HANDSHAKE_RECEIVE(SERVER_PUBKEY_REQUEST, true);
+    }
+
+    // [Receive] Server Handshake Finished
+    current_stage = "RECEIVE Server Handshake Finished";
+
+    HANDSHAKE_RECEIVE(SERVER_HANDSHAKE_FINISHED, false);
+
+    uint8_t *finished_key = derived_secret;
+    uint8_t verify_data[MAX_HASH_LENGTH] = {0};
+    unsigned int verify_data_length = 0;
+
+    memcpy(secret_info, "finished", 8);
+
+    if (!HKDF_expand(finished_key, hash->hash_size,
+                     md_hmac_hkdf,
+                     server_secret, hash->hash_size,
+                     secret_info, 8))
+    {
+        LogError("[%s] HKDF_expand() for |server_finished_key| failed: %s",
+                 current_stage,
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
+
+    // Append traffic after calculating traffic hash
+    ByteVecPushBackBlockFromByteVec(&traffic_buffer, &receive_buffer);
+
+    if (HMAC(md_hmac_hkdf,
+             finished_key, hash->hash_size,
+             traffic_hash, hash->hash_size,
+             verify_data, &verify_data_length) == NULL)
+    {
+        LogError("[%s] HMAC() for |server_verify_data| failed: %s",
+                 current_stage,
+                 ERR_error_string(ERR_get_error(), NULL));
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    ByteVecResize(&decryption_buffer, receive_remaining_length);
+
+    if (!aead->Decrypt(CLTLS_REMAINING_HEADER(receive_buffer.data),
+                       receive_remaining_length,
+                       decryption_buffer.data, &decrypted_length,
+                       NULL, 0,
+                       server_handshake_key,
+                       server_handshake_npub_iv,
+                       &iv_length))
+    {
+        LogError("[%s] Decryption of |server_public_key_verify| failed",
+                 current_stage);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    if (decrypted_length != verify_data_length)
+    {
+        LogError("[%s] Server finished verify data length is %zu, expected %u",
+                 current_stage,
+                 decrypted_length,
+                 verify_data_length);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_VERIFY_DATA_LENGTH);
+    }
+
+    if (memcmp(verify_data, decryption_buffer.data, verify_data_length))
+    {
+        LogError("[%s] Server finished verify data verification failed, is there an attack?",
+                 current_stage);
+        SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_VERIFY_DATA_VERIFY_FAILED);
+    }
+
     return true;
 }
