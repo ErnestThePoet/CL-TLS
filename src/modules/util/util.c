@@ -1,10 +1,10 @@
 #include "util.h"
 
-bool IdentityHex2Bin(const char *identity_hex, uint8_t *identity_bin)
+bool Hex2Bin(const char *hex, uint8_t *bin, const size_t bin_size)
 {
-    for (int i = 0; i < ENTITY_IDENTITY_LENGTH; i++)
+    for (int i = 0; i < bin_size; i++)
     {
-        if (sscanf(identity_hex + 2 * i, "%02hhX", identity_bin + i) != 1)
+        if (sscanf(hex + 2 * i, "%02hhX", bin + i) != 1)
         {
             return false;
         }
@@ -13,10 +13,10 @@ bool IdentityHex2Bin(const char *identity_hex, uint8_t *identity_bin)
     return true;
 }
 
-void IdentityBin2Hex(const uint8_t *identity_bin, char *identity_hex)
+void Bin2Hex(const uint8_t *bin, char *hex, const size_t bin_size)
 {
-    for (int i = 0; i < ENTITY_IDENTITY_LENGTH; i++)
+    for (int i = 0; i < bin_size; i++)
     {
-        sprintf(identity_hex + i * 2, "%02hhX", identity_bin[i]);
+        sprintf(hex + i * 2, "%02hhX", bin[i]);
     }
 }

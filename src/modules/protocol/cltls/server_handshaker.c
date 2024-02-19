@@ -103,7 +103,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                ENTITY_IDENTITY_LENGTH);
 
         char client_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
-        IdentityBin2Hex(client_id.id, client_id_hex);
+        Bin2Hex(client_id.id, client_id_hex, ENTITY_IDENTITY_LENGTH);
 
         if (application_layer_protocol == CLTLS_PROTOCOL_KGC)
         {

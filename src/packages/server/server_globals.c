@@ -76,7 +76,7 @@ bool InitializeGlobals(const char *config_file_path)
     fclose(config_file_fp);
 
     // Load server identity
-    if (!IdentityHex2Bin(server_id_hex, kServerIdentity))
+    if (!Hex2Bin(server_id_hex, kServerIdentity, ENTITY_IDENTITY_LENGTH))
     {
         LogError("Error loading config file: invalid IDENTITY value");
         fclose(config_file_fp);
