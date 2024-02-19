@@ -281,5 +281,9 @@
 
 const char *GetCltlsErrorMessage(const uint8_t error_code);
 void BindIdentityPka(const uint8_t *identity, const uint8_t *pka, uint8_t *out);
+inline bool ShouldRequestClientPublicKey(const uint8_t application_layer_protocol)
+{
+    return application_layer_protocol != CLTLS_PROTOCOL_KGC_REGISTER_REQUEST;
+}
 
 #endif
