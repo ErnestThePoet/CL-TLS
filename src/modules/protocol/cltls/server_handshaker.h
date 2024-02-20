@@ -25,6 +25,7 @@ typedef struct
 } ServerHandshakeCtx;
 
 bool ServerHandshake(const ServerHandshakeCtx *ctx,
-                     HandshakeResult *handshake_result_ret);
+                     HandshakeResult *handshake_result_ret,
+                     uint8_t* application_layer_protocol_ret);
 
 #endif

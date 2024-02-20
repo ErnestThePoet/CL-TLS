@@ -56,7 +56,8 @@ static uint8_t ChooseCipherSuite(set_CipherSuite *server_cipher_suite_set,
 }
 
 bool ServerHandshake(const ServerHandshakeCtx *ctx,
-                     HandshakeResult *handshake_result_ret)
+                     HandshakeResult *handshake_result_ret,
+                     uint8_t *application_layer_protocol_ret)
 {
     ByteVec receive_buffer;
     ByteVec send_buffer;
@@ -86,6 +87,8 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                  application_layer_protocol);
         SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_APPLICATION_LAYER_PROTOCOL);
     }
+
+    *application_layer_protocol_ret = application_layer_protocol;
 
     uint8_t client_identity[ENTITY_IDENTITY_LENGTH] = {0};
     memcpy(client_identity,
