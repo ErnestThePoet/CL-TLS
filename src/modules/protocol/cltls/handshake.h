@@ -1,5 +1,5 @@
-#ifndef HANDSHAKER_H_
-#define HANDSHAKER_H_
+#ifndef HANDSHAKE_H_
+#define HANDSHAKE_H_
 
 #include <stdio.h>
 #include <stdbool.h>
