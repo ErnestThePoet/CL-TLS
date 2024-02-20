@@ -1,7 +1,7 @@
-#ifndef CLIENT_HANDSHAKER_H_
-#define CLIENT_HANDSHAKER_H_
+#ifndef CLIENT_HANDSHAKE_H_
+#define CLIENT_HANDSHAKE_H_
 
-#include "handshaker.h"
+#include "handshake.h"
 
 typedef struct
 {

@@ -14,7 +14,7 @@
 #include <database/idip.h>
 #include <database/permitted_ids.h>
 
-#include <protocol/cltls/handshaker.h>
+#include <protocol/cltls/handshake.h>
 
 #include "server_args.h"
 

@@ -1,4 +1,4 @@
-#include "server_handshaker.h"
+#include "server_handshake.h"
 
 static bool CheckApplicationLayerProtocol(const ServerMode server_mode,
                                           const uint8_t application_layer_protocol)

@@ -1,7 +1,7 @@
-#ifndef SERVER_HANDSHAKER_H_
-#define SERVER_HANDSHAKER_H_
+#ifndef SERVER_HANDSHAKE_H_
+#define SERVER_HANDSHAKE_H_
 
-#include "handshaker.h"
+#include "handshake.h"
 
 typedef enum
 {
