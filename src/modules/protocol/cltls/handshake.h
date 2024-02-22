@@ -37,6 +37,7 @@ typedef struct
 typedef struct
 {
     AeadScheme *aead;
+    size_t iv_length;
     uint8_t client_key[MAX_ENC_KEY_LENGTH];
     uint8_t server_key[MAX_ENC_KEY_LENGTH];
     uint8_t client_npub_iv[MAX_NPUB_IV_LENGTH];

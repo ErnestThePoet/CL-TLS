@@ -466,8 +466,6 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
 
     CALCULATE_HANDSHAKE_KEY;
 
-    handshake_result_ret->aead = aead;
-
     ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH);
     CLTLS_SET_COMMON_HEADER(send_buffer.data, CLTLS_MSG_TYPE_HANDSHAKE_SUCCEED, 0);
     if (!TcpSend(ctx->socket_fd,
@@ -480,6 +478,9 @@ bool ServerHandshake(const ClientHandshakeCtx *ctx,
     }
 
     HANDSHAKE_RECEIVE(HANDSHAKE_SUCCEED, false);
+
+    handshake_result_ret->aead = aead;
+    handshake_result_ret->iv_length = iv_length;
 
     ByteVecFree(&receive_buffer);
     ByteVecFree(&send_buffer);
