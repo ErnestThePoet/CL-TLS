@@ -51,7 +51,6 @@ typedef struct
 #define HANDSHAKE_FREE_RETURN_FALSE      \
     do                                   \
     {                                    \
-        TcpClose(ctx->socket_fd);        \
         ByteVecFree(&receive_buffer);    \
         ByteVecFree(&send_buffer);       \
         ByteVecFree(&traffic_buffer);    \
