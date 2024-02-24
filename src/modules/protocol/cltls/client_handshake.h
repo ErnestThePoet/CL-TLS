@@ -15,7 +15,7 @@ typedef struct
     set_CipherSuite *client_cipher_suite_set;
 } ClientHandshakeCtx;
 
-bool ServerHandshake(const ClientHandshakeCtx *ctx,
+bool ClientHandshake(const ClientHandshakeCtx *ctx,
                      HandshakeResult *handshake_result_ret);
 
 #endif

@@ -1,6 +1,6 @@
 #include "client_handshake.h"
 
-bool ServerHandshake(const ClientHandshakeCtx *ctx,
+bool ClientHandshake(const ClientHandshakeCtx *ctx,
                      HandshakeResult *handshake_result_ret)
 {
     ByteVec receive_buffer;
