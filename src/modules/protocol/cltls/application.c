@@ -122,7 +122,10 @@ bool ReceiveApplicationData(const int socket_fd,
     case CLTLS_MSG_TYPE_CLOSE_CONNECTION:
         LogInfo("Connection gracefully closed");
         ByteVecFree(&receive_buffer);
-        *connection_closed_ret = true;
+        if (connection_closed_ret != NULL)
+        {
+            *connection_closed_ret = true;
+        }
         return true;
     case CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY:
         LogError("[%s] The other party send ERROR_STOP_NOTIFY: %s",
@@ -162,6 +165,10 @@ bool ReceiveApplicationData(const int socket_fd,
 
     ByteVecFree(&receive_buffer);
 
-    *connection_closed_ret = false;
+    if (connection_closed_ret != NULL)
+    {
+        *connection_closed_ret = false;
+    }
+
     return true;
 }
