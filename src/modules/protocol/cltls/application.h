@@ -17,19 +17,8 @@
         return false;                         \
     } while (false)
 
-#define APPLICATION_COMMON_SEND_ERROR_STOP_NOTIFY(ERROR_CODE)     \
-    do                                                            \
-    {                                                             \
-        uint8_t error_stop_notify_send_data                       \
-            [CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH] = {0};        \
-        CLTLS_SET_COMMON_HEADER(error_stop_notify_send_data,      \
-                                CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY, \
-                                2);                               \
-        error_stop_notify_send_data[3] = ERROR_CODE;              \
-        TcpSend(socket_fd,                                        \
-                error_stop_notify_send_data,                      \
-                CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH);           \
-    } while (false)
+#define APPLICATION_COMMON_SEND_ERROR_STOP_NOTIFY(ERROR_CODE) \
+    CLTLS_SEND_ERROR_STOP_NOTIFY(socket_fd, ERROR_CODE);
 
 #define APPLICATION_SEND_SEND_ERROR_STOP_NOTIFY(ERROR_CODE)    \
     do                                                         \

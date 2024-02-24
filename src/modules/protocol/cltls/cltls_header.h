@@ -291,6 +291,20 @@
     (CLTLS_COMMON_HEADER_LENGTH +             \
      CLTLS_ERROR_CODE_LENGTH)
 
+#define CLTLS_SEND_ERROR_STOP_NOTIFY(FD, ERROR_CODE)              \
+    do                                                            \
+    {                                                             \
+        uint8_t error_stop_notify_send_data                       \
+            [CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH] = {0};        \
+        CLTLS_SET_COMMON_HEADER(error_stop_notify_send_data,      \
+                                CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY, \
+                                2);                               \
+        error_stop_notify_send_data[3] = ERROR_CODE;              \
+        TcpSend(FD,                                               \
+                error_stop_notify_send_data,                      \
+                CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH);           \
+    } while (false)
+
 const char *GetCltlsErrorMessage(const uint8_t error_code);
 void BindIdentityPka(const uint8_t *identity, const uint8_t *pka, uint8_t *out);
 inline bool ShouldRequestClientPublicKey(const uint8_t application_layer_protocol)

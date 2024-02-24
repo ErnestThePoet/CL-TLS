@@ -75,15 +75,7 @@ typedef struct
 #define HANDSHAKE_SEND_ERROR_STOP_NOTIFY(ERROR_CODE)              \
     do                                                            \
     {                                                             \
-        uint8_t error_stop_notify_send_data                       \
-            [CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH] = {0};        \
-        CLTLS_SET_COMMON_HEADER(error_stop_notify_send_data,      \
-                                CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY, \
-                                2);                               \
-        error_stop_notify_send_data[3] = ERROR_CODE;              \
-        TcpSend(ctx->socket_fd,                                   \
-                error_stop_notify_send_data,                      \
-                CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH);           \
+        CLTLS_SEND_ERROR_STOP_NOTIFY(ctx->socket_fd, ERROR_CODE); \
         HANDSHAKE_FREE_RETURN_FALSE;                              \
     } while (false)
 
