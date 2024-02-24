@@ -25,6 +25,7 @@
 #define KGC_MSG_TYPE_LENGTH 1
 #define KGC_ENTITY_TYPE_LENGTH 1
 #define KGC_BELONGING_SERVER_COUNT_LENGTH 2
+#define KGC_BELONGING_SERVER_PORT_LENGTH 2
 #define KGC_STATUS_CODE_LENGTH 1
 
 /******************************************************
@@ -62,7 +63,7 @@
  * ---------------------------------------
  * | Belonging Server Count              |  2B
  * ---------------------------------------
- * | Belonging Server Identities         | (32*Count)B
+ * | Belonging Server Identities & Ports | ((32+2)*Count)B
  * ---------------------------------------
  *
  ******************************************************/
