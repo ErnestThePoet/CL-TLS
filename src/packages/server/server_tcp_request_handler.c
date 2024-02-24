@@ -216,7 +216,7 @@ void *ServerTcpRequestHandler(void *arg)
     const TcpRequestHandlerCtx *ctx = (const TcpRequestHandlerCtx *)arg;
     const ServerArgs *server_args = (const ServerArgs *)ctx->extra;
 
-    ServerHandshakeCtx ctx = {
+    ServerHandshakeCtx server_handshake_ctx = {
         .forward_ip = server_args->forward_ip,
         .forward_port = server_args->forward_port,
         .kgc_public_key = kKgcPublicKey,
@@ -231,7 +231,9 @@ void *ServerTcpRequestHandler(void *arg)
 
     HandshakeResult handshake_result;
     uint8_t application_layer_protocol = 0;
-    if (!ServerHandshake(&ctx, &handshake_result, &application_layer_protocol))
+    if (!ServerHandshake(&server_handshake_ctx,
+                         &handshake_result,
+                         &application_layer_protocol))
     {
         TcpClose(ctx->client_socket_fd);
         free(arg);
