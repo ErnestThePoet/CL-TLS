@@ -1,12 +1,5 @@
 #include "server_globals.h"
 
-static int CipherSuiteCmp(CipherSuite *a, CipherSuite *b)
-{
-    return a->cipher_suite == b->cipher_suite
-               ? 0
-               : (a->cipher_suite > b->cipher_suite ? 1 : -1);
-}
-
 bool InitializeGlobals(const ServerArgs *server_args)
 {
     // Read config file

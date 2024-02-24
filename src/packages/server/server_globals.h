@@ -14,8 +14,6 @@
 #include <database/idip.h>
 #include <database/permitted_ids.h>
 
-#include <protocol/cltls/handshake.h>
-
 #include "server_args.h"
 
 uint8_t kServerIdentity[ENTITY_IDENTITY_LENGTH] = {0};

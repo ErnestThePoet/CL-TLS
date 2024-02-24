@@ -28,14 +28,6 @@
 
 typedef struct
 {
-    uint8_t cipher_suite;
-} CipherSuite;
-#define P
-#define T CipherSuite
-#include <set.h>
-
-typedef struct
-{
     AeadScheme *aead;
     size_t iv_length;
     uint8_t client_key[MAX_ENC_KEY_LENGTH];

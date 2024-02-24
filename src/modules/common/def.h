@@ -6,6 +6,21 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
+typedef struct
+{
+    uint8_t cipher_suite;
+} CipherSuite;
+#define P
+#define T CipherSuite
+#include <set.h>
+
+int CipherSuiteCmp(CipherSuite *a, CipherSuite *b)
+{
+    return a->cipher_suite == b->cipher_suite
+               ? 0
+               : (a->cipher_suite > b->cipher_suite ? 1 : -1);
+}
+
 // More severe the level, greater the value
 typedef enum
 {
