@@ -9,18 +9,15 @@ static bool KgcServe(const int socket_fd,
     ByteVecInitWithCapacity(&send_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
     ByteVecInitWithCapacity(&receive_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
 
-    bool connection_closed = false;
+    const char *current_stage = "KGC Serve";
 
     if (!ReceiveApplicationData(socket_fd,
                                 handshake_result,
                                 false,
-                                &receive_buffer,
-                                &connection_closed))
+                                &receive_buffer))
     {
         KGC_SERVE_FREE_RETURN_FALSE;
     }
-
-    const char *current_stage = "KGC Serve";
 
     if (receive_buffer.data[0] != KGC_MSG_TYPE_REGISTER_REQUEST)
     {
@@ -152,8 +149,7 @@ static bool KgcServe(const int socket_fd,
             if (!ReceiveApplicationData(belonging_server_socket_fd,
                                         &client_handshake_result,
                                         true,
-                                        &receive_buffer,
-                                        NULL))
+                                        &receive_buffer))
             {
                 LogError("[%s] Failed to receive ADD_CLIENT_RESPONSE from "
                          "belonging server %s",
@@ -182,7 +178,6 @@ static bool KgcServe(const int socket_fd,
                     CLTLS_ERROR_APPLICATION_LAYER_ERROR);
             }
 
-            SendCloseConnection(belonging_server_socket_fd);
             TcpClose(belonging_server_socket_fd);
         }
     }

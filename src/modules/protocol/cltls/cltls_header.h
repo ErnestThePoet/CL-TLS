@@ -22,7 +22,6 @@
 #define CLTLS_MSG_TYPE_CLIENT_HANDSHAKE_FINISHED 0x22
 #define CLTLS_MSG_TYPE_HANDSHAKE_SUCCEED 0x90
 #define CLTLS_MSG_TYPE_APPLICATION_DATA 0xA0
-#define CLTLS_MSG_TYPE_CLOSE_CONNECTION 0xB0
 #define CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY 0xF0
 
 ////////// Cipher Suites
@@ -263,18 +262,6 @@
  * ---------------------------------------
  *
  ******************************************************/
-
-/******************************************************
- * Close Connection
- *
- * ---------------------------------------
- * | Message Type                        |  1B
- * ---------------------------------------
- * | Remaining Length(0)                 |  2B
- * ---------------------------------------
- *
- ******************************************************/
-#define CLTLS_CLOSE_CONNECTION_HEADER_LENGTH CLTLS_COMMON_HEADER_LENGTH
 
 /******************************************************
  * Error Stop Notify

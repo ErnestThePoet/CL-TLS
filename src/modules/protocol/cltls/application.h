@@ -34,8 +34,6 @@
         APPLICATION_RECEIVE_FREE_RETURN_FALSE;                 \
     } while (false)
 
-void SendCloseConnection(const int socket_fd);
-
 bool SendApplicationData(const int socket_fd,
                          const HandshakeResult *handshake_result,
                          const bool is_client,
@@ -44,7 +42,6 @@ bool SendApplicationData(const int socket_fd,
 bool ReceiveApplicationData(const int socket_fd,
                             const HandshakeResult *handshake_result,
                             const bool is_client,
-                            ByteVec *data,
-                            bool *connection_closed_ret);
+                            ByteVec *data);
 
 #endif

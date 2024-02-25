@@ -1,19 +1,5 @@
 #include "application.h"
 
-void SendCloseConnection(const int socket_fd)
-{
-    uint8_t send_data[CLTLS_CLOSE_CONNECTION_HEADER_LENGTH] = {0};
-    CLTLS_SET_COMMON_HEADER(send_data,
-                            CLTLS_MSG_TYPE_CLOSE_CONNECTION,
-                            0);
-    if (!TcpSend(socket_fd,
-                 send_data,
-                 CLTLS_CLOSE_CONNECTION_HEADER_LENGTH))
-    {
-        LogError("[SEND Close Connection] Failed to send Close Connection");
-    }
-}
-
 bool SendApplicationData(const int socket_fd,
                          const HandshakeResult *handshake_result,
                          const bool is_client,
@@ -70,8 +56,7 @@ bool SendApplicationData(const int socket_fd,
 bool ReceiveApplicationData(const int socket_fd,
                             const HandshakeResult *handshake_result,
                             const bool is_client,
-                            ByteVec *data,
-                            bool *connection_closed_ret)
+                            ByteVec *data)
 {
     ByteVec receive_buffer;
 
@@ -94,7 +79,6 @@ bool ReceiveApplicationData(const int socket_fd,
     }
 
     if (CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_APPLICATION_DATA &&
-        CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_CLOSE_CONNECTION &&
         CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)
     {
         LogError("[%s] Invalid message type received",
@@ -117,25 +101,14 @@ bool ReceiveApplicationData(const int socket_fd,
         APPLICATION_RECEIVE_FREE_RETURN_FALSE;
     }
 
-    switch (CLTLS_MSG_TYPE(receive_buffer.data))
+    if (CLTLS_MSG_TYPE(receive_buffer.data) == CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)
     {
-    case CLTLS_MSG_TYPE_CLOSE_CONNECTION:
-        LogInfo("Connection gracefully closed");
-        ByteVecFree(&receive_buffer);
-        if (connection_closed_ret != NULL)
-        {
-            *connection_closed_ret = true;
-        }
-        return true;
-    case CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY:
         LogError("[%s] The other party send ERROR_STOP_NOTIFY: %s",
                  current_stage,
                  GetCltlsErrorMessage(
                      CLTLS_REMAINING_HEADER(receive_buffer.data[0])));
 
         APPLICATION_RECEIVE_FREE_RETURN_FALSE;
-    default:
-        break;
     }
 
     ByteVecResize(data, receive_remaining_length);
@@ -164,11 +137,6 @@ bool ReceiveApplicationData(const int socket_fd,
     ByteVecResize(data, decrypted_length);
 
     ByteVecFree(&receive_buffer);
-
-    if (connection_closed_ret != NULL)
-    {
-        *connection_closed_ret = false;
-    }
 
     return true;
 }
