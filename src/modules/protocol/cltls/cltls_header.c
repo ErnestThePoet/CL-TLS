@@ -38,5 +38,5 @@ const char *GetCltlsErrorMessage(const uint8_t error_code)
 void BindIdentityPka(const uint8_t *identity, const uint8_t *pka, uint8_t *out)
 {
     memcpy(out, identity, ENTITY_IDENTITY_LENGTH);
-    memcpy(out + ENTITY_IDENTITY_LENGTH, pka, CLTLS_ENTITY_PUBLIC_KEY_PKA_LENGTH);
+    memcpy(out + ENTITY_IDENTITY_LENGTH, pka, CLTLS_ENTITY_PKA_LENGTH);
 }
