@@ -7,6 +7,7 @@
 #include "server_args.h"
 #include "server_globals.h"
 #include "parse_server_args.h"
+#include "server_register.h"
 #include "server_tcp_request_handler.h"
 
 int main(int argc, char *argv[])
@@ -21,10 +22,9 @@ int main(int argc, char *argv[])
 
     if (server_args.register_server)
     {
-        // TODO Register server
-
+        bool register_successful = ServerRegister();
         FreeGlobals();
-        return EXIT_SUCCESS;
+        return register_successful ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
     int server_socket_fd = 0;
