@@ -91,4 +91,6 @@ uint8_t kKgcIdentity[ENTITY_IDENTITY_LENGTH] = {
     0xEC,
 };
 
+uint16_t kKgcListenPort = 27600;
+
 #endif

@@ -23,8 +23,8 @@ void ParseServerArgs(
             OPT_BOOLEAN('r', "register", &register_server, "register the server from KGC", NULL, 0, 0),
             OPT_GROUP("Mandatory options to run server"),
             OPT_STRING('m', "mode", &mode, "server mode(KGC|PROXY)", NULL, 0, 0),
-            OPT_INTEGER('p', "port", &listen_port, "listen port", NULL, 0, 0),
             OPT_GROUP("Options required in PROXY mode"),
+            OPT_INTEGER('p', "port", &listen_port, "listen port", NULL, 0, 0),
             OPT_STRING('\0', "fwd-ip", &forward_ip, "proxy forward ip", NULL, 0, 0),
             OPT_INTEGER('\0', "fwd-port", &forward_port, "proxy forward port", NULL, 0, 0),
             OPT_GROUP("Optional options"),
@@ -68,17 +68,21 @@ void ParseServerArgs(
         PRINT_ERROR_INVALID_OPTION_VALUE("%s", mode, "'mode'('m')");
     }
 
-    if (listen_port == -1)
-    {
-        PRINT_ERROR_REQUIRED_OPTION_NOT_PROVIDED("'port'('p')");
-    }
-    else if (listen_port < 0 || listen_port > 65535)
-    {
-        PRINT_ERROR_INVALID_OPTION_VALUE("%d", listen_port, "'port'('p')");
-    }
-
     if (server_args_ret->mode == SERVER_MODE_PROXY)
     {
+        if (listen_port == -1)
+        {
+            PRINT_ERROR_REQUIRED_OPTION_NOT_PROVIDED("'port'('p')");
+        }
+        else if (listen_port < 0 || listen_port > 65535)
+        {
+            PRINT_ERROR_INVALID_OPTION_VALUE("%d", listen_port, "'port'('p')");
+        }
+        else
+        {
+            server_args_ret->listen_port = listen_port;
+        }
+
         if (forward_ip == NULL)
         {
             PRINT_ERROR_REQUIRED_OPTION_NOT_PROVIDED("'fwd-ip'");
@@ -101,6 +105,10 @@ void ParseServerArgs(
         }
 
         server_args_ret->forward_port = forward_port;
+    }
+    else if (server_args_ret->mode == SERVER_MODE_KGC)
+    {
+        server_args_ret->listen_port = kKgcListenPort;
     }
 
     if (log_level == NULL || !strcmp(log_level, "WARN"))
