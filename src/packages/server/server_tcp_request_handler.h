@@ -25,13 +25,11 @@
                       KGC_REGISTER_RESPONSE_FAILURE_HEADER_LENGTH); \
         send_buffer.data[0] = KGC_MSG_TYPE_RESIGTER_RESPONSE;       \
         send_buffer.data[1] = KGC_REGISTER_STATUS_FAILURE;          \
-        if (!SendApplicationData(socket_fd,                         \
-                                 handshake_result,                  \
-                                 false,                             \
-                                 &send_buffer))                     \
-        {                                                           \
-            KGC_SERVE_FREE_RETURN_FALSE;                            \
-        }                                                           \
+        SendApplicationData(socket_fd,                              \
+                            handshake_result,                       \
+                            false,                                  \
+                            &send_buffer);                          \
+        KGC_SERVE_FREE_RETURN_FALSE;                                \
     } while (false)
 
 #define KGC_SERVE_BELONGING_SERVER_CLOSE_SEND_FAILURE \
