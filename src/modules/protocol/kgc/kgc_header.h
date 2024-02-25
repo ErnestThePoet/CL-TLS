@@ -84,7 +84,7 @@
 #define KGC_REGISTER_RESPONSE_SUCCESS_HEADER_LENGTH \
     (KGC_MSG_TYPE_LENGTH +                          \
      KGC_STATUS_CODE_LENGTH +                       \
-     CLTLS_ENTITY_PUBLIC_KEY_SIGNATURE_LENGTH)
+     CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH)
 
 /******************************************************
  * Register Response(Failure)
