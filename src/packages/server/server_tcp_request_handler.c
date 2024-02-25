@@ -160,7 +160,7 @@ static bool KgcServe(const int socket_fd,
 
             if (receive_buffer.data[0] != KGC_MSG_TYPE_ADD_CLIENT_RESPONSE)
             {
-                LogError("[%s] Unexpected KGC message received from "
+                LogError("[%s] Unexpected KGC message type received from "
                          "belonging server %s; ADD_CLIENT_RESPONSE expected",
                          current_stage,
                          current_identity_hex);
