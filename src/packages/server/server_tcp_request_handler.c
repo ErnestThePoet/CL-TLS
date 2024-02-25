@@ -1,6 +1,6 @@
 #include "server_tcp_request_handler.h"
 
-static bool KgcServe(const ServerHandshakeCtx *ctx,
+static bool KgcServe(const int socket_fd,
                      const HandshakeResult *handshake_result)
 {
     ByteVec send_buffer;
@@ -11,7 +11,7 @@ static bool KgcServe(const ServerHandshakeCtx *ctx,
 
     bool connection_closed = false;
 
-    if (!ReceiveApplicationData(ctx->socket_fd,
+    if (!ReceiveApplicationData(socket_fd,
                                 handshake_result,
                                 false,
                                 &receive_buffer,
@@ -47,7 +47,7 @@ static bool KgcServe(const ServerHandshakeCtx *ctx,
 
     if (!ED25519_sign(binded_id_pka_signature,
                       binded_id_pka, CLTLS_BINDED_IDENTITY_PKA_LENGTH,
-                      ctx->server_private_key))
+                      kServerPrivateKey))
     {
         LogError("[%s] ED25519_sign() for |binded_id_pka_signature| failed: %s",
                  current_stage,
@@ -114,10 +114,10 @@ static bool KgcServe(const ServerHandshakeCtx *ctx,
                 .socket_fd = belonging_server_socket_fd,
                 .application_layer_protocol = CLTLS_PROTOCOL_KGC,
                 .client_cipher_suite_set = &kServerCipherSuiteSet,
-                .client_identity = ctx->server_identity,
-                .client_private_key = ctx->server_private_key,
-                .client_public_key = ctx->server_public_key,
-                .kgc_public_key = ctx->kgc_public_key,
+                .client_identity = kServerIdentity,
+                .client_private_key = kServerPrivateKey,
+                .client_public_key = kServerPublicKey,
+                .kgc_public_key = kKgcPublicKey,
                 .server_identity = belonging_server_id_ip->key.id};
 
             HandshakeResult client_handshake_result;
@@ -194,7 +194,7 @@ static bool KgcServe(const ServerHandshakeCtx *ctx,
            binded_id_pka_signature,
            CLTLS_ENTITY_PUBLIC_KEY_SIGNATURE_LENGTH);
 
-    if (!SendApplicationData(ctx->socket_fd,
+    if (!SendApplicationData(socket_fd,
                              handshake_result,
                              false,
                              &send_buffer))

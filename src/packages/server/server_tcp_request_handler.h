@@ -25,7 +25,7 @@
                       KGC_REGISTER_RESPONSE_FAILURE_HEADER_LENGTH); \
         send_buffer.data[0] = KGC_MSG_TYPE_RESIGTER_RESPONSE;       \
         send_buffer.data[1] = KGC_REGISTER_STATUS_FAILURE;          \
-        if (!SendApplicationData(ctx->socket_fd,                    \
+        if (!SendApplicationData(socket_fd,                         \
                                  handshake_result,                  \
                                  false,                             \
                                  &send_buffer))                     \
