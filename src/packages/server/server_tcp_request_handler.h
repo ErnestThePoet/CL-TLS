@@ -39,8 +39,12 @@
         KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;     \
     } while (false)
 
-#define KGC_SERVE_BELONGING_SERVER_SEND_ERROR_STOP_NOTIFY(ERROR_CODE) \
-    CLTLS_SEND_ERROR_STOP_NOTIFY(belonging_server_socket_fd, ERROR_CODE)
+#define KGC_SERVE_BELONGING_SERVER_SEND_ERROR_STOP_NOTIFY(ERROR_CODE)         \
+    do                                                                        \
+    {                                                                         \
+        CLTLS_SEND_ERROR_STOP_NOTIFY(belonging_server_socket_fd, ERROR_CODE); \
+        KGC_SERVE_BELONGING_SERVER_CLOSE_SEND_FAILURE;                        \
+    } while (false)
 
 void *ServerTcpRequestHandler(void *arg);
 

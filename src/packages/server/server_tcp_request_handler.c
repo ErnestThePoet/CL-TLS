@@ -166,7 +166,6 @@ static bool KgcServe(const int socket_fd,
                          current_identity_hex);
                 KGC_SERVE_BELONGING_SERVER_SEND_ERROR_STOP_NOTIFY(
                     CLTLS_ERROR_APPLICATION_LAYER_ERROR);
-                KGC_SERVE_BELONGING_SERVER_CLOSE_SEND_FAILURE;
             }
 
             if (receive_buffer.data[KGC_MSG_TYPE_LENGTH] ==
@@ -177,7 +176,6 @@ static bool KgcServe(const int socket_fd,
                          current_identity_hex);
                 KGC_SERVE_BELONGING_SERVER_SEND_ERROR_STOP_NOTIFY(
                     CLTLS_ERROR_APPLICATION_LAYER_ERROR);
-                KGC_SERVE_BELONGING_SERVER_CLOSE_SEND_FAILURE;
             }
 
             TcpClose(belonging_server_socket_fd);
