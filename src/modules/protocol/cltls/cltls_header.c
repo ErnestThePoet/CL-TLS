@@ -31,7 +31,7 @@ const char *GetCltlsErrorMessage(const uint8_t error_code)
     case CLTLS_ERROR_APPLICATION_LAYER_ERROR:
         return "ERROR_APPLICATION_LAYER_ERROR";
     default:
-        return "";
+        return "<UNKNOWN>";
     }
 }
 
