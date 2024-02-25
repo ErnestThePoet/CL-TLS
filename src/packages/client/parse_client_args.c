@@ -50,6 +50,10 @@ void ParseClientArgs(
     {
         PRINT_ERROR_INVALID_OPTION_VALUE("%d", listen_port, "'port'('p')");
     }
+    else
+    {
+        client_args_ret->listen_port = listen_port;
+    }
 
     if (log_level == NULL || !strcmp(log_level, "WARN"))
     {
