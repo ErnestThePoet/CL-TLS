@@ -217,8 +217,6 @@ void *ServerTcpRequestHandler(void *arg)
     const ServerArgs *server_args = (const ServerArgs *)ctx->extra;
 
     ServerHandshakeCtx server_handshake_ctx = {
-        .forward_ip = server_args->forward_ip,
-        .forward_port = server_args->forward_port,
         .kgc_public_key = kKgcPublicKey,
         .mode = server_args->mode,
         .preferred_cipher_suite = server_args->preferred_cipher_suite,

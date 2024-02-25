@@ -13,8 +13,6 @@ typedef struct
 {
     int socket_fd;
     ServerMode mode;
-    char *forward_ip;
-    uint16_t forward_port;
     uint8_t *server_identity;
     uint8_t *server_public_key;
     uint8_t *server_private_key;
