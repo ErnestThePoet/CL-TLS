@@ -4,6 +4,7 @@ void ParseClientArgs(
     const int argc, char *argv[], ClientArgs *client_args_ret)
 {
     int register_client = 0;
+    const char *belonging_server_ids_file_path = NULL;
     int listen_port = -1;
     const char *log_level = NULL;
     const char *config_file_path = NULL;
@@ -17,6 +18,8 @@ void ParseClientArgs(
             OPT_HELP(),
             OPT_GROUP("Register server"),
             OPT_BOOLEAN('r', "register", &register_client, "register the client from KGC", NULL, 0, 0),
+            OPT_GROUP("Mandatory options to register client"),
+            OPT_STRING('\0', "bs", &belonging_server_ids_file_path, "belonging server IDs file path", NULL, 0, 0),
             OPT_GROUP("Mandatory options to run client"),
             OPT_INTEGER('p', "port", &listen_port, "listen port", NULL, 0, 0),
             OPT_GROUP("Optional options"),
@@ -35,6 +38,21 @@ void ParseClientArgs(
     if (register_client)
     {
         client_args_ret->register_client = true;
+
+        if (belonging_server_ids_file_path == NULL)
+        {
+            PRINT_ERROR_REQUIRED_OPTION_NOT_PROVIDED("'bs'");
+        }
+        else if (strlen(belonging_server_ids_file_path) >= MAX_PATH_LENGTH)
+        {
+            PRINT_ERROR_INVALID_OPTION_VALUE(
+                "%s", belonging_server_ids_file_path, "'bs'");
+        }
+        else
+        {
+            strcpy(client_args_ret->belonging_server_ids_file_path,
+                   belonging_server_ids_file_path);
+        }
         return;
     }
     else
