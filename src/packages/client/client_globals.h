@@ -13,6 +13,8 @@
 
 #include "client_args.h"
 
+uint64_t kSocketBlockSize = 0;
+
 uint8_t kClientIdentity[ENTITY_IDENTITY_LENGTH] = {0};
 uint8_t kKgcPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
 uint8_t kClientPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};

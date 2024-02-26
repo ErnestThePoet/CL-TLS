@@ -66,6 +66,15 @@ bool InitializeGlobals(const ServerArgs *server_args)
         return false;
     }
 
+    if (fscanf(config_file_fp,
+               "SOCKET_BLOCK_SIZE=%llu\n",
+               &kSocketBlockSize) != 1)
+    {
+        LogError("Error loading config file: failed to read SOCKET_BLOCK_SIZE");
+        fclose(config_file_fp);
+        return false;
+    }
+
     fclose(config_file_fp);
 
     // Load server identity

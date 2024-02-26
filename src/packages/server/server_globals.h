@@ -16,6 +16,8 @@
 
 #include "server_args.h"
 
+uint64_t kSocketBlockSize = 0;
+
 uint8_t kServerIdentity[ENTITY_IDENTITY_LENGTH] = {0};
 uint8_t kKgcPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
 uint8_t kServerPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
