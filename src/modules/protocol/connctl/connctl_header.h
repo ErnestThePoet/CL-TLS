@@ -13,6 +13,7 @@
 #define CONNCTL_MSG_TYPE_CONNECT_RESPONSE 0x10
 
 #define CONNCTL_MSG_TYPE_LENGTH 1
+#define CONNCTL_PORT_LENGTH 2
 #define CONNCTL_STATUS_CODE_LENGTH 1
 
 /******************************************************
@@ -23,11 +24,13 @@
  * ---------------------------------------
  * | Identity                            |  32B
  * ---------------------------------------
+ * | Port                                |  2B
+ * ---------------------------------------
  *
  ******************************************************/
 
 #define CONNCTL_CONNECT_REQUEST_HEADER_LENGTH \
-    (CONNCTL_MSG_TYPE_LENGTH + ENTITY_IDENTITY_LENGTH)
+    (CONNCTL_MSG_TYPE_LENGTH + ENTITY_IDENTITY_LENGTH + CONNCTL_PORT_LENGTH)
 
 /******************************************************
  * Connect Response
