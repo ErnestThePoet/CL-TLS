@@ -21,6 +21,8 @@ void *ClientTcpRequestHandler(void *arg)
         CLIENT_CLOSE_C_FREE_RETURN;
     }
 
+    current_stage = "Connect and Handshake with Server";
+
     char server_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
     Bin2Hex(buffer.data + CONNCTL_MSG_TYPE_LENGTH,
             server_id_hex,
@@ -75,6 +77,8 @@ void *ClientTcpRequestHandler(void *arg)
         CLIENT_SEND_CONNECT_FAILURE_CLOSE_CS_FREE_RETURN;
     }
 
+    current_stage = "SEND Connect Response";
+
     ByteVecResize(&buffer, CONNCTL_CONNECT_RESPONSE_LENGTH);
     buffer.data[0] = CONNCTL_MSG_TYPE_CONNECT_RESPONSE;
     buffer.data[1] = CONNCTL_CONNECT_STATUS_SUCCESS;
@@ -87,6 +91,8 @@ void *ClientTcpRequestHandler(void *arg)
         CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
             CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
+
+    current_stage = "Forward MQTT Packets";
 
     // Loop until we receive MQTT DISCONNECT
     while (true)
