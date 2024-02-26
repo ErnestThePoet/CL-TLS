@@ -24,13 +24,6 @@
         SERVER_REGISTER_FREE_RETURN_FALSE;      \
     } while (false)
 
-#define SERVER_REGISTER_SEND_ERROR_STOP_NOFITY(ERROR_CODE)       \
-    do                                                           \
-    {                                                            \
-        CLTLS_SEND_ERROR_STOP_NOTIFY(kgc_socket_fd, ERROR_CODE); \
-        SERVER_REGISTER_CLOSE_FREE_RETURN_FALSE;                 \
-    } while (false)
-
 bool ServerRegister();
 
 #endif

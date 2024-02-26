@@ -10,6 +10,95 @@ bool ServerRegister()
 
     const char *current_stage = "Register Server";
 
+    BIGNUM *pka_bn = BN_new();
+    if (pka_bn == NULL)
+    {
+        LogError("[%s] Memory allocation for |pka_bn| failed",
+                 current_stage);
+        exit(EXIT_FAILURE);
+    }
+
+    BIGNUM *ska_bn = BN_new();
+    if (ska_bn == NULL)
+    {
+        LogError("[%s] Memory allocation for |ska_bn| failed",
+                 current_stage);
+        exit(EXIT_FAILURE);
+    }
+
+    if (!BN_rand(pka_bn,
+                 CLTLS_ENTITY_PKA_LENGTH * 8,
+                 BN_RAND_TOP_ANY,
+                 BN_RAND_BOTTOM_ANY))
+    {
+        LogError("[%s] BN_rand() for |pka_bn| failed: %s",
+                 current_stage,
+                 ERR_error_string(ERR_get_error(), NULL));
+        BN_free(pka_bn);
+        BN_free(ska_bn);
+        SERVER_REGISTER_FREE_RETURN_FALSE;
+    }
+
+    if (!BN_rand(ska_bn,
+                 CLTLS_ENTITY_SKA_LENGTH * 8,
+                 BN_RAND_TOP_ANY,
+                 BN_RAND_BOTTOM_ANY))
+    {
+        LogError("[%s] BN_rand() for |ska_bn| failed: %s",
+                 current_stage,
+                 ERR_error_string(ERR_get_error(), NULL));
+        BN_free(pka_bn);
+        BN_free(ska_bn);
+        SERVER_REGISTER_FREE_RETURN_FALSE;
+    }
+
+    uint8_t pka[CLTLS_ENTITY_PKA_LENGTH] = {0};
+    uint8_t sign_ska[CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH +
+                     CLTLS_ENTITY_SKA_LENGTH] = {0};
+
+    if (!BN_bn2bin_padded(pka,
+                          CLTLS_ENTITY_PKA_LENGTH,
+                          pka_bn))
+    {
+        LogError("[%s] BN_bn2bin_padded() for |pka| failed: %s",
+                 current_stage,
+                 ERR_error_string(ERR_get_error(), NULL));
+        BN_free(pka_bn);
+        BN_free(ska_bn);
+        SERVER_REGISTER_FREE_RETURN_FALSE;
+    }
+
+    if (!BN_bn2bin_padded(sign_ska + CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH,
+                          CLTLS_ENTITY_SKA_LENGTH,
+                          ska_bn))
+    {
+        LogError("[%s] BN_bn2bin_padded() for |sign_ska| failed: %s",
+                 current_stage,
+                 ERR_error_string(ERR_get_error(), NULL));
+        BN_free(pka_bn);
+        BN_free(ska_bn);
+        SERVER_REGISTER_FREE_RETURN_FALSE;
+    }
+
+    BN_free(pka_bn);
+    BN_free(ska_bn);
+
+    ByteVecResize(&send_buffer, KGC_REGISTER_REQUEST_SERVER_HEADER_LENGTH);
+
+    send_buffer.data[0] = KGC_MSG_TYPE_REGISTER_REQUEST;
+    send_buffer.data[KGC_MSG_TYPE_LENGTH] = KGC_ENTITY_TYPE_SERVER;
+    memcpy(send_buffer.data +
+               KGC_MSG_TYPE_LENGTH +
+               KGC_ENTITY_TYPE_LENGTH,
+           kServerIdentity,
+           ENTITY_IDENTITY_LENGTH);
+    memcpy(send_buffer.data +
+               KGC_MSG_TYPE_LENGTH +
+               KGC_ENTITY_TYPE_LENGTH +
+               ENTITY_IDENTITY_LENGTH,
+           pka,
+           CLTLS_ENTITY_PKA_LENGTH);
+
     IdIp kgc_idip_key;
     memcpy(kgc_idip_key.id, kKgcIdentity, ENTITY_IDENTITY_LENGTH);
     set_IdIp_node *kgc_idip = set_IdIp_find(&kServerIdIpTable, kgc_idip_key);
@@ -47,99 +136,6 @@ bool ServerRegister()
                  current_stage);
         SERVER_REGISTER_CLOSE_FREE_RETURN_FALSE;
     }
-
-    BIGNUM *pka_bn = BN_new();
-    if (pka_bn == NULL)
-    {
-        LogError("[%s] Memory allocation for |pka_bn| failed",
-                 current_stage);
-        exit(EXIT_FAILURE);
-    }
-
-    BIGNUM *ska_bn = BN_new();
-    if (ska_bn == NULL)
-    {
-        LogError("[%s] Memory allocation for |ska_bn| failed",
-                 current_stage);
-        exit(EXIT_FAILURE);
-    }
-
-    if (!BN_rand(pka_bn,
-                 CLTLS_ENTITY_PKA_LENGTH * 8,
-                 BN_RAND_TOP_ANY,
-                 BN_RAND_BOTTOM_ANY))
-    {
-        LogError("[%s] BN_rand() for |pka_bn| failed: %s",
-                 current_stage,
-                 ERR_error_string(ERR_get_error(), NULL));
-        BN_free(pka_bn);
-        BN_free(ska_bn);
-        SERVER_REGISTER_SEND_ERROR_STOP_NOFITY(
-            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
-    }
-
-    if (!BN_rand(ska_bn,
-                 CLTLS_ENTITY_SKA_LENGTH * 8,
-                 BN_RAND_TOP_ANY,
-                 BN_RAND_BOTTOM_ANY))
-    {
-        LogError("[%s] BN_rand() for |ska_bn| failed: %s",
-                 current_stage,
-                 ERR_error_string(ERR_get_error(), NULL));
-        BN_free(pka_bn);
-        BN_free(ska_bn);
-        SERVER_REGISTER_SEND_ERROR_STOP_NOFITY(
-            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
-    }
-
-    uint8_t pka[CLTLS_ENTITY_PKA_LENGTH] = {0};
-    uint8_t sign_ska[CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH +
-                     CLTLS_ENTITY_SKA_LENGTH] = {0};
-
-    if (!BN_bn2bin_padded(pka,
-                          CLTLS_ENTITY_PKA_LENGTH,
-                          pka_bn))
-    {
-        LogError("[%s] BN_bn2bin_padded() for |pka| failed: %s",
-                 current_stage,
-                 ERR_error_string(ERR_get_error(), NULL));
-        BN_free(pka_bn);
-        BN_free(ska_bn);
-        SERVER_REGISTER_SEND_ERROR_STOP_NOFITY(
-            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
-    }
-
-    if (!BN_bn2bin_padded(sign_ska + CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH,
-                          CLTLS_ENTITY_SKA_LENGTH,
-                          ska_bn))
-    {
-        LogError("[%s] BN_bn2bin_padded() for |sign_ska| failed: %s",
-                 current_stage,
-                 ERR_error_string(ERR_get_error(), NULL));
-        BN_free(pka_bn);
-        BN_free(ska_bn);
-        SERVER_REGISTER_SEND_ERROR_STOP_NOFITY(
-            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
-    }
-
-    BN_free(pka_bn);
-    BN_free(ska_bn);
-
-    ByteVecResize(&send_buffer, KGC_REGISTER_REQUEST_SERVER_HEADER_LENGTH);
-
-    send_buffer.data[0] = KGC_MSG_TYPE_REGISTER_REQUEST;
-    send_buffer.data[KGC_MSG_TYPE_LENGTH] = KGC_ENTITY_TYPE_SERVER;
-    memcpy(send_buffer.data +
-               KGC_MSG_TYPE_LENGTH +
-               KGC_ENTITY_TYPE_LENGTH,
-           kServerIdentity,
-           ENTITY_IDENTITY_LENGTH);
-    memcpy(send_buffer.data +
-               KGC_MSG_TYPE_LENGTH +
-               KGC_ENTITY_TYPE_LENGTH +
-               ENTITY_IDENTITY_LENGTH,
-           pka,
-           CLTLS_ENTITY_PKA_LENGTH);
 
     if (!SendApplicationData(kgc_socket_fd,
                              &client_handshake_result,
