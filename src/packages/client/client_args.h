@@ -9,7 +9,7 @@
 typedef struct
 {
     bool register_client;
-    char belonging_server_ids_file_path[MAX_PATH_LENGTH];
+    char belonging_servers_file_path[MAX_PATH_LENGTH];
     uint16_t listen_port;
     char config_file_path[MAX_PATH_LENGTH];
 } ClientArgs;
