@@ -198,11 +198,5 @@ void *ClientTcpRequestHandler(void *arg)
         }
     }
 
-    TcpClose(server_socket_fd);
-    TcpClose(ctx->client_socket_fd);
-
-    ByteVecFree(&buffer);
-    free(arg);
-
-    return NULL;
+    CLIENT_CLOSE_CS_FREE_RETURN;
 }
