@@ -1,6 +1,8 @@
 #ifndef CONNCTL_HEADER_H_
 #define CONNCTL_HEADER_H_
 
+#include <common/def.h>
+
 ////////// Message Types
 // When a local client wants the CL-TLS proxy to
 // establish a connection to a server, it sends a
@@ -9,6 +11,9 @@
 // to HTTPS proxy servers.
 #define CONNCTL_MSG_TYPE_CONNECT_REQUEST 0x00
 #define CONNCTL_MSG_TYPE_CONNECT_RESPONSE 0x10
+
+#define CONNCTL_MSG_TYPE_LENGTH 1
+#define CONNCTL_STATUS_CODE_LENGTH 1
 
 /******************************************************
  * Connect Request
@@ -21,6 +26,9 @@
  *
  ******************************************************/
 
+#define CONNCTL_CONNECT_REQUEST_HEADER_LENGTH \
+    (CONNCTL_MSG_TYPE_LENGTH + ENTITY_IDENTITY_LENGTH)
+
 /******************************************************
  * Connect Response
  *
@@ -31,5 +39,8 @@
  * ---------------------------------------
  *
  ******************************************************/
+
+#define CONNCTL_CONNECT_RESPONSE_LENGTH \
+    (CONNCTL_MSG_TYPE_LENGTH + CONNCTL_STATUS_CODE_LENGTH)
 
 #endif
