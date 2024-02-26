@@ -97,13 +97,8 @@ void *ClientTcpRequestHandler(void *arg)
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
 
-        uint8_t mqtt_msg_type = (buffer.data[0] >> 4);
+        const uint8_t mqtt_msg_type = (buffer.data[0] >> 4);
         LogInfo("Received %s", GetMqttMessageType(mqtt_msg_type));
-
-        if (mqtt_msg_type == MQTT_MSG_TYPE_DISCONNECT)
-        {
-            break;
-        }
 
         // Decode MQTT remaining length
         uint8_t current_byte = buffer.data[1];
@@ -166,6 +161,11 @@ void *ClientTcpRequestHandler(void *arg)
             ByteVecResize(&buffer, current_read_size);
 
             receive_buffer_offset = 0;
+        }
+
+        if (mqtt_msg_type == MQTT_MSG_TYPE_DISCONNECT)
+        {
+            break;
         }
 
         // Send data back
