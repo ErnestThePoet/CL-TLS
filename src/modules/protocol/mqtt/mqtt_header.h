@@ -19,6 +19,8 @@
  *
  **************************************************************/
 
+#define MQTT_FIXED_HEADER_LENGTH 2
+
 #define MQTT_MSG_TYPE_CONNECT 1
 #define MQTT_MSG_TYPE_CONNACK 2
 #define MQTT_MSG_TYPE_PUBLISH 3
@@ -33,5 +35,7 @@
 #define MQTT_MSG_TYPE_PINGREQ 12
 #define MQTT_MSG_TYPE_PINGRESP 13
 #define MQTT_MSG_TYPE_DISCONNECT 14
+
+const char *GetMqttMessageType(const uint8_t msg_type);
 
 #endif
