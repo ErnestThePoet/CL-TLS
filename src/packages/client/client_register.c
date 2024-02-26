@@ -174,7 +174,7 @@ bool ClientRegister(const char *belonging_servers_file_path)
                             kKgcListenPort,
                             &kgc_socket_fd))
     {
-        LogError("[%s] Cannot connect to KGC: %s", current_stage, STR_ERRNO);
+        LogError("[%s] Cannot connect to KGC", current_stage);
         CLIENT_REGISTER_FREE_RETURN_FALSE;
     }
 

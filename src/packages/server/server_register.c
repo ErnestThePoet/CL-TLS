@@ -113,7 +113,7 @@ bool ServerRegister()
                             kKgcListenPort,
                             &kgc_socket_fd))
     {
-        LogError("[%s] Cannot connect to KGC: %s", current_stage, STR_ERRNO);
+        LogError("[%s] Cannot connect to KGC", current_stage);
         SERVER_REGISTER_FREE_RETURN_FALSE;
     }
 

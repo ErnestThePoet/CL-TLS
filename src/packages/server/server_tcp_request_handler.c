@@ -100,10 +100,9 @@ static bool KgcServe(const int socket_fd,
                                     current_port,
                                     &belonging_server_socket_fd))
             {
-                LogError("[%s] Cannot connect to belonging server %s: %s",
+                LogError("[%s] Cannot connect to belonging server %s",
                          current_stage,
-                         current_identity_hex,
-                         STR_ERRNO);
+                         current_identity_hex);
                 KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;
             }
 
