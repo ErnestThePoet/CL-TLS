@@ -5,13 +5,16 @@
 
 /**************************************************************
  * MQTT Fixed Header
+ * See https://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/mqtt-v3r1.html
+ * for reference
  *
  * ---------------------------------------------------------
  * | bit | 7 | 6 | 5 | 4 |     3     |  2  |  1  |    0    |
  * ---------------------------------------------------------
  * | 1B  | Message Type  | DUP Flag  | QOS Level | RETAIN  |
  * ---------------------------------------------------------
- * | 1B  | Remaining Length                                |
+ * | 1B  | Remaining Length (Uses variable length encoding |
+ * |     | scheme; See reference for explanation)          |
  * ---------------------------------------------------------
  *
  **************************************************************/
