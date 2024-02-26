@@ -37,7 +37,8 @@ void TcpClose(const int socket_fd);
 bool TcpCreateServer(uint16_t port,
                      int *server_socket_fd_ret);
 
-// TcpHandleRequest is responsible for freeing the TcpServerHandlerCtx* arg.
+// TcpHandleRequest is responsible for freeing the TcpServerHandlerCtx* arg
+// and closing client_socket_fd.
 void TcpRunServer(const int server_socket_fd,
                   void *(*TcpRequestHandler)(void *),
                   void *ctx_extra);
