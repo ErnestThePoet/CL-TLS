@@ -183,8 +183,8 @@ bool ClientRegister(const char *belonging_servers_file_path)
         .application_layer_protocol = CLTLS_PROTOCOL_KGC_REGISTER_REQUEST,
         .client_cipher_suite_set = &kClientCipherSuiteSet,
         .client_identity = kClientIdentity,
-        .client_private_key = kClientPrivateKey, // Empty
-        .client_public_key = kClientPublicKey,   // Empty
+        .client_private_key = NULL, // Empty
+        .client_public_key = NULL,  // Empty
         .kgc_public_key = kKgcPublicKey,
         .client_identity = kKgcIdentity};
 
