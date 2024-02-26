@@ -65,7 +65,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     {
         LogError("[%s] Server's chosen cipher suite is not supported",
                  current_stage);
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_SELECTED_CIPHER_SUITE_UNSUPPORTED);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_SELECTED_CIPHER_SUITE_UNSUPPORTED);
     }
 
     const HashScheme *hash = NULL;
@@ -85,7 +86,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
         LogError("[%s] X25519() failed: %s",
                  current_stage,
                  ERR_error_string(ERR_get_error(), NULL));
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     // Used as both secret and salt
@@ -145,7 +147,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     {
         LogError("[%s] Decryption of |server_public_key| failed",
                  current_stage);
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     if (decrypted_length != CLTLS_ENTITY_PUBLIC_KEY_LENGTH)
@@ -154,7 +157,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
                  current_stage,
                  decrypted_length,
                  CLTLS_ENTITY_PUBLIC_KEY_LENGTH);
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_PUBLIC_KEY_LENGTH);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INVALID_PUBLIC_KEY_LENGTH);
     }
 
     uint8_t server_public_key_pkf[CLTLS_ENTITY_PKF_LENGTH] = {0};
@@ -176,7 +180,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     {
         LogError("[%s] Server public key verification failed, is he an adversary?",
                  current_stage);
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_PUBLIC_KEY_VERIFY_FAILED);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_PUBLIC_KEY_VERIFY_FAILED);
     }
 
     // [Receive] Server Public Key Verify
@@ -196,7 +201,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     {
         LogError("[%s] Decryption of |server_public_key_verify| failed",
                  current_stage);
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     if (decrypted_length != CLTLS_TRAFFIC_SIGNATURE_LENGTH)
@@ -205,7 +211,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
                  current_stage,
                  decrypted_length,
                  CLTLS_TRAFFIC_SIGNATURE_LENGTH);
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_TRAFFIC_SIGNATURE_LENGTH);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INVALID_TRAFFIC_SIGNATURE_LENGTH);
     }
 
     uint8_t traffic_hash[MAX_HASH_LENGTH] = {0};
@@ -222,7 +229,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     {
         LogError("[%s] Server traffic signature verification failed, is there an MiTM?",
                  current_stage);
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_TRAFFIC_SIGNATURE_VERIFY_FAILED);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_TRAFFIC_SIGNATURE_VERIFY_FAILED);
     }
 
     const bool should_send_public_key =
@@ -255,7 +263,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
         LogError("[%s] HKDF_expand() for |server_finished_key| failed: %s",
                  current_stage,
                  ERR_error_string(ERR_get_error(), NULL));
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
@@ -271,7 +280,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
         LogError("[%s] HMAC() for |server_verify_data| failed: %s",
                  current_stage,
                  ERR_error_string(ERR_get_error(), NULL));
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     ByteVecResize(&decryption_buffer, receive_remaining_length);
@@ -286,7 +296,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     {
         LogError("[%s] Decryption of |server_public_key_verify| failed",
                  current_stage);
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     if (decrypted_length != verify_data_length)
@@ -295,14 +306,16 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
                  current_stage,
                  decrypted_length,
                  verify_data_length);
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INVALID_VERIFY_DATA_LENGTH);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INVALID_VERIFY_DATA_LENGTH);
     }
 
     if (memcmp(verify_data, decryption_buffer.data, verify_data_length))
     {
         LogError("[%s] Server finished verify data verification failed, is there an attack?",
                  current_stage);
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_VERIFY_DATA_VERIFY_FAILED);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_VERIFY_DATA_VERIFY_FAILED);
     }
 
     if (should_send_public_key)
@@ -325,7 +338,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
         {
             LogError("[%s] Encryption of |client_public_key| failed",
                      current_stage);
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
 
         ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
@@ -358,7 +372,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
             LogError("[%s] ED25519_sign() for |traffic_hash| failed: %s",
                      current_stage,
                      ERR_error_string(ERR_get_error(), NULL));
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
 
         ByteVecResize(&send_buffer,
@@ -375,7 +390,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
         {
             LogError("[%s] Encryption of |traffic_signature| failed",
                      current_stage);
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
 
         ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
@@ -409,7 +425,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
         LogError("[%s] HKDF_expand() for |client_finished_key| failed: %s",
                  current_stage,
                  ERR_error_string(ERR_get_error(), NULL));
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
@@ -422,7 +439,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
         LogError("[%s] HMAC() for |client_verify_data| failed: %s",
                  current_stage,
                  ERR_error_string(ERR_get_error(), NULL));
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     ByteVecResize(&send_buffer,
@@ -439,7 +457,8 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     {
         LogError("[%s] Encryption of |client_verify_data| failed",
                  current_stage);
-        HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);

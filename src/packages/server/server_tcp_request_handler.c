@@ -124,7 +124,7 @@ static bool KgcServe(const int socket_fd,
                 LogError("[%s] CL-TLS handshake failed with belonging server %s",
                          current_stage,
                          current_identity_hex);
-                KGC_SERVE_BELONGING_SERVER_CLOSE_SEND_FAILURE;
+                KGC_SERVE_BS_CLOSE_SEND_FAILURE;
             }
 
             ByteVecResize(&send_buffer,
@@ -142,7 +142,7 @@ static bool KgcServe(const int socket_fd,
                 LogError("[%s] Failed to send ADD_CLIENT_REQUEST to belonging server %s",
                          current_stage,
                          current_identity_hex);
-                KGC_SERVE_BELONGING_SERVER_CLOSE_SEND_FAILURE;
+                KGC_SERVE_BS_CLOSE_SEND_FAILURE;
             }
 
             if (!ReceiveApplicationData(belonging_server_socket_fd,
@@ -154,7 +154,7 @@ static bool KgcServe(const int socket_fd,
                          "belonging server %s",
                          current_stage,
                          current_identity_hex);
-                KGC_SERVE_BELONGING_SERVER_CLOSE_SEND_FAILURE;
+                KGC_SERVE_BS_CLOSE_SEND_FAILURE;
             }
 
             if (receive_buffer.data[0] != KGC_MSG_TYPE_ADD_CLIENT_RESPONSE)
@@ -163,7 +163,7 @@ static bool KgcServe(const int socket_fd,
                          "belonging server %s; ADD_CLIENT_RESPONSE expected",
                          current_stage,
                          current_identity_hex);
-                KGC_SERVE_BELONGING_SERVER_SEND_ERROR_STOP_NOTIFY(
+                KGC_SERVE_BS_SEND_ERROR_STOP_NOTIFY_CLOSE_SEND_FAILURE(
                     CLTLS_ERROR_APPLICATION_LAYER_ERROR);
             }
 
@@ -173,7 +173,7 @@ static bool KgcServe(const int socket_fd,
                 LogError("[%s] Belonging server %s reports ADD_CLIENT_STATUS_FAILURE",
                          current_stage,
                          current_identity_hex);
-                KGC_SERVE_BELONGING_SERVER_SEND_ERROR_STOP_NOTIFY(
+                KGC_SERVE_BS_SEND_ERROR_STOP_NOTIFY_CLOSE_SEND_FAILURE(
                     CLTLS_ERROR_APPLICATION_LAYER_ERROR);
             }
 

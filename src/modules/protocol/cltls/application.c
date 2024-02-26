@@ -30,7 +30,7 @@ bool SendApplicationData(const int socket_fd,
     {
         LogError("[%s] Encryption of Application Data failed",
                  current_stage);
-        APPLICATION_SEND_SEND_ERROR_STOP_NOTIFY(
+        APPLICATION_SEND_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
             CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
@@ -83,7 +83,7 @@ bool ReceiveApplicationData(const int socket_fd,
     {
         LogError("[%s] Invalid message type received",
                  current_stage);
-        APPLICATION_RECEIVE_SEND_ERROR_STOP_NOTIFY(
+        APPLICATION_RECEIVE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
             CLTLS_ERROR_UNEXPECTED_MSG_TYPE);
     }
 
@@ -130,7 +130,7 @@ bool ReceiveApplicationData(const int socket_fd,
     {
         LogError("[%s] Decryption of Application Data failed",
                  current_stage);
-        APPLICATION_RECEIVE_SEND_ERROR_STOP_NOTIFY(
+        APPLICATION_RECEIVE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
             CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 

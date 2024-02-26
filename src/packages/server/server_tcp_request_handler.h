@@ -32,18 +32,18 @@
         KGC_SERVE_FREE_RETURN_FALSE;                                \
     } while (false)
 
-#define KGC_SERVE_BELONGING_SERVER_CLOSE_SEND_FAILURE \
-    do                                                \
-    {                                                 \
-        TcpClose(belonging_server_socket_fd);         \
-        KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;     \
+#define KGC_SERVE_BS_CLOSE_SEND_FAILURE           \
+    do                                            \
+    {                                             \
+        TcpClose(belonging_server_socket_fd);     \
+        KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE; \
     } while (false)
 
-#define KGC_SERVE_BELONGING_SERVER_SEND_ERROR_STOP_NOTIFY(ERROR_CODE)         \
+#define KGC_SERVE_BS_SEND_ERROR_STOP_NOTIFY_CLOSE_SEND_FAILURE(ERROR_CODE)    \
     do                                                                        \
     {                                                                         \
         CLTLS_SEND_ERROR_STOP_NOTIFY(belonging_server_socket_fd, ERROR_CODE); \
-        KGC_SERVE_BELONGING_SERVER_CLOSE_SEND_FAILURE;                        \
+        KGC_SERVE_BS_CLOSE_SEND_FAILURE;                                      \
     } while (false)
 
 void *ServerTcpRequestHandler(void *arg);

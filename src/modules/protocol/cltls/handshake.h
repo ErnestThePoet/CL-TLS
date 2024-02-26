@@ -51,24 +51,25 @@ typedef struct
         return false;                    \
     } while (false)
 
-#define HANDSHAKE_CHECK_ERROR_STOP_NOTIFY                                            \
-    do                                                                               \
-    {                                                                                \
-        if (CLTLS_MSG_TYPE(receive_buffer.data) == CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY) \
-        {                                                                            \
-            LogError("[%s] The other party send ERROR_STOP_NOTIFY: %s",              \
-                     current_stage,                                                  \
-                     GetCltlsErrorMessage(                                           \
-                         CLTLS_REMAINING_HEADER(receive_buffer.data[0])));           \
-            HANDSHAKE_FREE_RETURN_FALSE;                                             \
-        }                                                                            \
+#define HANDSHAKE_CHECK_ERROR_STOP_NOTIFY                                  \
+    do                                                                     \
+    {                                                                      \
+        if (CLTLS_MSG_TYPE(receive_buffer.data) ==                         \
+            CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)                              \
+        {                                                                  \
+            LogError("[%s] The other party send ERROR_STOP_NOTIFY: %s",    \
+                     current_stage,                                        \
+                     GetCltlsErrorMessage(                                 \
+                         CLTLS_REMAINING_HEADER(receive_buffer.data[0]))); \
+            HANDSHAKE_FREE_RETURN_FALSE;                                   \
+        }                                                                  \
     } while (false)
 
-#define HANDSHAKE_SEND_ERROR_STOP_NOTIFY(ERROR_CODE)              \
-    do                                                            \
-    {                                                             \
-        CLTLS_SEND_ERROR_STOP_NOTIFY(ctx->socket_fd, ERROR_CODE); \
-        HANDSHAKE_FREE_RETURN_FALSE;                              \
+#define HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(ERROR_CODE) \
+    do                                                                 \
+    {                                                                  \
+        CLTLS_SEND_ERROR_STOP_NOTIFY(ctx->socket_fd, ERROR_CODE);      \
+        HANDSHAKE_FREE_RETURN_FALSE;                                   \
     } while (false)
 
 #define HANDSHAKE_RECEIVE_COMMON_HEADER(MSG_TYPE)                          \
@@ -86,16 +87,19 @@ typedef struct
         }                                                                  \
     } while (false)
 
-#define HANDSHAKE_RECEIVE_CHECK_MSG_TYPE(MSG_TYPE)                                   \
-    do                                                                               \
-    {                                                                                \
-        if (CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_##MSG_TYPE &&      \
-            CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY) \
-        {                                                                            \
-            LogError("[%s] Invalid message type received, expecting " #MSG_TYPE,     \
-                     current_stage);                                                 \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_UNEXPECTED_MSG_TYPE);       \
-        }                                                                            \
+#define HANDSHAKE_RECEIVE_CHECK_MSG_TYPE(MSG_TYPE)                               \
+    do                                                                           \
+    {                                                                            \
+        if (CLTLS_MSG_TYPE(receive_buffer.data) !=                               \
+                CLTLS_MSG_TYPE_##MSG_TYPE &&                                     \
+            CLTLS_MSG_TYPE(receive_buffer.data) !=                               \
+                CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)                                \
+        {                                                                        \
+            LogError("[%s] Invalid message type received, expecting " #MSG_TYPE, \
+                     current_stage);                                             \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                  \
+                CLTLS_ERROR_UNEXPECTED_MSG_TYPE);                                \
+        }                                                                        \
     } while (false)
 
 #define HANDSHAKE_RECEIVE_REMAINING(MSG_TYPE, APPEND_TRAFFIC)                   \
@@ -130,43 +134,45 @@ typedef struct
         HANDSHAKE_RECEIVE_REMAINING(MSG_TYPE, APPEND_TRAFFIC); \
     } while (false)
 
-#define GENERATE_KE_KEY_RANDOM                                                      \
-    do                                                                              \
-    {                                                                               \
-        X25519_keypair(self_ke_public_key, self_ke_private_key);                    \
-                                                                                    \
-        BIGNUM *self_ke_random_bn = BN_new();                                       \
-        if (self_ke_random_bn == NULL)                                              \
-        {                                                                           \
-            LogError("[%s] Memory allocation for |self_ke_random_bn| failed",       \
-                     current_stage);                                                \
-            exit(EXIT_FAILURE);                                                     \
-        }                                                                           \
-                                                                                    \
-        if (!BN_rand(self_ke_random_bn,                                             \
-                     CLTLS_KE_RANDOM_LENGTH * 8,                                    \
-                     BN_RAND_TOP_ANY,                                               \
-                     BN_RAND_BOTTOM_ANY))                                           \
-        {                                                                           \
-            LogError("[%s] BN_rand() failed: %s",                                   \
-                     current_stage,                                                 \
-                     ERR_error_string(ERR_get_error(), NULL));                      \
-            BN_free(self_ke_random_bn);                                             \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR); \
-        }                                                                           \
-                                                                                    \
-        if (!BN_bn2bin_padded(self_ke_random,                                       \
-                              CLTLS_KE_RANDOM_LENGTH,                               \
-                              self_ke_random_bn))                                   \
-        {                                                                           \
-            LogError("[%s] BN_bn2bin_padded() failed: %s",                          \
-                     current_stage,                                                 \
-                     ERR_error_string(ERR_get_error(), NULL));                      \
-            BN_free(self_ke_random_bn);                                             \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR); \
-        }                                                                           \
-                                                                                    \
-        BN_free(self_ke_random_bn);                                                 \
+#define GENERATE_KE_KEY_RANDOM                                                \
+    do                                                                        \
+    {                                                                         \
+        X25519_keypair(self_ke_public_key, self_ke_private_key);              \
+                                                                              \
+        BIGNUM *self_ke_random_bn = BN_new();                                 \
+        if (self_ke_random_bn == NULL)                                        \
+        {                                                                     \
+            LogError("[%s] Memory allocation for |self_ke_random_bn| failed", \
+                     current_stage);                                          \
+            exit(EXIT_FAILURE);                                               \
+        }                                                                     \
+                                                                              \
+        if (!BN_rand(self_ke_random_bn,                                       \
+                     CLTLS_KE_RANDOM_LENGTH * 8,                              \
+                     BN_RAND_TOP_ANY,                                         \
+                     BN_RAND_BOTTOM_ANY))                                     \
+        {                                                                     \
+            LogError("[%s] BN_rand() failed: %s",                             \
+                     current_stage,                                           \
+                     ERR_error_string(ERR_get_error(), NULL));                \
+            BN_free(self_ke_random_bn);                                       \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(               \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                        \
+        }                                                                     \
+                                                                              \
+        if (!BN_bn2bin_padded(self_ke_random,                                 \
+                              CLTLS_KE_RANDOM_LENGTH,                         \
+                              self_ke_random_bn))                             \
+        {                                                                     \
+            LogError("[%s] BN_bn2bin_padded() failed: %s",                    \
+                     current_stage,                                           \
+                     ERR_error_string(ERR_get_error(), NULL));                \
+            BN_free(self_ke_random_bn);                                       \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(               \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                        \
+        }                                                                     \
+                                                                              \
+        BN_free(self_ke_random_bn);                                           \
     } while (false)
 
 #define CALCULATE_HANDSHAKE_KEY                                                      \
@@ -184,7 +190,8 @@ typedef struct
             LogError("[%s] HKDF() for |derived_secret| failed: %s",                  \
                      current_stage,                                                  \
                      ERR_error_string(ERR_get_error(), NULL));                       \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);  \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                      \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                               \
         }                                                                            \
                                                                                      \
         if (!HKDF_extract(handshake_secret, &hkdf_extract_out_length,                \
@@ -195,7 +202,8 @@ typedef struct
             LogError("[%s] HKDF_extract() for |handshake_secret| failed: %s",        \
                      current_stage,                                                  \
                      ERR_error_string(ERR_get_error(), NULL));                       \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);  \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                      \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                               \
         }                                                                            \
                                                                                      \
         hash->Hash(traffic_buffer.data, traffic_buffer.size, secret_info + 12);      \
@@ -209,7 +217,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |client_secret| failed: %s",            \
                      current_stage,                                                  \
                      ERR_error_string(ERR_get_error(), NULL));                       \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);  \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                      \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                               \
         }                                                                            \
                                                                                      \
         memcpy(secret_info, "s hs traffic", 12);                                     \
@@ -222,7 +231,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |server_secret| failed: %s",            \
                      current_stage,                                                  \
                      ERR_error_string(ERR_get_error(), NULL));                       \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);  \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                      \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                               \
         }                                                                            \
                                                                                      \
         if (!HKDF_expand(client_handshake_key, aead->key_size,                       \
@@ -233,7 +243,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |client_handshake_key| failed: %s",     \
                      current_stage,                                                  \
                      ERR_error_string(ERR_get_error(), NULL));                       \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);  \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                      \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                               \
         }                                                                            \
                                                                                      \
         if (!HKDF_expand(server_handshake_key, aead->key_size,                       \
@@ -244,7 +255,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |server_handshake_key| failed: %s",     \
                      current_stage,                                                  \
                      ERR_error_string(ERR_get_error(), NULL));                       \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);  \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                      \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                               \
         }                                                                            \
                                                                                      \
         if (!HKDF_expand(client_handshake_npub_iv, aead->npub_iv_size,               \
@@ -255,7 +267,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |client_handshake_npub_iv| failed: %s", \
                      current_stage,                                                  \
                      ERR_error_string(ERR_get_error(), NULL));                       \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);  \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                      \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                               \
         }                                                                            \
                                                                                      \
         if (!HKDF_expand(server_handshake_npub_iv, aead->npub_iv_size,               \
@@ -266,7 +279,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |server_handshake_npub_iv| failed: %s", \
                      current_stage,                                                  \
                      ERR_error_string(ERR_get_error(), NULL));                       \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);  \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                      \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                               \
         }                                                                            \
     } while (false)
 
@@ -284,7 +298,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |derived_secret| failed: %s",             \
                      current_stage,                                                    \
                      ERR_error_string(ERR_get_error(), NULL));                         \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);    \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                        \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                                 \
         }                                                                              \
                                                                                        \
         if (!HKDF_extract(master_secret, hash->hash_size,                              \
@@ -295,7 +310,8 @@ typedef struct
             LogError("[%s] HKDF_extract() for |master_secret| failed: %s",             \
                      current_stage,                                                    \
                      ERR_error_string(ERR_get_error(), NULL));                         \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);    \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                        \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                                 \
         }                                                                              \
                                                                                        \
         hash->Hash(traffic_buffer.data, traffic_buffer.size, secret_info + 12);        \
@@ -309,7 +325,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |client_secret| failed: %s",              \
                      current_stage,                                                    \
                      ERR_error_string(ERR_get_error(), NULL));                         \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);    \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                        \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                                 \
         }                                                                              \
                                                                                        \
         memcpy(secret_info, "s ap traffic", 12);                                       \
@@ -322,7 +339,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |server_secret| failed: %s",              \
                      current_stage,                                                    \
                      ERR_error_string(ERR_get_error(), NULL));                         \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);    \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                        \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                                 \
         }                                                                              \
                                                                                        \
         if (!HKDF_expand(handshake_result_ret->client_key, aead->key_size,             \
@@ -333,7 +351,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |client_application_key| failed: %s",     \
                      current_stage,                                                    \
                      ERR_error_string(ERR_get_error(), NULL));                         \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);    \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                        \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                                 \
         }                                                                              \
                                                                                        \
         if (!HKDF_expand(handshake_result_ret->server_key, aead->key_size,             \
@@ -344,7 +363,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |server_application_key| failed: %s",     \
                      current_stage,                                                    \
                      ERR_error_string(ERR_get_error(), NULL));                         \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);    \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                        \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                                 \
         }                                                                              \
                                                                                        \
         if (!HKDF_expand(handshake_result_ret->client_npub_iv, aead->npub_iv_size,     \
@@ -355,7 +375,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |client_application_npub_iv| failed: %s", \
                      current_stage,                                                    \
                      ERR_error_string(ERR_get_error(), NULL));                         \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);    \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                        \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                                 \
         }                                                                              \
                                                                                        \
         if (!HKDF_expand(handshake_result_ret->server_npub_iv, aead->npub_iv_size,     \
@@ -366,7 +387,8 @@ typedef struct
             LogError("[%s] HKDF_expand() for |server_application_npub_iv| failed: %s", \
                      current_stage,                                                    \
                      ERR_error_string(ERR_get_error(), NULL));                         \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY(CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);    \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                        \
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                                 \
         }                                                                              \
     } while (false)
 
