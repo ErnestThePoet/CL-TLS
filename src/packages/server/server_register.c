@@ -8,21 +8,17 @@ bool ServerRegister()
     ByteVecInitWithCapacity(&send_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
     ByteVecInitWithCapacity(&receive_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
 
-    const char *current_stage = "Register Server";
-
     BIGNUM *pka_bn = BN_new();
     if (pka_bn == NULL)
     {
-        LogError("[%s] Memory allocation for |pka_bn| failed",
-                 current_stage);
+        LogError("Memory allocation for |pka_bn| failed");
         exit(EXIT_FAILURE);
     }
 
     BIGNUM *ska_bn = BN_new();
     if (ska_bn == NULL)
     {
-        LogError("[%s] Memory allocation for |ska_bn| failed",
-                 current_stage);
+        LogError("Memory allocation for |ska_bn| failed");
         exit(EXIT_FAILURE);
     }
 
@@ -31,8 +27,7 @@ bool ServerRegister()
                  BN_RAND_TOP_ANY,
                  BN_RAND_BOTTOM_ANY))
     {
-        LogError("[%s] BN_rand() for |pka_bn| failed: %s",
-                 current_stage,
+        LogError("BN_rand() for |pka_bn| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         BN_free(pka_bn);
         BN_free(ska_bn);
@@ -44,8 +39,7 @@ bool ServerRegister()
                  BN_RAND_TOP_ANY,
                  BN_RAND_BOTTOM_ANY))
     {
-        LogError("[%s] BN_rand() for |ska_bn| failed: %s",
-                 current_stage,
+        LogError("BN_rand() for |ska_bn| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         BN_free(pka_bn);
         BN_free(ska_bn);
@@ -60,8 +54,7 @@ bool ServerRegister()
                           CLTLS_ENTITY_PKA_LENGTH,
                           pka_bn))
     {
-        LogError("[%s] BN_bn2bin_padded() for |pka| failed: %s",
-                 current_stage,
+        LogError("BN_bn2bin_padded() for |pka| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         BN_free(pka_bn);
         BN_free(ska_bn);
@@ -72,8 +65,7 @@ bool ServerRegister()
                           CLTLS_ENTITY_SKA_LENGTH,
                           ska_bn))
     {
-        LogError("[%s] BN_bn2bin_padded() for |sign_ska| failed: %s",
-                 current_stage,
+        LogError("BN_bn2bin_padded() for |sign_ska| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         BN_free(pka_bn);
         BN_free(ska_bn);
@@ -104,7 +96,7 @@ bool ServerRegister()
     set_IdIp_node *kgc_idip = set_IdIp_find(&kServerIdIpTable, kgc_idip_key);
     if (kgc_idip == set_IdIp_end(&kServerIdIpTable))
     {
-        LogError("[%s] KGC ID not in ID/IP table", current_stage);
+        LogError("KGC ID not in ID/IP table");
         SERVER_REGISTER_FREE_RETURN_FALSE;
     }
 
@@ -113,7 +105,7 @@ bool ServerRegister()
                             kKgcListenPort,
                             &kgc_socket_fd))
     {
-        LogError("[%s] Cannot connect to KGC", current_stage);
+        LogError("Cannot connect to KGC");
         SERVER_REGISTER_FREE_RETURN_FALSE;
     }
 
@@ -132,8 +124,7 @@ bool ServerRegister()
     if (!ClientHandshake(&client_handshake_ctx,
                          &client_handshake_result))
     {
-        LogError("[%s] CL-TLS handshake failed with KGC",
-                 current_stage);
+        LogError("CL-TLS handshake failed with KGC");
         SERVER_REGISTER_CLOSE_FREE_RETURN_FALSE;
     }
 
@@ -157,15 +148,14 @@ bool ServerRegister()
 
     if (receive_buffer.data[0] != KGC_MSG_TYPE_RESIGTER_RESPONSE)
     {
-        LogError("[%s] Unexpected message type received from "
-                 "KGC; RESIGTER_RESPONSE expected",
-                 current_stage);
+        LogError("Unexpected message type received from "
+                 "KGC; RESIGTER_RESPONSE expected");
         SERVER_REGISTER_FREE_RETURN_FALSE;
     }
 
     if (receive_buffer.data[KGC_MSG_TYPE_LENGTH] == KGC_REGISTER_STATUS_FAILURE)
     {
-        LogError("[%s] KGC reports register failure", current_stage);
+        LogError("KGC reports register failure");
         SERVER_REGISTER_FREE_RETURN_FALSE;
     }
 
@@ -183,8 +173,7 @@ bool ServerRegister()
               hkdf_salt, 32,
               "Server Keypair Seed", 19))
     {
-        LogError("[%s] HKDF() for |keypair_seed| failed: %s",
-                 current_stage,
+        LogError("HKDF() for |keypair_seed| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         SERVER_REGISTER_FREE_RETURN_FALSE;
     }
@@ -203,8 +192,7 @@ bool ServerRegister()
     FILE *public_key_file = fopen(kServerPublicKeyPath, "wb");
     if (public_key_file == NULL)
     {
-        LogError("[%s] Failed to open public key file %s for writing",
-                 current_stage,
+        LogError("Failed to open public key file %s for writing",
                  kServerPublicKeyPath);
         SERVER_REGISTER_FREE_RETURN_FALSE;
     }
@@ -212,8 +200,7 @@ bool ServerRegister()
     if (fwrite(public_key, 1, CLTLS_ENTITY_PUBLIC_KEY_LENGTH, public_key_file) !=
         CLTLS_ENTITY_PUBLIC_KEY_LENGTH)
     {
-        LogError("[%s] Failed to write public key into file %s",
-                 current_stage,
+        LogError("Failed to write public key into file %s",
                  kServerPublicKeyPath);
         fclose(public_key_file);
         SERVER_REGISTER_FREE_RETURN_FALSE;
@@ -224,8 +211,7 @@ bool ServerRegister()
     FILE *private_key_file = fopen(kServerPrivateKeyPath, "wb");
     if (private_key_file == NULL)
     {
-        LogError("[%s] Failed to open private key file %s for writing",
-                 current_stage,
+        LogError("Failed to open private key file %s for writing",
                  kServerPrivateKeyPath);
         SERVER_REGISTER_FREE_RETURN_FALSE;
     }
@@ -233,8 +219,7 @@ bool ServerRegister()
     if (fwrite(private_key, 1, CLTLS_ENTITY_PRIVATE_KEY_LENGTH, private_key_file) !=
         CLTLS_ENTITY_PRIVATE_KEY_LENGTH)
     {
-        LogError("[%s] Failed to write private key into file %s",
-                 current_stage,
+        LogError("Failed to write private key into file %s",
                  kServerPrivateKeyPath);
         fclose(private_key_file);
         SERVER_REGISTER_FREE_RETURN_FALSE;

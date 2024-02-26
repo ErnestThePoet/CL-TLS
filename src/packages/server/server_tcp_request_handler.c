@@ -9,8 +9,6 @@ static bool KgcServe(const int socket_fd,
     ByteVecInitWithCapacity(&send_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
     ByteVecInitWithCapacity(&receive_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
 
-    const char *current_stage = "KGC Serve";
-
     if (!ReceiveApplicationData(socket_fd,
                                 handshake_result,
                                 false,
@@ -21,9 +19,8 @@ static bool KgcServe(const int socket_fd,
 
     if (receive_buffer.data[0] != KGC_MSG_TYPE_REGISTER_REQUEST)
     {
-        LogError("[%s] Unexpected KGC message type; "
-                 "KGC_MSG_TYPE_REGISTER_REQUEST expected",
-                 current_stage);
+        LogError("Unexpected KGC message type; "
+                 "KGC_MSG_TYPE_REGISTER_REQUEST expected");
         KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;
     }
 
@@ -46,8 +43,7 @@ static bool KgcServe(const int socket_fd,
                       binded_id_pka, CLTLS_BINDED_IDENTITY_PKA_LENGTH,
                       kServerPrivateKey))
     {
-        LogError("[%s] ED25519_sign() for |binded_id_pka_signature| failed: %s",
-                 current_stage,
+        LogError("ED25519_sign() for |binded_id_pka_signature| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;
     }
@@ -89,8 +85,7 @@ static bool KgcServe(const int socket_fd,
 
             if (belonging_server_id_ip == set_IdIp_end(&kServerIdIpTable))
             {
-                LogError("[%s] Belonging server ID %s not in ID/IP table",
-                         current_stage,
+                LogError("Belonging server ID %s not in ID/IP table",
                          current_identity_hex);
                 KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;
             }
@@ -100,8 +95,7 @@ static bool KgcServe(const int socket_fd,
                                     current_port,
                                     &belonging_server_socket_fd))
             {
-                LogError("[%s] Cannot connect to belonging server %s",
-                         current_stage,
+                LogError("Cannot connect to belonging server %s",
                          current_identity_hex);
                 KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;
             }
@@ -121,8 +115,7 @@ static bool KgcServe(const int socket_fd,
             if (!ClientHandshake(&client_handshake_ctx,
                                  &client_handshake_result))
             {
-                LogError("[%s] CL-TLS handshake failed with belonging server %s",
-                         current_stage,
+                LogError("CL-TLS handshake failed with belonging server %s",
                          current_identity_hex);
                 KGC_SERVE_BS_CLOSE_SEND_FAILURE;
             }
@@ -139,8 +132,7 @@ static bool KgcServe(const int socket_fd,
                                      true,
                                      &send_buffer))
             {
-                LogError("[%s] Failed to send ADD_CLIENT_REQUEST to belonging server %s",
-                         current_stage,
+                LogError("Failed to send ADD_CLIENT_REQUEST to belonging server %s",
                          current_identity_hex);
                 KGC_SERVE_BS_CLOSE_SEND_FAILURE;
             }
@@ -150,18 +142,16 @@ static bool KgcServe(const int socket_fd,
                                         true,
                                         &receive_buffer))
             {
-                LogError("[%s] Failed to receive ADD_CLIENT_RESPONSE from "
+                LogError("Failed to receive ADD_CLIENT_RESPONSE from "
                          "belonging server %s",
-                         current_stage,
                          current_identity_hex);
                 KGC_SERVE_BS_CLOSE_SEND_FAILURE;
             }
 
             if (receive_buffer.data[0] != KGC_MSG_TYPE_ADD_CLIENT_RESPONSE)
             {
-                LogError("[%s] Unexpected KGC message type received from "
+                LogError("Unexpected KGC message type received from "
                          "belonging server %s; ADD_CLIENT_RESPONSE expected",
-                         current_stage,
                          current_identity_hex);
                 KGC_SERVE_BS_SEND_ERROR_STOP_NOTIFY_CLOSE_SEND_FAILURE(
                     CLTLS_ERROR_APPLICATION_LAYER_ERROR);
@@ -170,8 +160,7 @@ static bool KgcServe(const int socket_fd,
             if (receive_buffer.data[KGC_MSG_TYPE_LENGTH] ==
                 KGC_ADD_CLIENT_STATUS_FAILURE)
             {
-                LogError("[%s] Belonging server %s reports ADD_CLIENT_STATUS_FAILURE",
-                         current_stage,
+                LogError("Belonging server %s reports ADD_CLIENT_STATUS_FAILURE",
                          current_identity_hex);
                 KGC_SERVE_BS_SEND_ERROR_STOP_NOTIFY_CLOSE_SEND_FAILURE(
                     CLTLS_ERROR_APPLICATION_LAYER_ERROR);
@@ -201,7 +190,17 @@ static bool KgcServe(const int socket_fd,
     return true;
 }
 
-static bool ProxyServe(const ServerHandshakeCtx *ctx)
+static bool MqttProxyServe(const int socket_fd,
+                           const HandshakeResult *handshake_result)
+{
+    ByteVec buffer;
+
+    ByteVecInitWithCapacity(&buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
+
+}
+
+static bool AddClientServe(const int socket_fd,
+                           const HandshakeResult *handshake_result)
 {
 }
 
@@ -227,10 +226,35 @@ void *ServerTcpRequestHandler(void *arg)
                          &handshake_result,
                          &application_layer_protocol))
     {
-        TcpClose(ctx->client_socket_fd);
-        free(arg);
-        return NULL;
+        SERVER_CLOSE_FREE_RETURN;
     }
 
-    return NULL;
+    switch (server_args->mode)
+    {
+    case SERVER_MODE_KGC:
+        if (!KgcServe(ctx->client_socket_fd, &handshake_result))
+        {
+            SERVER_CLOSE_FREE_RETURN;
+        }
+        break;
+    case SERVER_MODE_PROXY:
+        switch (application_layer_protocol)
+        {
+        case CLTLS_PROTOCOL_MQTT:
+            if (!MqttProxyServe(ctx->client_socket_fd, &handshake_result))
+            {
+                SERVER_CLOSE_FREE_RETURN;
+            }
+            break;
+        case CLTLS_PROTOCOL_KGC:
+            if (!AddClientServe(ctx->client_socket_fd, &handshake_result))
+            {
+                SERVER_CLOSE_FREE_RETURN;
+            }
+            break;
+        }
+        break;
+    }
+
+    SERVER_CLOSE_FREE_RETURN;
 }

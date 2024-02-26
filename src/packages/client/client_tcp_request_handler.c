@@ -9,19 +9,15 @@ void *ClientTcpRequestHandler(void *arg)
 
     ByteVecInitWithCapacity(&buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
 
-    const char *current_stage = "RECEIVE Connect Request";
-
     ByteVecResize(&buffer, CONNCTL_CONNECT_REQUEST_HEADER_LENGTH);
 
     if (!TcpRecv(ctx->client_socket_fd,
                  buffer.data,
                  CONNCTL_CONNECT_REQUEST_HEADER_LENGTH))
     {
-        LogError("[%s] Failed to receive CONNCTL Connect Request", current_stage);
+        LogError("Failed to receive CONNCTL Connect Request");
         CLIENT_CLOSE_C_FREE_RETURN;
     }
-
-    current_stage = "Connect and Handshake with Server";
 
     char server_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
     Bin2Hex(buffer.data + CONNCTL_MSG_TYPE_LENGTH,
@@ -36,8 +32,7 @@ void *ClientTcpRequestHandler(void *arg)
     set_IdIp_node *server_idip = set_IdIp_find(&kClientIdIpTable, server_idip_key);
     if (server_idip == set_IdIp_end(&kClientIdIpTable))
     {
-        LogError("[%s] Server ID %s not in ID/IP table",
-                 current_stage,
+        LogError("Server ID %s not in ID/IP table",
                  server_id_hex);
         CLIENT_SEND_CONNECT_FAILURE_CLOSE_C_FREE_RETURN;
     }
@@ -50,8 +45,7 @@ void *ClientTcpRequestHandler(void *arg)
     int server_socket_fd = 0;
     if (!TcpConnectToServer(server_idip->key.ip, server_port, &server_socket_fd))
     {
-        LogError("[%s] Failed to connect to server %s",
-                 current_stage,
+        LogError("Failed to connect to server %s",
                  server_id_hex);
         CLIENT_SEND_CONNECT_FAILURE_CLOSE_C_FREE_RETURN;
     }
@@ -71,13 +65,10 @@ void *ClientTcpRequestHandler(void *arg)
     if (!ClientHandshake(&client_handshake_ctx,
                          &client_handshake_result))
     {
-        LogError("[%s] CL-TLS handshake failed with server %s",
-                 current_stage,
+        LogError("CL-TLS handshake failed with server %s",
                  server_id_hex);
         CLIENT_SEND_CONNECT_FAILURE_CLOSE_CS_FREE_RETURN;
     }
-
-    current_stage = "SEND Connect Response";
 
     ByteVecResize(&buffer, CONNCTL_CONNECT_RESPONSE_LENGTH);
     buffer.data[0] = CONNCTL_MSG_TYPE_CONNECT_RESPONSE;
@@ -86,13 +77,10 @@ void *ClientTcpRequestHandler(void *arg)
                  buffer.data,
                  CONNCTL_CONNECT_RESPONSE_LENGTH))
     {
-        LogError("[%s] Failed to send CONNCTL Connect Response",
-                 current_stage);
+        LogError("Failed to send CONNCTL Connect Response");
         CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
             CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
-
-    current_stage = "Forward MQTT Packets";
 
     // Loop until we receive MQTT DISCONNECT
     while (true)
@@ -104,8 +92,7 @@ void *ClientTcpRequestHandler(void *arg)
                      buffer.data,
                      MQTT_FIXED_HEADER_LENGTH))
         {
-            LogError("[%s] Failed to receive MQTT fixed header",
-                     current_stage);
+            LogError("Failed to receive MQTT fixed header");
             CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
@@ -131,8 +118,7 @@ void *ClientTcpRequestHandler(void *arg)
                          &current_byte,
                          1))
             {
-                LogError("[%s] Failed to receive MQTT remaining length",
-                         current_stage);
+                LogError("Failed to receive MQTT remaining length");
                 CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
                     CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
             }
@@ -161,8 +147,7 @@ void *ClientTcpRequestHandler(void *arg)
                          buffer.data + receive_buffer_offset,
                          current_read_size))
             {
-                LogError("[%s] Failed to receive MQTT payload from client",
-                         current_stage);
+                LogError("Failed to receive MQTT payload from client");
                 CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
                     CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
             }
@@ -172,8 +157,7 @@ void *ClientTcpRequestHandler(void *arg)
                                      true,
                                      &buffer))
             {
-                LogError("[%s] Failed to forward data to server",
-                         current_stage);
+                LogError("Failed to forward data to server");
                 CLIENT_CLOSE_CS_FREE_RETURN;
             }
 
@@ -190,15 +174,13 @@ void *ClientTcpRequestHandler(void *arg)
                                     true,
                                     &buffer))
         {
-            LogError("[%s] Failed to receive data from server",
-                     current_stage);
+            LogError("Failed to receive data from server");
             CLIENT_CLOSE_CS_FREE_RETURN;
         }
 
         if (!TcpSend(ctx->client_socket_fd, buffer.data, buffer.size))
         {
-            LogError("[%s] Failed to forward data to client",
-                     current_stage);
+            LogError("Failed to forward data to client");
             CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
