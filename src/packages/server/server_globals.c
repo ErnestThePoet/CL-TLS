@@ -157,6 +157,12 @@ bool InitializeGlobals(const ServerArgs *server_args)
         return false;
     }
 
+    if (kSocketBlockSize == 0)
+    {
+        LogError("SOCKET_BLOCK_SIZE must be positive");
+        return false;
+    }
+
     // Create supported cipher suite set
     kServerCipherSuiteSet = set_CipherSuite_init(CipherSuiteCmp);
     set_CipherSuite_insert(
