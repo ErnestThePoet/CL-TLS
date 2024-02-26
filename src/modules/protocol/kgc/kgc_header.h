@@ -68,6 +68,13 @@
  *
  ******************************************************/
 
+#define KGC_REGISTER_REQUEST_CLIENT_FIXED_HEADER_LENGTH \
+    (KGC_MSG_TYPE_LENGTH +                              \
+     KGC_ENTITY_TYPE_LENGTH +                           \
+     ENTITY_IDENTITY_LENGTH +                           \
+     CLTLS_ENTITY_PUBLIC_KEY_LENGTH +                   \
+     KGC_BELONGING_SERVER_COUNT_LENGTH)
+
 /******************************************************
  * Register Response(Success)
  *
