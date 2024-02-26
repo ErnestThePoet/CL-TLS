@@ -4,14 +4,24 @@ bool TcpSend(const int client_socket_fd,
              const uint8_t *buffer,
              const size_t send_size)
 {
-    const ssize_t sent_size = send(client_socket_fd, buffer, send_size, 0);
-    if (sent_size < 0)
+    size_t sent_size = 0;
+
+    while (sent_size < send_size)
     {
-        LogError("send() error: %s", STR_ERRNO);
-        return false;
+        const size_t remaining_send_size = send_size - sent_size;
+        const ssize_t current_send_size = send(
+            client_socket_fd, buffer + sent_size, remaining_send_size, 0);
+        // Unlike recv(), we will keep trying to send if it returns 0
+        if (current_send_size < 0)
+        {
+            LogError("send() error: %s", STR_ERRNO);
+            return false;
+        }
+
+        sent_size += current_send_size;
     }
 
-    return sent_size == send_size;
+    return true;
 }
 
 bool TcpRecv(const int server_socket_fd,
