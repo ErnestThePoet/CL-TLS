@@ -157,9 +157,9 @@ bool InitializeGlobals(const ServerArgs *server_args)
         return false;
     }
 
-    if (kSocketBlockSize == 0)
+    if (kSocketBlockSize < MIN_SOCKET_BLOCK_SIZE)
     {
-        LogError("SOCKET_BLOCK_SIZE must be positive");
+        LogError("SOCKET_BLOCK_SIZE must be at least %d", MIN_SOCKET_BLOCK_SIZE);
         return false;
     }
 
