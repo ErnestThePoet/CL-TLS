@@ -167,7 +167,7 @@ bool ServerRegister()
     uint8_t hkdf_salt[32] = {0};
 
     if (!HKDF(keypair_seed, 32,
-              EVP_sha256(),
+              EVP_AsconHash(),
               sign_ska,
               CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH + CLTLS_ENTITY_SKA_LENGTH,
               hkdf_salt, 32,
