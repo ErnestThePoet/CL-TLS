@@ -97,8 +97,8 @@ void *ClientTcpRequestHandler(void *arg)
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
 
-        const uint8_t mqtt_msg_type = (buffer.data[0] >> 4);
-        LogInfo("Received %s", GetMqttMessageType(mqtt_msg_type));
+        uint8_t mqtt_msg_type = (buffer.data[0] >> 4);
+        LogInfo("Received %s from client", GetMqttMessageType(mqtt_msg_type));
 
         // Decode MQTT remaining length
         uint8_t current_byte = buffer.data[1];
@@ -177,6 +177,9 @@ void *ClientTcpRequestHandler(void *arg)
             LogError("Failed to receive MQTT packet from server");
             CLIENT_CLOSE_CS_FREE_RETURN;
         }
+
+        mqtt_msg_type = (buffer.data[0] >> 4);
+        LogInfo("Received %s from server", GetMqttMessageType(mqtt_msg_type));
 
         if (!TcpSend(ctx->client_socket_fd, buffer.data, buffer.size))
         {
