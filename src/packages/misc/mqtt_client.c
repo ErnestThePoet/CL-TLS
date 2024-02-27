@@ -18,6 +18,8 @@
 
 int main(int argc, char *argv[])
 {
+    kLogLevel = LOG_LEVEL_INFO;
+
     if (argc != 3)
     {
         LogError("Invalid arguments");

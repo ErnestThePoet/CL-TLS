@@ -21,14 +21,14 @@
 
 int main(int argc, char *argv[])
 {
+    kLogLevel = LOG_LEVEL_INFO;
+
     if (argc != 2)
     {
         LogError("Invalid arguments");
         fputs("Usage: cltls_misc_initializer <path-to-store-keypair>\n", stderr);
         return EXIT_FAILURE;
     }
-
-    kLogLevel = LOG_LEVEL_INFO;
 
     BIGNUM *pka_bn = BN_new();
     if (pka_bn == NULL)
