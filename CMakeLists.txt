@@ -32,7 +32,7 @@ file(GLOB_RECURSE SRC_MODULES "src/modules/*.c")
 set(PACKAGE_LIST client server)
 
 foreach(PACKAGE ${PACKAGE_LIST})
-    file(GLOB_RECURSE SRC_PACKAGE "src/packages/${PACKAGE}/*.c" "src/packages/${PACKAGE}/*.h")
+    file(GLOB_RECURSE SRC_PACKAGE "src/packages/${PACKAGE}/*.c")
 
     add_executable(cltls_${PACKAGE} ${SRC_MODULES} ${SRC_PACKAGE})
 
