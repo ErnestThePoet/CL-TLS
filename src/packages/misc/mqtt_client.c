@@ -249,4 +249,6 @@ int main(int argc, char *argv[])
             connected = true;
         }
     }
+
+    return EXIT_SUCCESS;
 }
