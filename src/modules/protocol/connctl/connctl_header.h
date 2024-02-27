@@ -46,7 +46,7 @@
  *
  ******************************************************/
 
-#define CONNCTL_CONNECT_RESPONSE_LENGTH \
+#define CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH \
     (CONNCTL_MSG_TYPE_LENGTH + CONNCTL_STATUS_CODE_LENGTH)
 
 #endif

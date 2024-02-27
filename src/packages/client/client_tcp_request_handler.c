@@ -70,12 +70,12 @@ void *ClientTcpRequestHandler(void *arg)
         CLIENT_SEND_CONNECT_FAILURE_CLOSE_CS_FREE_RETURN;
     }
 
-    ByteVecResize(&buffer, CONNCTL_CONNECT_RESPONSE_LENGTH);
+    ByteVecResize(&buffer, CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH);
     buffer.data[0] = CONNCTL_MSG_TYPE_CONNECT_RESPONSE;
     buffer.data[1] = CONNCTL_CONNECT_STATUS_SUCCESS;
     if (!TcpSend(ctx->client_socket_fd,
                  buffer.data,
-                 CONNCTL_CONNECT_RESPONSE_LENGTH))
+                 CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH))
     {
         LogError("Failed to send CONNCTL Connect Response");
         CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(

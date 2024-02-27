@@ -22,13 +22,13 @@
 #define CLIENT_SEND_CONNECT_FAILURE                              \
     do                                                           \
     {                                                            \
-        ByteVecResize(&buffer, CONNCTL_CONNECT_RESPONSE_LENGTH); \
+        ByteVecResize(&buffer, CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH); \
         buffer.data[0] = CONNCTL_MSG_TYPE_CONNECT_RESPONSE;      \
         buffer.data[CONNCTL_MSG_TYPE_LENGTH] =                   \
             CONNCTL_CONNECT_STATUS_FAILURE;                      \
         TcpSend(ctx->client_socket_fd,                           \
                 buffer.data,                                     \
-                CONNCTL_CONNECT_RESPONSE_LENGTH);                \
+                CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH);                \
     } while (false)
 
 #define CLIENT_CLOSE_CS_FREE_RETURN \
