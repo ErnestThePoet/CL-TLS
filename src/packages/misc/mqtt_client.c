@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
                     sent_size += current_send_size;
                 }
 
-                LogInfo("Packet delivered");
+                LogInfo("PUBLISH Message delivered");
 
                 uint8_t receive_common_header[5] = {0};
 
