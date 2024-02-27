@@ -218,7 +218,7 @@ static bool MqttProxyServe(const int socket_fd,
             MQTT_PROXY_SERVE_CLOSE_FREE_RETURN_FALSE;
         }
 
-        uint8_t mqtt_msg_type = (buffer.data[0] >> 4);
+        uint8_t mqtt_msg_type = MQTT_MSG_TYPE(buffer.data[0]);
         LogInfo("Received %s from client", GetMqttMessageType(mqtt_msg_type));
 
         if (!TcpSend(forward_socket_fd,
@@ -286,8 +286,8 @@ static bool MqttProxyServe(const int socket_fd,
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
 
-        mqtt_msg_type = (buffer.data[0] >> 4);
-        LogInfo("Received %s from server", GetMqttMessageType(mqtt_msg_type));
+        LogInfo("Received %s from server",
+                GetMqttMessageType(MQTT_MSG_TYPE(buffer.data[0])));
 
         // Decode MQTT remaining length
         current_byte = buffer.data[1];

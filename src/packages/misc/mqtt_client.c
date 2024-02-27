@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
                 remaining_size += multiplier * (current_byte & 0x7FU);
 
                 LogInfo("Received %s with remaining length %u in %.03fms",
-                        GetMqttMessageType(receive_common_header[0]),
+                        GetMqttMessageType(MQTT_MSG_TYPE(receive_common_header[0])),
                         remaining_size,
                         1000 * ((time_receive - time_send_end) / (float)CLOCKS_PER_SEC));
 
