@@ -1,6 +1,6 @@
 #include "mqtt_header.h"
 
-int GetRemainingLengthByteCount(const uint32_t remaining_length)
+int GetMqttRemainingLengthByteCount(const uint32_t remaining_length)
 {
     if (remaining_length <= 127U)
     {
