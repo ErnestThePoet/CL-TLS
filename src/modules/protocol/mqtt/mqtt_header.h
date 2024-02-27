@@ -36,6 +36,7 @@
 #define MQTT_MSG_TYPE_PINGRESP 13
 #define MQTT_MSG_TYPE_DISCONNECT 14
 
+int GetRemainingLengthByteCount(const uint32_t remaining_length);
 const char *GetMqttMessageType(const uint8_t msg_type);
 
 #endif

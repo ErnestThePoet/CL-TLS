@@ -16,26 +16,6 @@
 #define MAX_PRINT_LENGTH 1024
 #define MAX_SOCKET_BLOCK_SIZE (4 * 1024 * 1024)
 
-int GetRemainingLengthByteCount(const uint32_t remaining_length)
-{
-    if (remaining_length <= 127U)
-    {
-        return 1;
-    }
-    else if (remaining_length <= 127U + 127U * 128)
-    {
-        return 2;
-    }
-    else if (remaining_length <= 127U + 127U * 128 + 127U * 128 * 128)
-    {
-        return 3;
-    }
-    else
-    {
-        return 4;
-    }
-}
-
 int main(int argc, char *argv[])
 {
     if (argc != 3)

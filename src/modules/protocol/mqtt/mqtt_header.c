@@ -1,5 +1,25 @@
 #include "mqtt_header.h"
 
+int GetRemainingLengthByteCount(const uint32_t remaining_length)
+{
+    if (remaining_length <= 127U)
+    {
+        return 1;
+    }
+    else if (remaining_length <= 127U + 127U * 128)
+    {
+        return 2;
+    }
+    else if (remaining_length <= 127U + 127U * 128 + 127U * 128 * 128)
+    {
+        return 3;
+    }
+    else
+    {
+        return 4;
+    }
+}
+
 const char *GetMqttMessageType(const uint8_t msg_type)
 {
     switch (msg_type)
