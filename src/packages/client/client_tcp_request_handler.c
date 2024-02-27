@@ -97,10 +97,6 @@ void *ClientTcpRequestHandler(void *arg)
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
 
-        uint8_t mqtt_msg_type = MQTT_MSG_TYPE(buffer.data[0]);
-        LogInfo("Received %s from client",
-                GetMqttMessageType(mqtt_msg_type));
-
         // Decode MQTT remaining length
         uint8_t current_byte = buffer.data[1];
         size_t mqtt_remaining_length = 0;
@@ -123,6 +119,11 @@ void *ClientTcpRequestHandler(void *arg)
         }
 
         mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
+
+        uint8_t mqtt_msg_type = MQTT_MSG_TYPE(buffer.data[0]);
+        LogInfo("Received %s with remaining length %zu from client",
+                GetMqttMessageType(mqtt_msg_type),
+                mqtt_remaining_length);
 
         size_t remaining_read_size = mqtt_remaining_length;
 
@@ -179,8 +180,11 @@ void *ClientTcpRequestHandler(void *arg)
             CLIENT_CLOSE_CS_FREE_RETURN;
         }
 
-        LogInfo("Received %s from server",
-                GetMqttMessageType(MQTT_MSG_TYPE(buffer.data[0])));
+        mqtt_remaining_length = DecodeMqttRemainingLength(buffer.data + 1);
+
+        LogInfo("Received %s with remaining length %zu from server",
+                GetMqttMessageType(MQTT_MSG_TYPE(buffer.data[0])),
+                mqtt_remaining_length);
 
         if (!TcpSend(ctx->client_socket_fd, buffer.data, buffer.size))
         {
@@ -188,20 +192,6 @@ void *ClientTcpRequestHandler(void *arg)
             CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
-
-        size_t current_byte_index = 1;
-        current_byte = buffer.data[current_byte_index];
-        mqtt_remaining_length = 0;
-        multiplier = 1;
-
-        while (current_byte & 0x80U)
-        {
-            mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
-            multiplier *= 128;
-            current_byte = buffer.data[++current_byte_index];
-        }
-
-        mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
 
         remaining_read_size = mqtt_remaining_length - buffer.size;
 

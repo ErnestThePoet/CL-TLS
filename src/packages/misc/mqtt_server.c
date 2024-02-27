@@ -30,15 +30,14 @@ void *MqttServerTcpRequestHandler(void *arg)
 
     while (true)
     {
-        uint8_t receive_common_header[5] = {0};
+        uint8_t receive_fixed_header[MQTT_FIXED_HEADER_LENGTH] = {0};
 
-        if (!TcpRecv(socket_fd, receive_common_header, 2))
+        if (!TcpRecv(socket_fd, receive_fixed_header, 2))
         {
             MQTT_SERVER_CLOSE_FREE_RETURN;
         }
 
-        size_t current_byte_index = 1;
-        uint8_t current_byte = receive_common_header[1];
+        uint8_t current_byte = receive_fixed_header[1];
         uint32_t remaining_size = 0;
         size_t multiplier = 1;
 
@@ -46,12 +45,17 @@ void *MqttServerTcpRequestHandler(void *arg)
         {
             remaining_size += multiplier * (current_byte & 0x7FU);
             multiplier *= 128;
-            current_byte = receive_common_header[++current_byte_index];
+            if (!TcpRecv(socket_fd,
+                         &current_byte,
+                         1))
+            {
+                MQTT_SERVER_CLOSE_FREE_RETURN;
+            }
         }
 
         remaining_size += multiplier * (current_byte & 0x7FU);
 
-        uint8_t msg_type = MQTT_MSG_TYPE(receive_common_header[0]);
+        uint8_t msg_type = MQTT_MSG_TYPE(receive_fixed_header[0]);
         LogInfo("Received %s with remaining length %u",
                 GetMqttMessageType(msg_type),
                 remaining_size);
@@ -84,7 +88,7 @@ void *MqttServerTcpRequestHandler(void *arg)
 
         // Send back a PUBLISH with same length
         const size_t total_size = 1 +
-                                  GetRemainingLengthByteCount(remaining_size) +
+                                  GetMqttRemainingLengthByteCount(remaining_size) +
                                   remaining_size;
 
         msg = realloc(msg, total_size);
@@ -96,25 +100,20 @@ void *MqttServerTcpRequestHandler(void *arg)
 
         msg[0] = 0x30;
 
-        int current_index = 1;
-        while (remaining_size > 0)
-        {
-            uint8_t base_byte = remaining_size > 127 ? 0x80U : 0x00U;
-            msg[current_index++] = base_byte | (remaining_size & 0x7FU);
-            remaining_size >>= 7;
-        }
+        const size_t rl_byte_count = EncodeMqttRemainingLength(
+            remaining_size, msg + 1);
 
         uint8_t counter = 0xFF;
         for (uint32_t i = 0; i < remaining_size; i++)
         {
-            msg[current_index + i] = counter--;
+            msg[1 + rl_byte_count + i] = counter--;
         }
 
         if (remaining_size <= MAX_PRINT_LENGTH)
         {
             for (uint32_t i = 0; i < remaining_size; i++)
             {
-                printf("%02hhX ", msg[current_index + i]);
+                printf("%02hhX ", msg[1 + rl_byte_count + i]);
             }
             putchar('\n');
         }

@@ -218,9 +218,6 @@ static bool MqttProxyServe(const int socket_fd,
             MQTT_PROXY_SERVE_CLOSE_FREE_RETURN_FALSE;
         }
 
-        uint8_t mqtt_msg_type = MQTT_MSG_TYPE(buffer.data[0]);
-        LogInfo("Received %s from client", GetMqttMessageType(mqtt_msg_type));
-
         if (!TcpSend(forward_socket_fd,
                      buffer.data,
                      buffer.size))
@@ -230,19 +227,13 @@ static bool MqttProxyServe(const int socket_fd,
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
 
-        size_t current_byte_index = 1;
-        uint8_t current_byte = buffer.data[current_byte_index];
-        size_t mqtt_remaining_length = 0;
-        size_t multiplier = 1;
+        size_t mqtt_remaining_length = DecodeMqttRemainingLength(buffer.data + 1);
 
-        while (current_byte & 0x80U)
-        {
-            mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
-            multiplier *= 128;
-            current_byte = buffer.data[++current_byte_index];
-        }
+        uint8_t mqtt_msg_type = MQTT_MSG_TYPE(buffer.data[0]);
 
-        mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
+        LogInfo("Received %s with remaining length %zu from client",
+                GetMqttMessageType(mqtt_msg_type),
+                mqtt_remaining_length);
 
         size_t remaining_read_size = mqtt_remaining_length - buffer.size;
 
@@ -290,9 +281,9 @@ static bool MqttProxyServe(const int socket_fd,
                 GetMqttMessageType(MQTT_MSG_TYPE(buffer.data[0])));
 
         // Decode MQTT remaining length
-        current_byte = buffer.data[1];
+        uint8_t current_byte = buffer.data[1];
+        size_t multiplier = 1;
         mqtt_remaining_length = 0;
-        multiplier = 1;
 
         while (current_byte & 0x80U)
         {

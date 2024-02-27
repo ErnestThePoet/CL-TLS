@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
                 }
 
                 const size_t total_size = 1 +
-                                          GetRemainingLengthByteCount(remaining_size) +
+                                          GetMqttRemainingLengthByteCount(remaining_size) +
                                           remaining_size;
 
                 uint8_t *msg = malloc(total_size);
@@ -87,25 +87,20 @@ int main(int argc, char *argv[])
 
                 msg[0] = 0x30;
 
-                int current_index = 1;
-                while (remaining_size > 0)
-                {
-                    uint8_t base_byte = remaining_size > 127 ? 0x80U : 0x00U;
-                    msg[current_index++] = base_byte | (remaining_size & 0x7FU);
-                    remaining_size >>= 7;
-                }
+                const size_t rl_byte_count = EncodeMqttRemainingLength(
+                    remaining_size, msg + 1);
 
                 uint8_t counter = 0;
                 for (uint32_t i = 0; i < remaining_size; i++)
                 {
-                    msg[current_index + i] = counter++;
+                    msg[1 + rl_byte_count + i] = counter++;
                 }
 
                 if (remaining_size <= MAX_PRINT_LENGTH)
                 {
                     for (uint32_t i = 0; i < remaining_size; i++)
                     {
-                        printf("%02hhX ", msg[current_index + i]);
+                        printf("%02hhX ", msg[1 + rl_byte_count + i]);
                     }
                     putchar('\n');
                 }
@@ -127,10 +122,10 @@ int main(int argc, char *argv[])
 
                 LogInfo("PUBLISH Message delivered");
 
-                uint8_t receive_common_header[5] = {0};
+                uint8_t receive_fixed_header[MQTT_FIXED_HEADER_LENGTH] = {0};
 
                 clock_t time_send_end = clock();
-                if (!TcpRecv(socket_fd, receive_common_header, 2))
+                if (!TcpRecv(socket_fd, receive_fixed_header, 2))
                 {
                     TcpClose(socket_fd);
                     connected = false;
@@ -138,8 +133,7 @@ int main(int argc, char *argv[])
                 }
                 clock_t time_receive = clock();
 
-                size_t current_byte_index = 1;
-                uint8_t current_byte = receive_common_header[1];
+                uint8_t current_byte = receive_fixed_header[1];
                 remaining_size = 0;
                 size_t multiplier = 1;
 
@@ -147,13 +141,20 @@ int main(int argc, char *argv[])
                 {
                     remaining_size += multiplier * (current_byte & 0x7FU);
                     multiplier *= 128;
-                    current_byte = receive_common_header[++current_byte_index];
+                    if (!TcpRecv(socket_fd,
+                                 &current_byte,
+                                 1))
+                    {
+                        TcpClose(socket_fd);
+                        connected = false;
+                        continue;
+                    }
                 }
 
                 remaining_size += multiplier * (current_byte & 0x7FU);
 
                 LogInfo("Received %s with remaining length %u in %.03fms",
-                        GetMqttMessageType(MQTT_MSG_TYPE(receive_common_header[0])),
+                        GetMqttMessageType(MQTT_MSG_TYPE(receive_fixed_header[0])),
                         remaining_size,
                         1000 * ((time_receive - time_send_end) / (float)CLOCKS_PER_SEC));
 
