@@ -139,7 +139,7 @@ bool ClientRegister(const char *belonging_servers_file_path)
         current_port = htons(current_port);
 
         ByteVecPushBackBlock(&send_buffer, current_id, ENTITY_IDENTITY_LENGTH);
-        ByteVecPushBackBlock(&send_buffer, &current_port, 2);
+        ByteVecPushBackBlock(&send_buffer, (const uint8_t *)&current_port, 2);
 
         belonging_server_count++;
     }
@@ -231,7 +231,7 @@ bool ClientRegister(const char *belonging_servers_file_path)
               sign_ska,
               CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH + CLTLS_ENTITY_SKA_LENGTH,
               hkdf_salt, 32,
-              "Client Keypair Seed", 19))
+              (const uint8_t *)"Client Keypair Seed", 19))
     {
         LogError("HKDF() for |keypair_seed| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));

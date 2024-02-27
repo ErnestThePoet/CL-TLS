@@ -179,7 +179,7 @@ typedef struct
     do                                                                               \
     {                                                                                \
         memcpy(secret_info, "derived", 7);                                           \
-        hash->Hash("", 0, secret_info + 7);                                          \
+        hash->Hash((const uint8_t *)"", 0, secret_info + 7);                         \
                                                                                      \
         if (!HKDF(derived_secret, hash->hash_size,                                   \
                   md_hmac_hkdf,                                                      \
@@ -238,7 +238,7 @@ typedef struct
         if (!HKDF_expand(client_handshake_key, aead->key_size,                       \
                          md_hmac_hkdf,                                               \
                          client_secret, hash->hash_size,                             \
-                         "key", 3))                                                  \
+                         (const uint8_t *)"key", 3))                                 \
         {                                                                            \
             LogError("[%s] HKDF_expand() for |client_handshake_key| failed: %s",     \
                      current_stage,                                                  \
@@ -250,7 +250,7 @@ typedef struct
         if (!HKDF_expand(server_handshake_key, aead->key_size,                       \
                          md_hmac_hkdf,                                               \
                          server_secret, hash->hash_size,                             \
-                         "key", 3))                                                  \
+                         (const uint8_t *)"key", 3))                                 \
         {                                                                            \
             LogError("[%s] HKDF_expand() for |server_handshake_key| failed: %s",     \
                      current_stage,                                                  \
@@ -262,7 +262,7 @@ typedef struct
         if (!HKDF_expand(client_handshake_npub_iv, aead->npub_iv_size,               \
                          md_hmac_hkdf,                                               \
                          client_secret, hash->hash_size,                             \
-                         "iv", 2))                                                   \
+                         (const uint8_t *)"iv", 2))                                  \
         {                                                                            \
             LogError("[%s] HKDF_expand() for |client_handshake_npub_iv| failed: %s", \
                      current_stage,                                                  \
@@ -274,7 +274,7 @@ typedef struct
         if (!HKDF_expand(server_handshake_npub_iv, aead->npub_iv_size,               \
                          md_hmac_hkdf,                                               \
                          server_secret, hash->hash_size,                             \
-                         "iv", 2))                                                   \
+                         (const uint8_t *)"iv", 2))                                  \
         {                                                                            \
             LogError("[%s] HKDF_expand() for |server_handshake_npub_iv| failed: %s", \
                      current_stage,                                                  \
@@ -288,7 +288,7 @@ typedef struct
     do                                                                                 \
     {                                                                                  \
         memcpy(secret_info, "derived", 7);                                             \
-        hash->Hash("", 0, secret_info + 7);                                            \
+        hash->Hash((const uint8_t *)"", 0, secret_info + 7);                           \
                                                                                        \
         if (!HKDF_expand(derived_secret, hash->hash_size,                              \
                          md_hmac_hkdf,                                                 \
@@ -302,7 +302,7 @@ typedef struct
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);                                 \
         }                                                                              \
                                                                                        \
-        if (!HKDF_extract(master_secret, hash->hash_size,                              \
+        if (!HKDF_extract(master_secret, &hkdf_extract_out_length,                     \
                           md_hmac_hkdf,                                                \
                           early_secret_secret_salt, hash->hash_size,                   \
                           derived_secret, hash->hash_size))                            \
@@ -346,7 +346,7 @@ typedef struct
         if (!HKDF_expand(handshake_result_ret->client_key, aead->key_size,             \
                          md_hmac_hkdf,                                                 \
                          client_secret, hash->hash_size,                               \
-                         "key", 3))                                                    \
+                         (const uint8_t *)"key", 3))                                   \
         {                                                                              \
             LogError("[%s] HKDF_expand() for |client_application_key| failed: %s",     \
                      current_stage,                                                    \
@@ -358,7 +358,7 @@ typedef struct
         if (!HKDF_expand(handshake_result_ret->server_key, aead->key_size,             \
                          md_hmac_hkdf,                                                 \
                          server_secret, hash->hash_size,                               \
-                         "key", 3))                                                    \
+                         (const uint8_t *)"key", 3))                                   \
         {                                                                              \
             LogError("[%s] HKDF_expand() for |server_application_key| failed: %s",     \
                      current_stage,                                                    \
@@ -370,7 +370,7 @@ typedef struct
         if (!HKDF_expand(handshake_result_ret->client_npub_iv, aead->npub_iv_size,     \
                          md_hmac_hkdf,                                                 \
                          client_secret, hash->hash_size,                               \
-                         "iv", 2))                                                     \
+                         (const uint8_t *)"iv", 2))                                    \
         {                                                                              \
             LogError("[%s] HKDF_expand() for |client_application_npub_iv| failed: %s", \
                      current_stage,                                                    \
@@ -382,7 +382,7 @@ typedef struct
         if (!HKDF_expand(handshake_result_ret->server_npub_iv, aead->npub_iv_size,     \
                          md_hmac_hkdf,                                                 \
                          server_secret, hash->hash_size,                               \
-                         "iv", 2))                                                     \
+                         (const uint8_t *)"iv", 2))                                    \
         {                                                                              \
             LogError("[%s] HKDF_expand() for |server_application_npub_iv| failed: %s", \
                      current_stage,                                                    \

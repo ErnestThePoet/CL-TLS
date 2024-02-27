@@ -1,7 +1,7 @@
 #include "server_tcp_request_handler.h"
 
 static bool KgcServe(const int socket_fd,
-                     const HandshakeResult *handshake_result)
+                     HandshakeResult *handshake_result)
 {
     ByteVec send_buffer;
     ByteVec receive_buffer;
@@ -189,7 +189,7 @@ static bool KgcServe(const int socket_fd,
 }
 
 static bool MqttProxyServe(const int socket_fd,
-                           const HandshakeResult *handshake_result,
+                           HandshakeResult *handshake_result,
                            const char *forward_ip,
                            const uint16_t forward_port)
 {
@@ -358,7 +358,7 @@ static bool MqttProxyServe(const int socket_fd,
 }
 
 static bool AddClientServe(const int socket_fd,
-                           const HandshakeResult *handshake_result)
+                           HandshakeResult *handshake_result)
 {
     ByteVec send_buffer;
     ByteVec receive_buffer;

@@ -171,7 +171,7 @@ bool ServerRegister()
               sign_ska,
               CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH + CLTLS_ENTITY_SKA_LENGTH,
               hkdf_salt, 32,
-              "Server Keypair Seed", 19))
+              (const uint8_t *)"Server Keypair Seed", 19))
     {
         LogError("HKDF() for |keypair_seed| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));

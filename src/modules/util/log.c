@@ -4,24 +4,24 @@ static void VLog(const LogType log_type,
                  const char *format,
                  va_list args)
 {
-    if (kLogLevel >= log_type)
+    if ((int)kLogLevel >= (int)log_type)
     {
         switch (log_type)
         {
         case LOG_TYPE_ERROR:
-            fputs(stderr, STYLE_RED STYLE_BOLD "Error: " STYLE_NRM STYLE_RED);
+            fputs(STYLE_RED STYLE_BOLD "Error: " STYLE_NRM STYLE_RED, stderr);
             vfprintf(stderr, format, args);
             fputc('\n', stderr);
             fputs(STYLE_NRM, stderr);
             break;
         case LOG_TYPE_WARN:
-            fputs(stderr, STYLE_YEL STYLE_BOLD "Warn: " STYLE_NRM STYLE_YEL);
+            fputs(STYLE_YEL STYLE_BOLD "Warn: " STYLE_NRM STYLE_YEL, stdout);
             vfprintf(stdout, format, args);
             fputc('\n', stdout);
             fputs(STYLE_NRM, stdout);
             break;
         default:
-            fputs(stderr, STYLE_BOLD "Info: " STYLE_NRM);
+            fputs(STYLE_BOLD "Info: " STYLE_NRM, stdout);
             vfprintf(stdout, format, args);
             fputc('\n', stdout);
             break;

@@ -3,7 +3,7 @@
 void *ClientTcpRequestHandler(void *arg)
 {
     const TcpRequestHandlerCtx *ctx = (const TcpRequestHandlerCtx *)arg;
-    const ClientArgs *client_args = (const ClientArgs *)ctx->extra;
+    // const ClientArgs *client_args = (const ClientArgs *)ctx->extra;
 
     ByteVec buffer;
 

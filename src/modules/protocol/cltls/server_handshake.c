@@ -620,7 +620,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     uint8_t master_secret[MAX_HASH_LENGTH] = {0};
 
-    CALCULATE_HANDSHAKE_KEY;
+    CALCULATE_APPLICATION_KEY;
 
     ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH);
     CLTLS_SET_COMMON_HEADER(send_buffer.data, CLTLS_MSG_TYPE_HANDSHAKE_SUCCEED, 0);
@@ -635,7 +635,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     HANDSHAKE_RECEIVE(HANDSHAKE_SUCCEED, false);
 
-    handshake_result_ret->aead = aead;
+    handshake_result_ret->aead = (AeadScheme *)aead;
     handshake_result_ret->iv_length = iv_length;
 
     ByteVecFree(&receive_buffer);

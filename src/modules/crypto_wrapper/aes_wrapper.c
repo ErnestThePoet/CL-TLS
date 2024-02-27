@@ -148,7 +148,7 @@ int Aes128GcmDecrypt(const uint8_t *c, size_t clen,
     size_t plaintext_length = current_length;
 
     /* Set expected tag value. Works in OpenSSL 1.0.1d and later */
-    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, 16, c + clen - 16))
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, 16, (void *)(c + clen - 16)))
     {
         ERROR_EVP_CTX_FREE_RETURN;
     }

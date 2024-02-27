@@ -88,7 +88,7 @@ bool InitializeGlobals(const ServerArgs *server_args)
     }
 
     if (fscanf(config_file_fp,
-               "SOCKET_BLOCK_SIZE=%llu\n",
+               "SOCKET_BLOCK_SIZE=%lu\n",
                &kSocketBlockSize) != 1)
     {
         LogError("Error loading config file: failed to read SOCKET_BLOCK_SIZE");
