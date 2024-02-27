@@ -20,6 +20,34 @@ int GetRemainingLengthByteCount(const uint32_t remaining_length)
     }
 }
 
+void EncodeMqttRemainingLength(size_t remaining_length, uint8_t *out)
+{
+    int current_index = 0;
+    while (remaining_length > 0)
+    {
+        uint8_t base_byte = remaining_length > 127 ? 0x80U : 0x00U;
+        out[current_index++] = base_byte | (remaining_length & 0x7FU);
+        remaining_length >>= 7;
+    }
+}
+
+size_t DecodeMqttRemainingLength(const uint8_t *in)
+{
+    size_t current_byte_index = 0;
+    uint8_t current_byte = in[0];
+    uint32_t remaining_size = 0;
+    size_t multiplier = 1;
+
+    while (current_byte & 0x80U)
+    {
+        remaining_size += multiplier * (current_byte & 0x7FU);
+        multiplier *= 128;
+        current_byte = in[++current_byte_index];
+    }
+
+    return remaining_size + multiplier * (current_byte & 0x7FU);
+}
+
 const char *GetMqttMessageType(const uint8_t msg_type)
 {
     switch (msg_type)

@@ -2,6 +2,7 @@
 #define MQTT_HEADER_H_
 
 #include <stdint.h>
+#include <stddef.h>
 
 /**************************************************************
  * MQTT Fixed Header
@@ -39,6 +40,8 @@
 #define MQTT_MSG_TYPE(BYTE1) ((BYTE1) >> 4)
 
 int GetRemainingLengthByteCount(const uint32_t remaining_length);
+void EncodeMqttRemainingLength(size_t remaining_length, uint8_t *out);
+size_t DecodeMqttRemainingLength(const uint8_t *in);
 const char *GetMqttMessageType(const uint8_t msg_type);
 
 #endif
