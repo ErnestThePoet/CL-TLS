@@ -142,7 +142,7 @@ void *ClientTcpRequestHandler(void *arg)
                          buffer.data + receive_buffer_offset,
                          current_read_size))
             {
-                LogError("Failed to receive MQTT payload from client");
+                LogError("Failed to receive MQTT packet from client");
                 CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
                     CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
             }
@@ -152,7 +152,7 @@ void *ClientTcpRequestHandler(void *arg)
                                      true,
                                      &buffer))
             {
-                LogError("Failed to forward data to server");
+                LogError("Failed to forward MQTT packet to server");
                 CLIENT_CLOSE_CS_FREE_RETURN;
             }
 
@@ -174,13 +174,13 @@ void *ClientTcpRequestHandler(void *arg)
                                     true,
                                     &buffer))
         {
-            LogError("Failed to receive data from server");
+            LogError("Failed to receive MQTT packet from server");
             CLIENT_CLOSE_CS_FREE_RETURN;
         }
 
         if (!TcpSend(ctx->client_socket_fd, buffer.data, buffer.size))
         {
-            LogError("Failed to forward data to client");
+            LogError("Failed to forward MQTT packet to client");
             CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
