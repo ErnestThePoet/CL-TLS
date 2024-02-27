@@ -48,11 +48,26 @@
         KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE; \
     } while (false)
 
-#define KGC_SERVE_BS_SEND_ERROR_STOP_NOTIFY_CLOSE_SEND_FAILURE(ERROR_CODE)    \
-    do                                                                        \
-    {                                                                         \
-        CLTLS_SEND_ERROR_STOP_NOTIFY(belonging_server_socket_fd, ERROR_CODE); \
-        KGC_SERVE_BS_CLOSE_SEND_FAILURE;                                      \
+#define ADD_CLIENT_SERVE_FREE_RETURN_FALSE \
+    do                                     \
+    {                                      \
+        ByteVecFree(&send_buffer);         \
+        ByteVecFree(&receive_buffer);      \
+        return false;                      \
+    } while (false)
+
+#define ADD_CLIENT_SERVE_SEND_RESPONSE_FAILURE                  \
+    do                                                          \
+    {                                                           \
+        ByteVecResize(&send_buffer,                             \
+                      KGC_ADD_CLIENT_RESPONSE_HEADER_LENGTH);   \
+        send_buffer.data[0] = KGC_MSG_TYPE_ADD_CLIENT_RESPONSE; \
+        send_buffer.data[1] = KGC_ADD_CLIENT_STATUS_FAILURE;    \
+        SendApplicationData(socket_fd,                          \
+                            handshake_result,                   \
+                            false,                              \
+                            &send_buffer);                      \
+        ADD_CLIENT_SERVE_FREE_RETURN_FALSE;                     \
     } while (false)
 
 #define MQTT_PROXY_SERVE_FREE_RETURN_FALSE \

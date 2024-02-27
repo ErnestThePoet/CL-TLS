@@ -148,13 +148,14 @@ static bool KgcServe(const int socket_fd,
                 KGC_SERVE_BS_CLOSE_SEND_FAILURE;
             }
 
+            TcpClose(belonging_server_socket_fd);
+
             if (receive_buffer.data[0] != KGC_MSG_TYPE_ADD_CLIENT_RESPONSE)
             {
                 LogError("Unexpected KGC message type received from "
                          "belonging server %s; ADD_CLIENT_RESPONSE expected",
                          current_identity_hex);
-                KGC_SERVE_BS_SEND_ERROR_STOP_NOTIFY_CLOSE_SEND_FAILURE(
-                    CLTLS_ERROR_APPLICATION_LAYER_ERROR);
+                KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;
             }
 
             if (receive_buffer.data[KGC_MSG_TYPE_LENGTH] ==
@@ -162,11 +163,8 @@ static bool KgcServe(const int socket_fd,
             {
                 LogError("Belonging server %s reports ADD_CLIENT_STATUS_FAILURE",
                          current_identity_hex);
-                KGC_SERVE_BS_SEND_ERROR_STOP_NOTIFY_CLOSE_SEND_FAILURE(
-                    CLTLS_ERROR_APPLICATION_LAYER_ERROR);
+                KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;
             }
-
-            TcpClose(belonging_server_socket_fd);
         }
     }
 
@@ -362,6 +360,74 @@ static bool MqttProxyServe(const int socket_fd,
 static bool AddClientServe(const int socket_fd,
                            const HandshakeResult *handshake_result)
 {
+    ByteVec send_buffer;
+    ByteVec receive_buffer;
+
+    ByteVecInitWithCapacity(&send_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
+    ByteVecInitWithCapacity(&receive_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
+
+    if (!ReceiveApplicationData(socket_fd,
+                                handshake_result,
+                                false,
+                                &receive_buffer))
+    {
+        ADD_CLIENT_SERVE_FREE_RETURN_FALSE;
+    }
+
+    if (receive_buffer.data[0] != KGC_MSG_TYPE_ADD_CLIENT_REQUEST)
+    {
+        LogError("Unexpected KGC message type; "
+                 "KGC_MSG_TYPE_ADD_CLIENT_REQUEST expected");
+        ADD_CLIENT_SERVE_SEND_RESPONSE_FAILURE;
+    }
+
+    char new_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
+    Bin2Hex(receive_buffer.data + KGC_MSG_TYPE_LENGTH,
+            new_id_hex,
+            ENTITY_IDENTITY_LENGTH);
+
+    pthread_mutex_lock(&kServerPermittedIdsMutex);
+
+    FILE *permitted_ids_fp = fopen(kServerPermittedIdsDatabasePath, "a");
+    if (permitted_ids_fp == NULL)
+    {
+        LogError("Failed to open permitted IDs database file %s",
+                 kServerPermittedIdsDatabasePath);
+        pthread_mutex_unlock(&kServerPermittedIdsMutex);
+        ADD_CLIENT_SERVE_SEND_RESPONSE_FAILURE;
+    }
+
+    if (fprintf(permitted_ids_fp, "%s\n", new_id_hex) != 1)
+    {
+        LogError("Failed to append new entry into permitted IDs database file %s",
+                 kServerPermittedIdsDatabasePath);
+        fclose(permitted_ids_fp);
+        pthread_mutex_unlock(&kServerPermittedIdsMutex);
+        ADD_CLIENT_SERVE_SEND_RESPONSE_FAILURE;
+    }
+
+    fclose(permitted_ids_fp);
+
+    Id new_id;
+    memcpy(new_id.id,
+           receive_buffer.data + KGC_MSG_TYPE_LENGTH,
+           ENTITY_IDENTITY_LENGTH);
+    set_Id_insert(&kServerPermittedIdSet, new_id);
+
+    pthread_mutex_unlock(&kServerPermittedIdsMutex);
+
+    ByteVecResize(&send_buffer,
+                  KGC_ADD_CLIENT_RESPONSE_HEADER_LENGTH);
+    send_buffer.data[0] = KGC_MSG_TYPE_ADD_CLIENT_RESPONSE;
+    send_buffer.data[1] = KGC_ADD_CLIENT_STATUS_SUCCESS;
+    SendApplicationData(socket_fd,
+                        handshake_result,
+                        false,
+                        &send_buffer);
+
+    ByteVecFree(&send_buffer);
+    ByteVecFree(&receive_buffer);
+    return true;
 }
 
 void *ServerTcpRequestHandler(void *arg)
