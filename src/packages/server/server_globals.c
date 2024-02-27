@@ -1,5 +1,26 @@
 #include "server_globals.h"
 
+uint64_t kSocketBlockSize = 0;
+
+uint8_t kServerIdentity[ENTITY_IDENTITY_LENGTH] = {0};
+uint8_t kKgcPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
+uint8_t kServerPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
+uint8_t kServerPrivateKey[CLTLS_ENTITY_PRIVATE_KEY_LENGTH] = {0};
+
+set_CipherSuite kServerCipherSuiteSet;
+
+set_IdIp kServerIdIpTable;
+
+set_Id kServerPermittedIdSet;
+
+char kKgcPublicKeyPath[MAX_PATH_LENGTH] = {0};
+char kServerPublicKeyPath[MAX_PATH_LENGTH] = {0};
+char kServerPrivateKeyPath[MAX_PATH_LENGTH] = {0};
+char kServerIdIpDatabasePath[MAX_PATH_LENGTH] = {0};
+char kServerPermittedIdsDatabasePath[MAX_PATH_LENGTH] = {0};
+
+pthread_mutex_t kServerPermittedIdsMutex;
+
 bool InitializeGlobals(const ServerArgs *server_args)
 {
     // Read config file

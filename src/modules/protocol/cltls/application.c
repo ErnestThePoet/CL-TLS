@@ -1,7 +1,7 @@
 #include "application.h"
 
 bool SendApplicationData(const int socket_fd,
-                         const HandshakeResult *handshake_result,
+                         HandshakeResult *handshake_result,
                          const bool is_client,
                          const ByteVec *data)
 {
@@ -54,7 +54,7 @@ bool SendApplicationData(const int socket_fd,
 }
 
 bool ReceiveApplicationData(const int socket_fd,
-                            const HandshakeResult *handshake_result,
+                            HandshakeResult *handshake_result,
                             const bool is_client,
                             ByteVec *data)
 {

@@ -13,22 +13,22 @@
 
 #include "client_args.h"
 
-uint64_t kSocketBlockSize = 0;
+extern uint64_t kSocketBlockSize;
 
-uint8_t kClientIdentity[ENTITY_IDENTITY_LENGTH] = {0};
-uint8_t kKgcPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
-uint8_t kClientPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
-uint8_t kClientPrivateKey[CLTLS_ENTITY_PRIVATE_KEY_LENGTH] = {0};
+extern uint8_t kClientIdentity[ENTITY_IDENTITY_LENGTH];
+extern uint8_t kKgcPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH];
+extern uint8_t kClientPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH];
+extern uint8_t kClientPrivateKey[CLTLS_ENTITY_PRIVATE_KEY_LENGTH];
 
-set_CipherSuite kClientCipherSuiteSet;
+extern set_CipherSuite kClientCipherSuiteSet;
 // ID/IP table is manually maintained in a file which is loaded
 // at startup
-set_IdIp kClientIdIpTable;
+extern set_IdIp kClientIdIpTable;
 
-char kKgcPublicKeyPath[MAX_PATH_LENGTH] = {0};
-char kClientPublicKeyPath[MAX_PATH_LENGTH] = {0};
-char kClientPrivateKeyPath[MAX_PATH_LENGTH] = {0};
-char kClientIdIpDatabasePath[MAX_PATH_LENGTH] = {0};
+extern char kKgcPublicKeyPath[MAX_PATH_LENGTH];
+extern char kClientPublicKeyPath[MAX_PATH_LENGTH];
+extern char kClientPrivateKeyPath[MAX_PATH_LENGTH];
+extern char kClientIdIpDatabasePath[MAX_PATH_LENGTH];
 
 bool InitializeGlobals(const ClientArgs *client_args);
 void FreeGlobals();

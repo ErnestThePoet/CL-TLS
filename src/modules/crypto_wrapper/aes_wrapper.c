@@ -1,5 +1,7 @@
 #include "aes_wrapper.h"
 
+// extra1 is used as IV
+// extra2 is used as IV Length(size_t)
 int Aes128GcmEncrypt(const uint8_t *m, size_t mlen,
                      uint8_t *c, size_t *clen,
                      const uint8_t *ad, size_t adlen,
@@ -85,6 +87,8 @@ int Aes128GcmEncrypt(const uint8_t *m, size_t mlen,
     return 1;
 }
 
+// extra1 is used as IV
+// extra2 is used as IV Length(size_t)
 int Aes128GcmDecrypt(const uint8_t *c, size_t clen,
                      uint8_t *m, size_t *mlen,
                      const uint8_t *ad, size_t adlen,
@@ -171,3 +175,11 @@ int Aes128GcmDecrypt(const uint8_t *c, size_t clen,
         return 0;
     }
 }
+
+static const AeadScheme kAeadSchemeAes128Gcm_ = {
+    .Encrypt = Aes128GcmEncrypt,
+    .Decrypt = Aes128GcmDecrypt,
+    .key_size = 16,
+    .npub_iv_size = 16};
+
+const AeadScheme *kAeadSchemeAes128Gcm = &kAeadSchemeAes128Gcm_;

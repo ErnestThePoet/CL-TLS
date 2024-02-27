@@ -36,12 +36,6 @@ extern void ascon_hash_final(ascon_hash_state_t *s,
                              uint8_t *out,
                              uint64_t outlen);
 
-inline int AsconHash384(unsigned char *out, const unsigned char *in,
-                        unsigned long long inlen)
-{
-    return crypto_hash(out, in, inlen);
-}
-
-const EVP_MD *EVP_AsconHash();
+extern const EVP_MD *EVP_AsconHash();
 
 #endif

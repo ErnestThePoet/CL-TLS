@@ -62,7 +62,7 @@ void ByteVecPushBackBlock(ByteVec *byte_vec, const uint8_t *src, const size_t co
 
 void ByteVecPushBackBlockFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_vec)
 {
-    ByteVecAppendBlock(dest_byte_vec, src_byte_vec->data, src_byte_vec->size);
+    ByteVecPushBackBlock(dest_byte_vec, src_byte_vec->data, src_byte_vec->size);
 }
 
 void ByteVecCopyBlock(ByteVec *byte_vec,

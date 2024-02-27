@@ -52,7 +52,7 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
 
     // [Receive] Server Hello
-    const char *current_stage = "SEND Server Hello";
+    current_stage = "SEND Server Hello";
 
     HANDSHAKE_RECEIVE(SERVER_HELLO, true);
 

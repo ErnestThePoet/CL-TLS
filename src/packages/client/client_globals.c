@@ -1,5 +1,21 @@
 #include "client_globals.h"
 
+uint64_t kSocketBlockSize = 0;
+
+uint8_t kClientIdentity[ENTITY_IDENTITY_LENGTH] = {0};
+uint8_t kKgcPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
+uint8_t kClientPublicKey[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
+uint8_t kClientPrivateKey[CLTLS_ENTITY_PRIVATE_KEY_LENGTH] = {0};
+
+set_CipherSuite kClientCipherSuiteSet;
+
+set_IdIp kClientIdIpTable;
+
+char kKgcPublicKeyPath[MAX_PATH_LENGTH] = {0};
+char kClientPublicKeyPath[MAX_PATH_LENGTH] = {0};
+char kClientPrivateKeyPath[MAX_PATH_LENGTH] = {0};
+char kClientIdIpDatabasePath[MAX_PATH_LENGTH] = {0};
+
 bool InitializeGlobals(const ClientArgs *client_args)
 {
     // Read config file

@@ -14,12 +14,7 @@ typedef struct
 #define T CipherSuite
 #include <set.h>
 
-int CipherSuiteCmp(CipherSuite *a, CipherSuite *b)
-{
-    return a->cipher_suite == b->cipher_suite
-               ? 0
-               : (a->cipher_suite > b->cipher_suite ? 1 : -1);
-}
+int CipherSuiteCmp(CipherSuite *a, CipherSuite *b);
 
 // More severe the level, greater the value
 typedef enum
@@ -36,7 +31,7 @@ typedef enum
     LOG_TYPE_INFO
 } LogType;
 
-LogLevel kLogLevel = LOG_LEVEL_WARN;
+extern LogLevel kLogLevel;
 
 #define ENTITY_IDENTITY_LENGTH 32
 #define ENTITY_IDENTITY_HEX_LENGTH (ENTITY_IDENTITY_LENGTH * 2)
@@ -57,41 +52,8 @@ LogLevel kLogLevel = LOG_LEVEL_WARN;
 
 #define STR_ERRNO strerror(errno)
 
-uint8_t kKgcIdentity[ENTITY_IDENTITY_LENGTH] = {
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-    0xEC,
-};
+extern uint8_t kKgcIdentity[ENTITY_IDENTITY_LENGTH];
 
-uint16_t kKgcListenPort = 27600;
+extern uint16_t kKgcListenPort;
 
 #endif
