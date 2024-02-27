@@ -41,6 +41,18 @@ foreach(PACKAGE ${PACKAGE_LIST})
     target_link_libraries(cltls_${PACKAGE} PRIVATE crypto_boringssl_${LIB_SUFFIX_BORINGSSL})
 endforeach()
 
+set(MISC_EXECUTABLE_LIST initializer mqtt_client mqtt_server)
+    
+foreach(MISC_EXECUTABLE ${MISC_EXECUTABLE_LIST})
+    file(GLOB SRC_MISC_EXECUTABLE "src/packages/misc/${MISC_EXECUTABLE}.c")
+
+    add_executable(cltls_misc_${MISC_EXECUTABLE} ${SRC_MODULES} ${SRC_MISC_EXECUTABLE})
+
+    target_link_libraries(cltls_misc_${MISC_EXECUTABLE} PRIVATE crypto_aead_ascon128av12_${LIB_SUFFIX_ASCON})
+    target_link_libraries(cltls_misc_${MISC_EXECUTABLE} PRIVATE crypto_hash_asconhashav12_${LIB_SUFFIX_ASCON})
+    target_link_libraries(cltls_misc_${MISC_EXECUTABLE} PRIVATE crypto_boringssl_${LIB_SUFFIX_BORINGSSL})
+endforeach()
+
 if(ARCH_LOWER STREQUAL arm32)
     set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=c99 -O2 -Wall -static")
 else()
