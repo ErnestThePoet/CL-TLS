@@ -19,6 +19,7 @@ bool ServerRegister()
     if (ska_bn == NULL)
     {
         LogError("Memory allocation for |ska_bn| failed");
+        BN_free(pka_bn);
         exit(EXIT_FAILURE);
     }
 
