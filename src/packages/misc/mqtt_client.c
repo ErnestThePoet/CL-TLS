@@ -79,6 +79,11 @@ int main(int argc, char *argv[])
                                           remaining_size;
 
                 uint8_t *msg = malloc(total_size);
+                if (msg == NULL)
+                {
+                    LogError("Memory allocation for |msg| failed");
+                    exit(EXIT_FAILURE);
+                }
 
                 msg[0] = 0x30;
 
@@ -120,8 +125,6 @@ int main(int argc, char *argv[])
                     sent_size += current_send_size;
                 }
 
-                free(msg);
-
                 LogInfo("Packet delivered");
 
                 uint8_t receive_common_header[5] = {0};
@@ -154,7 +157,12 @@ int main(int argc, char *argv[])
                         remaining_size,
                         1000 * ((time_receive - time_send_end) / (float)CLOCKS_PER_SEC));
 
-                msg = malloc(remaining_size);
+                msg = realloc(msg, remaining_size);
+                if (msg == NULL)
+                {
+                    LogError("Memory reallocation for |msg| failed");
+                    exit(EXIT_FAILURE);
+                }
 
                 if (!TcpRecv(socket_fd, msg, remaining_size))
                 {
