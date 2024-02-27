@@ -6,9 +6,18 @@
 #include <protocol/cltls/application.h>
 
 #include <protocol/kgc/kgc_header.h>
+#include <protocol/mqtt/mqtt_header.h>
 
 #include "server_args.h"
 #include "server_globals.h"
+
+#define SERVER_CLOSE_FREE_RETURN         \
+    do                                   \
+    {                                    \
+        TcpClose(ctx->client_socket_fd); \
+        free(arg);                       \
+        return NULL;                     \
+    } while (false)
 
 #define KGC_SERVE_FREE_RETURN_FALSE   \
     do                                \
@@ -44,6 +53,34 @@
     {                                                                         \
         CLTLS_SEND_ERROR_STOP_NOTIFY(belonging_server_socket_fd, ERROR_CODE); \
         KGC_SERVE_BS_CLOSE_SEND_FAILURE;                                      \
+    } while (false)
+
+#define MQTT_PROXY_SERVE_FREE_RETURN_FALSE \
+    do                                     \
+    {                                      \
+        ByteVecFree(&buffer);              \
+        return false;                      \
+    } while (false)
+
+#define MQTT_PROXY_SERVE_CLOSE_FREE_RETURN_FALSE \
+    do                                           \
+    {                                            \
+        TcpClose(forward_socket_fd);             \
+        MQTT_PROXY_SERVE_FREE_RETURN_FALSE;      \
+    } while (false)
+
+#define MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(ERROR_CODE) \
+    do                                                                        \
+    {                                                                         \
+        CLTLS_SEND_ERROR_STOP_NOTIFY(socket_fd, ERROR_CODE);                  \
+        MQTT_PROXY_SERVE_FREE_RETURN_FALSE;                                   \
+    } while (false)
+
+#define MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_CLOSE_FREE_RETURN_FALSE(ERROR_CODE) \
+    do                                                                              \
+    {                                                                               \
+        CLTLS_SEND_ERROR_STOP_NOTIFY(socket_fd, ERROR_CODE);                        \
+        MQTT_PROXY_SERVE_CLOSE_FREE_RETURN_FALSE;                                   \
     } while (false)
 
 void *ServerTcpRequestHandler(void *arg);

@@ -191,12 +191,172 @@ static bool KgcServe(const int socket_fd,
 }
 
 static bool MqttProxyServe(const int socket_fd,
-                           const HandshakeResult *handshake_result)
+                           const HandshakeResult *handshake_result,
+                           const char *forward_ip,
+                           const uint16_t forward_port)
 {
     ByteVec buffer;
 
     ByteVecInitWithCapacity(&buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
 
+    int forward_socket_fd = 0;
+    if (!TcpConnectToServer(forward_ip, forward_port, &forward_socket_fd))
+    {
+        LogError("Failed to connect to proxy forward server");
+        MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+    }
+
+    // Loop until we receive MQTT DISCONNECT
+    while (true)
+    {
+        // Forward client data in blocks
+        if (!ReceiveApplicationData(socket_fd,
+                                    handshake_result,
+                                    false,
+                                    &buffer))
+        {
+            LogError("Failed to receive MQTT packet from client");
+            MQTT_PROXY_SERVE_CLOSE_FREE_RETURN_FALSE;
+        }
+
+        uint8_t mqtt_msg_type = (buffer.data[0] >> 4);
+        LogInfo("Received %s from client", GetMqttMessageType(mqtt_msg_type));
+
+        if (!TcpSend(forward_socket_fd,
+                     buffer.data,
+                     buffer.size))
+        {
+            LogError("Failed to forward MQTT packet to server");
+            MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_CLOSE_FREE_RETURN_FALSE(
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        }
+
+        size_t current_byte_index = 1;
+        uint8_t current_byte = buffer.data[current_byte_index];
+        size_t mqtt_remaining_length = 0;
+        size_t multiplier = 1;
+
+        while (current_byte & 0x80U)
+        {
+            mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
+            multiplier *= 128;
+            current_byte = buffer.data[++current_byte_index];
+        }
+
+        mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
+
+        size_t remaining_read_size = mqtt_remaining_length - buffer.size;
+
+        while (remaining_read_size > 0)
+        {
+            if (!ReceiveApplicationData(socket_fd,
+                                        handshake_result,
+                                        false,
+                                        &buffer))
+            {
+                LogError("Failed to receive MQTT packet from client");
+                MQTT_PROXY_SERVE_CLOSE_FREE_RETURN_FALSE;
+            }
+
+            if (!TcpSend(forward_socket_fd,
+                         buffer.data,
+                         buffer.size))
+            {
+                LogError("Failed to forward MQTT packet to server");
+                MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_CLOSE_FREE_RETURN_FALSE(
+                    CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+            }
+
+            remaining_read_size -= buffer.size;
+        }
+
+        if (mqtt_msg_type == MQTT_MSG_TYPE_DISCONNECT)
+        {
+            break;
+        }
+
+        // Forward server data in blocks
+        ByteVecResize(&buffer, MQTT_FIXED_HEADER_LENGTH);
+
+        if (!TcpRecv(forward_socket_fd,
+                     buffer.data,
+                     MQTT_FIXED_HEADER_LENGTH))
+        {
+            LogError("Failed to receive MQTT fixed header from server");
+            MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_CLOSE_FREE_RETURN_FALSE(
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        }
+
+        mqtt_msg_type = (buffer.data[0] >> 4);
+        LogInfo("Received %s from server", GetMqttMessageType(mqtt_msg_type));
+
+        // Decode MQTT remaining length
+        current_byte = buffer.data[1];
+        mqtt_remaining_length = 0;
+        multiplier = 1;
+
+        while (current_byte & 0x80U)
+        {
+            mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
+            multiplier *= 128;
+            if (!TcpRecv(socket_fd,
+                         &current_byte,
+                         1))
+            {
+                LogError("Failed to receive MQTT remaining length from server");
+                MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_CLOSE_FREE_RETURN_FALSE(
+                    CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+            }
+
+            ByteVecPushBack(&buffer, current_byte);
+        }
+
+        mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
+
+        remaining_read_size = mqtt_remaining_length;
+
+        // Forward client data in blocks
+        size_t current_read_size = MIN(
+            remaining_read_size,
+            kSocketBlockSize - buffer.size);
+
+        // Used in first block receive to append data after MQTT header.
+        // Always be 0 when receiving further blocks.
+        size_t receive_buffer_offset = buffer.size;
+
+        ByteVecResizeBy(&buffer, current_read_size);
+
+        while (remaining_read_size > 0)
+        {
+            if (!TcpRecv(forward_socket_fd,
+                         buffer.data + receive_buffer_offset,
+                         current_read_size))
+            {
+                LogError("Failed to receive MQTT packet from server");
+                MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_CLOSE_FREE_RETURN_FALSE(
+                    CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+            }
+
+            if (!SendApplicationData(socket_fd,
+                                     handshake_result,
+                                     false,
+                                     &buffer))
+            {
+                LogError("Failed to forward MQTT packet to client");
+                MQTT_PROXY_SERVE_CLOSE_FREE_RETURN_FALSE;
+            }
+
+            remaining_read_size -= current_read_size;
+            current_read_size = MIN(remaining_read_size, kSocketBlockSize);
+            ByteVecResize(&buffer, current_read_size);
+
+            receive_buffer_offset = 0;
+        }
+    }
+
+    ByteVecFree(&buffer);
+    return true;
 }
 
 static bool AddClientServe(const int socket_fd,
@@ -241,7 +401,10 @@ void *ServerTcpRequestHandler(void *arg)
         switch (application_layer_protocol)
         {
         case CLTLS_PROTOCOL_MQTT:
-            if (!MqttProxyServe(ctx->client_socket_fd, &handshake_result))
+            if (!MqttProxyServe(ctx->client_socket_fd,
+                                &handshake_result,
+                                server_args->forward_ip,
+                                server_args->forward_port))
             {
                 SERVER_CLOSE_FREE_RETURN;
             }
