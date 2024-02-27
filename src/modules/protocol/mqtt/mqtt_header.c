@@ -20,15 +20,17 @@ int GetMqttRemainingLengthByteCount(const uint32_t remaining_length)
     }
 }
 
-void EncodeMqttRemainingLength(size_t remaining_length, uint8_t *out)
+size_t EncodeMqttRemainingLength(size_t remaining_length, uint8_t *out)
 {
-    int current_index = 0;
+    size_t current_index = 0;
     while (remaining_length > 0)
     {
         uint8_t base_byte = remaining_length > 127 ? 0x80U : 0x00U;
         out[current_index++] = base_byte | (remaining_length & 0x7FU);
         remaining_length >>= 7;
     }
+
+    return current_index;
 }
 
 size_t DecodeMqttRemainingLength(const uint8_t *in)
