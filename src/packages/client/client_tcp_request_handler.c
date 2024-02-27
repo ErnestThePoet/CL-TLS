@@ -125,7 +125,7 @@ void *ClientTcpRequestHandler(void *arg)
 
         size_t remaining_read_size = mqtt_remaining_length;
 
-        // Forward data in blocks
+        // Forward client data in blocks
         size_t current_read_size = MIN(
             remaining_read_size,
             kSocketBlockSize - buffer.size);
