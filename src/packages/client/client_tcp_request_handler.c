@@ -92,7 +92,7 @@ void *ClientTcpRequestHandler(void *arg)
                      buffer.data,
                      MQTT_FIXED_HEADER_LENGTH))
         {
-            LogError("Failed to receive MQTT fixed header");
+            LogError("Failed to receive MQTT fixed header from client");
             CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
@@ -113,7 +113,7 @@ void *ClientTcpRequestHandler(void *arg)
                          &current_byte,
                          1))
             {
-                LogError("Failed to receive MQTT remaining length");
+                LogError("Failed to receive MQTT remaining length from client");
                 CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
                     CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
             }
