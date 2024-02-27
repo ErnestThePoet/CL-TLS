@@ -168,7 +168,7 @@ void *ClientTcpRequestHandler(void *arg)
             break;
         }
 
-        // Send data back
+        // Forward server data in blocks
         if (!ReceiveApplicationData(server_socket_fd,
                                     &client_handshake_result,
                                     true,
@@ -183,6 +183,43 @@ void *ClientTcpRequestHandler(void *arg)
             LogError("Failed to forward MQTT packet to client");
             CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        }
+
+        size_t current_byte_index = 1;
+        current_byte = buffer.data[current_byte_index];
+        mqtt_remaining_length = 0;
+        multiplier = 1;
+
+        while (current_byte & 0x80U)
+        {
+            mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
+            multiplier *= 128;
+            current_byte = buffer.data[++current_byte_index];
+        }
+
+        mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
+
+        size_t remaining_read_size = mqtt_remaining_length - buffer.size;
+
+        while (remaining_read_size > 0)
+        {
+            if (!ReceiveApplicationData(server_socket_fd,
+                                        &client_handshake_result,
+                                        true,
+                                        &buffer))
+            {
+                LogError("Failed to receive MQTT packet from server");
+                CLIENT_CLOSE_CS_FREE_RETURN;
+            }
+
+            if (!TcpSend(ctx->client_socket_fd, buffer.data, buffer.size))
+            {
+                LogError("Failed to forward MQTT packet to client");
+                CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
+                    CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+            }
+
+            remaining_read_size -= buffer.size;
         }
     }
 
