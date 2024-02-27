@@ -179,6 +179,7 @@ bool ServerRegister()
         SERVER_REGISTER_FREE_RETURN_FALSE;
     }
 
+    // pre allocate space for full public key
     uint8_t public_key[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
     uint8_t private_key[CLTLS_ENTITY_PRIVATE_KEY_LENGTH] = {0};
     ED25519_keypair_from_seed(public_key, private_key, keypair_seed);
