@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 {
     if (argc != 2)
     {
-        LogError("Invalid argument count");
+        LogError("Invalid arguments");
         fputs("Usage: cltls_misc_initializer <path-to-store-keypair>\n", stderr);
         return EXIT_FAILURE;
     }
