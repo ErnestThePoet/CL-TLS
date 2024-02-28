@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
     char file_path[MAX_PATH_LENGTH] = {0};
     strcpy(file_path, argv[1]);
-    strcat(file_path, "/pubkey");
+    strcat(file_path, "/pubkey.key");
 
     FILE *public_key_fp = fopen(file_path, "wb");
     if (public_key_fp == NULL)
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
     fclose(public_key_fp);
 
     strcpy(file_path, argv[1]);
-    strcat(file_path, "/privkey");
+    strcat(file_path, "/privkey.key");
 
     FILE *private_key_fp = fopen(file_path, "wb");
     if (private_key_fp == NULL)
