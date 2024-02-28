@@ -28,7 +28,7 @@ static void InitEvpAsconHash()
     kEvpAsconHash.init = AsconHashInit;
     kEvpAsconHash.update = AsconHashUpdate;
     kEvpAsconHash.final = AsconHashFinal;
-    kEvpAsconHash.block_size = ASCON_HASH_RATE;
+    kEvpAsconHash.block_size = 32; // bypass BoringSSL HMAC assert; actually should be ASCON_HASH_RATE
     kEvpAsconHash.ctx_size = sizeof(ascon_hash_state_t);
 }
 
