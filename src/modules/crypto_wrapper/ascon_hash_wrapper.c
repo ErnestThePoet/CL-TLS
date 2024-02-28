@@ -34,7 +34,7 @@ static void AsconHashAFreeCtx(void *ctx)
 
 static int AsconHashAHash(const uint8_t *in, size_t inlen, uint8_t *out)
 {
-    return crypto_hash(out, in, inlen);
+    return !crypto_hash(out, in, inlen);
 }
 
 static const HashScheme kHashSchemeAsconHashA_ = {

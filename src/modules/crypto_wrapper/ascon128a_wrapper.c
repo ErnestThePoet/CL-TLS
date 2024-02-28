@@ -17,7 +17,7 @@ static int Ascon128AEncrypt(const uint8_t *m, size_t mlen,
 
     *clen = clen_ull;
 
-    return result;
+    return !result;
 }
 
 // extra1 is used as npub
@@ -37,7 +37,7 @@ static int Ascon128ADecrypt(const uint8_t *c, size_t clen,
 
     *mlen = mlen_ull;
 
-    return result;
+    return !result;
 }
 
 static const AeadScheme kAeadSchemeAscon128A_ = {
