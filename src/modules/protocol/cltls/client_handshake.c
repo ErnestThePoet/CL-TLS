@@ -464,7 +464,7 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
 
     CLTLS_SET_COMMON_HEADER(send_buffer.data,
-                            CLTLS_MSG_TYPE_SERVER_HANDSHAKE_FINISHED,
+                            CLTLS_MSG_TYPE_CLIENT_HANDSHAKE_FINISHED,
                             encrypted_length);
 
     if (!TcpSend(ctx->socket_fd,

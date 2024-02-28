@@ -81,8 +81,9 @@ bool ReceiveApplicationData(const int socket_fd,
     if (CLTLS_MSG_TYPE(buffer.data) != CLTLS_MSG_TYPE_APPLICATION_DATA &&
         CLTLS_MSG_TYPE(buffer.data) != CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)
     {
-        LogError("[%s] Invalid message type received",
-                 current_stage);
+        LogError("[%s] Invalid message type received (0x%02hhX)",
+                 current_stage,
+                 CLTLS_MSG_TYPE(buffer.data));
         APPLICATION_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
             CLTLS_ERROR_UNEXPECTED_MSG_TYPE);
     }

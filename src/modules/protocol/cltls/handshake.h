@@ -87,19 +87,21 @@ typedef struct
         }                                                                  \
     } while (false)
 
-#define HANDSHAKE_RECEIVE_CHECK_MSG_TYPE(MSG_TYPE)                               \
-    do                                                                           \
-    {                                                                            \
-        if (CLTLS_MSG_TYPE(receive_buffer.data) !=                               \
-                CLTLS_MSG_TYPE_##MSG_TYPE &&                                     \
-            CLTLS_MSG_TYPE(receive_buffer.data) !=                               \
-                CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)                                \
-        {                                                                        \
-            LogError("[%s] Invalid message type received, expecting " #MSG_TYPE, \
-                     current_stage);                                             \
-            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(                  \
-                CLTLS_ERROR_UNEXPECTED_MSG_TYPE);                                \
-        }                                                                        \
+#define HANDSHAKE_RECEIVE_CHECK_MSG_TYPE(MSG_TYPE)                     \
+    do                                                                 \
+    {                                                                  \
+        if (CLTLS_MSG_TYPE(receive_buffer.data) !=                     \
+                CLTLS_MSG_TYPE_##MSG_TYPE &&                           \
+            CLTLS_MSG_TYPE(receive_buffer.data) !=                     \
+                CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)                      \
+        {                                                              \
+            LogError("[%s] Invalid message type received (0x%02hhX), " \
+                     "expecting " #MSG_TYPE,                           \
+                     current_stage,                                    \
+                     CLTLS_MSG_TYPE(receive_buffer.data));             \
+            HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(        \
+                CLTLS_ERROR_UNEXPECTED_MSG_TYPE);                      \
+        }                                                              \
     } while (false)
 
 #define HANDSHAKE_RECEIVE_REMAINING(MSG_TYPE, APPEND_TRAFFIC)                   \
