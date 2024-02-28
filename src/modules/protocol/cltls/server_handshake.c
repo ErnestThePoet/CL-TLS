@@ -83,7 +83,6 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     {
         LogError("[%s] Invalid application layer protocol 0x%02hhX",
                  current_stage,
-                 current_stage,
                  application_layer_protocol);
         HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
             CLTLS_ERROR_INVALID_APPLICATION_LAYER_PROTOCOL);
