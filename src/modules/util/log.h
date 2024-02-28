@@ -29,4 +29,7 @@ void LogWarn(const char *format,
 void LogInfo(const char *format,
              ...);
 
+void LogSuccess(const char *format,
+                ...);
+
 #endif

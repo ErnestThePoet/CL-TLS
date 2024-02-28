@@ -20,11 +20,16 @@ static void VLog(const LogType log_type,
             fputc('\n', stdout);
             fputs(STYLE_NRM, stdout);
             break;
-        default:
+        case LOG_TYPE_INFO:
             fputs(STYLE_BOLD "Info: " STYLE_NRM, stdout);
             vfprintf(stdout, format, args);
             fputc('\n', stdout);
             break;
+        case LOG_TYPE_SUCCESS:
+            fputs(STYLE_GRN STYLE_BOLD "Success: " STYLE_NRM STYLE_GRN, stdout);
+            vfprintf(stdout, format, args);
+            fputc('\n', stdout);
+            fputs(STYLE_NRM, stdout);
         }
     }
 }
@@ -63,5 +68,14 @@ void LogInfo(const char *format,
     va_list args;
     va_start(args, format);
     VLog(LOG_TYPE_INFO, format, args);
+    va_end(args);
+}
+
+void LogSuccess(const char *format,
+                ...)
+{
+    va_list args;
+    va_start(args, format);
+    VLog(LOG_TYPE_SUCCESS, format, args);
     va_end(args);
 }

@@ -28,7 +28,8 @@ typedef enum
 {
     LOG_TYPE_ERROR,
     LOG_TYPE_WARN,
-    LOG_TYPE_INFO
+    LOG_TYPE_INFO,
+    LOG_TYPE_SUCCESS
 } LogType;
 
 extern LogLevel kLogLevel;
