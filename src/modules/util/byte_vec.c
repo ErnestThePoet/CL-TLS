@@ -51,35 +51,20 @@ void ByteVecEnsureCapacity(ByteVec *byte_vec, const size_t capacity)
 
 void ByteVecPushBack(ByteVec *byte_vec, const uint8_t value)
 {
-    ByteVecEnsureCapacity(byte_vec, byte_vec->size + 1);
+    ByteVecResizeBy(byte_vec, 1);
     byte_vec->data[byte_vec->size - 1] = value;
 }
 
 void ByteVecPushBackBlock(ByteVec *byte_vec, const uint8_t *src, const size_t count)
 {
-    ByteVecCopyBlock(byte_vec, byte_vec->size, src, count);
+    const size_t previous_size = byte_vec->size;
+    ByteVecResizeBy(byte_vec, count);
+    memcpy(byte_vec->data + previous_size, src, count);
 }
 
 void ByteVecPushBackBlockFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_vec)
 {
     ByteVecPushBackBlock(dest_byte_vec, src_byte_vec->data, src_byte_vec->size);
-}
-
-void ByteVecCopyBlock(ByteVec *byte_vec,
-                      const size_t pos,
-                      const uint8_t *src,
-                      const size_t count)
-{
-    ByteVecEnsureCapacity(byte_vec, pos + count);
-
-    memcpy(byte_vec->data + pos, src, count);
-}
-
-void ByteVecCopyFromByteVec(ByteVec *dest_byte_vec,
-                            const size_t pos,
-                            const ByteVec *src_byte_vec)
-{
-    ByteVecCopyBlock(dest_byte_vec, pos, src_byte_vec->data, src_byte_vec->size);
 }
 
 void ByteVecClear(ByteVec *byte_vec)

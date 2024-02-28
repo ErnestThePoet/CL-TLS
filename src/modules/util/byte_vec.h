@@ -26,8 +26,6 @@ void ByteVecEnsureCapacity(ByteVec *byte_vec, const size_t capacity);
 void ByteVecPushBack(ByteVec *byte_vec, const uint8_t value);
 void ByteVecPushBackBlock(ByteVec *byte_vec, const uint8_t *src, const size_t count);
 void ByteVecPushBackBlockFromByteVec(ByteVec *dest_byte_vec, const ByteVec *src_byte_vec);
-void ByteVecCopyBlock(ByteVec *byte_vec, const size_t pos, const uint8_t *src, const size_t count);
-void ByteVecCopyFromByteVec(ByteVec *dest_byte_vec, const size_t pos, const ByteVec *src_byte_vec);
 
 // ByteVecClear() sets size to 0 without freeing extra capacity.
 void ByteVecClear(ByteVec *byte_vec);
