@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 
     fclose(private_key_fp);
 
-    LogInfo("Successfully generated keypair for KGC.\nLocate them in %s", argv[1]);
+    LogSuccess("Successfully generated keypair for KGC.\nLocate them in %s", argv[1]);
 
     return EXIT_SUCCESS;
 }

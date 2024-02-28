@@ -76,6 +76,13 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     HANDSHAKE_RECEIVE(CLIENT_HELLO, true);
 
+    char client_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
+    Bin2Hex(CLTLS_REMAINING_HEADER(receive_buffer.data) +
+                CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH,
+            client_id_hex, ENTITY_IDENTITY_LENGTH);
+
+    LogInfo("Client identity is %s", client_id_hex);
+
     const uint8_t application_layer_protocol =
         CLTLS_REMAINING_HEADER(receive_buffer.data)[0];
 
@@ -104,9 +111,6 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                CLTLS_REMAINING_HEADER(receive_buffer.data) +
                    CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH,
                ENTITY_IDENTITY_LENGTH);
-
-        char client_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
-        Bin2Hex(client_id.id, client_id_hex, ENTITY_IDENTITY_LENGTH);
 
         if (application_layer_protocol == CLTLS_PROTOCOL_KGC)
         {
@@ -642,7 +646,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     ByteVecFree(&traffic_buffer);
     ByteVecFree(&decryption_buffer);
 
-    LogInfo("Handshake successful");
+    LogSuccess("Handshake successful");
 
     return true;
 }

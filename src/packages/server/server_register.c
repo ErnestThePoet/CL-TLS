@@ -229,7 +229,7 @@ bool ServerRegister()
 
     fclose(private_key_file);
 
-    LogInfo("Successfully resigtered server");
+    LogSuccess("Successfully resigtered server");
 
     ByteVecFree(&send_buffer);
     ByteVecFree(&receive_buffer);

@@ -104,10 +104,10 @@ bool ReceiveApplicationData(const int socket_fd,
 
     if (CLTLS_MSG_TYPE(buffer.data) == CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)
     {
-        LogError("[%s] The other party send ERROR_STOP_NOTIFY: %s",
+        LogError("[%s] The other party sent ERROR_STOP_NOTIFY: %s",
                  current_stage,
                  GetCltlsErrorMessage(
-                     CLTLS_REMAINING_HEADER(buffer.data[0])));
+                     CLTLS_REMAINING_HEADER(buffer.data)[0]));
 
         APPLICATION_FREE_RETURN_FALSE;
     }

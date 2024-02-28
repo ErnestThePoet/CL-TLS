@@ -253,8 +253,8 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            LogInfo("Successfully connected in %.03fms",
-                    1000 * ((time_receive - time_send_end) / (float)CLOCKS_PER_SEC));
+            LogSuccess("Successfully connected in %.03fms",
+                       1000 * ((time_receive - time_send_end) / (float)CLOCKS_PER_SEC));
             connected = true;
         }
     }

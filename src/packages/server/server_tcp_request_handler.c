@@ -3,6 +3,8 @@
 static bool KgcServe(const int socket_fd,
                      HandshakeResult *handshake_result)
 {
+    LogInfo("KGC register service started");
+
     ByteVec send_buffer;
     ByteVec receive_buffer;
 
@@ -23,6 +25,11 @@ static bool KgcServe(const int socket_fd,
                  "KGC_MSG_TYPE_REGISTER_REQUEST expected");
         KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;
     }
+
+    const uint8_t client_entity_type = receive_buffer.data[KGC_MSG_TYPE_LENGTH];
+
+    LogInfo("Register entity type is %s",
+            client_entity_type == KGC_ENTITY_TYPE_CLIENT ? "CLIENT" : "SERVER");
 
     uint8_t *client_identity = receive_buffer.data +
                                KGC_MSG_TYPE_LENGTH +
@@ -48,7 +55,7 @@ static bool KgcServe(const int socket_fd,
         KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;
     }
 
-    if (receive_buffer.data[KGC_MSG_TYPE_LENGTH] == KGC_ENTITY_TYPE_CLIENT)
+    if (client_entity_type == KGC_ENTITY_TYPE_CLIENT)
     {
         uint8_t *belonging_server_count_ptr =
             receive_buffer.data + KGC_MSG_TYPE_LENGTH +
@@ -183,6 +190,8 @@ static bool KgcServe(const int socket_fd,
         KGC_SERVE_FREE_RETURN_FALSE;
     }
 
+    LogSuccess("KGC register service succeeded");
+
     ByteVecFree(&send_buffer);
     ByteVecFree(&receive_buffer);
     return true;
@@ -193,6 +202,8 @@ static bool MqttProxyServe(const int socket_fd,
                            const char *forward_ip,
                            const uint16_t forward_port)
 {
+    LogInfo("MQTT proxy service started");
+
     ByteVec buffer;
 
     ByteVecInitWithCapacity(&buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
@@ -344,6 +355,8 @@ static bool MqttProxyServe(const int socket_fd,
         }
     }
 
+    LogSuccess("MQTT proxy service successfully finished");
+
     ByteVecFree(&buffer);
     return true;
 }
@@ -351,6 +364,8 @@ static bool MqttProxyServe(const int socket_fd,
 static bool AddClientServe(const int socket_fd,
                            HandshakeResult *handshake_result)
 {
+    LogInfo("Adding new permitted client");
+
     ByteVec send_buffer;
     ByteVec receive_buffer;
 
@@ -376,6 +391,8 @@ static bool AddClientServe(const int socket_fd,
     Bin2Hex(receive_buffer.data + KGC_MSG_TYPE_LENGTH,
             new_id_hex,
             ENTITY_IDENTITY_LENGTH);
+
+    LogInfo("New permitted client identity is %s", new_id_hex);
 
     pthread_mutex_lock(&kServerPermittedIdsMutex);
 
@@ -406,6 +423,8 @@ static bool AddClientServe(const int socket_fd,
     set_Id_insert(&kServerPermittedIdSet, new_id);
 
     pthread_mutex_unlock(&kServerPermittedIdsMutex);
+
+    LogSuccess("Successfully added new permitted client");
 
     ByteVecResize(&send_buffer,
                   KGC_ADD_CLIENT_RESPONSE_HEADER_LENGTH);

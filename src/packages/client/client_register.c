@@ -288,7 +288,7 @@ bool ClientRegister(const char *belonging_servers_file_path)
 
     fclose(private_key_file);
 
-    LogInfo("Successfully resigtered client");
+    LogSuccess("Successfully resigtered client");
 
     ByteVecFree(&send_buffer);
     ByteVecFree(&receive_buffer);

@@ -2,6 +2,8 @@
 
 void *ClientTcpRequestHandler(void *arg)
 {
+    LogInfo("MQTT proxy service started");
+
     const TcpRequestHandlerCtx *ctx = (const TcpRequestHandlerCtx *)arg;
     // const ClientArgs *client_args = (const ClientArgs *)ctx->extra;
 
@@ -216,6 +218,8 @@ void *ClientTcpRequestHandler(void *arg)
             remaining_read_size -= buffer.size;
         }
     }
+
+    LogSuccess("MQTT proxy service successfully finished");
 
     CLIENT_CLOSE_CS_FREE_RETURN;
 }

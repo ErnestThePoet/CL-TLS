@@ -57,7 +57,7 @@ typedef struct
         if (CLTLS_MSG_TYPE(receive_buffer.data) ==                         \
             CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)                              \
         {                                                                  \
-            LogError("[%s] The other party send ERROR_STOP_NOTIFY: %s",    \
+            LogError("[%s] The other party sent ERROR_STOP_NOTIFY: %s",    \
                      current_stage,                                        \
                      GetCltlsErrorMessage(                                 \
                          CLTLS_REMAINING_HEADER(receive_buffer.data)[0])); \
