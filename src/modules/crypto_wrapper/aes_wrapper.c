@@ -180,6 +180,6 @@ static const AeadScheme kAeadSchemeAes128Gcm_ = {
     .Encrypt = Aes128GcmEncrypt,
     .Decrypt = Aes128GcmDecrypt,
     .key_size = 16,
-    .npub_iv_size = 16};
+    .npub_iv_size = 12};
 
 const AeadScheme *kAeadSchemeAes128Gcm = &kAeadSchemeAes128Gcm_;

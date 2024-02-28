@@ -44,6 +44,6 @@ static const AeadScheme kAeadSchemeAscon128A_ = {
     .Encrypt = Ascon128AEncrypt,
     .Decrypt = Ascon128ADecrypt,
     .key_size = 16,
-    .npub_iv_size = 12};
+    .npub_iv_size = 16};
 
 const AeadScheme *kAeadSchemeAscon128A = &kAeadSchemeAscon128A_;
