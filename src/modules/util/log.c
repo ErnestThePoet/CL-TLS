@@ -11,25 +11,28 @@ static void VLog(const LogType log_type,
         case LOG_TYPE_ERROR:
             fputs(STYLE_RED STYLE_BOLD "Error: " STYLE_NRM STYLE_RED, stderr);
             vfprintf(stderr, format, args);
-            fputc('\n', stderr);
             fputs(STYLE_NRM, stderr);
+            fputc('\n', stderr);
             break;
         case LOG_TYPE_WARN:
             fputs(STYLE_YEL STYLE_BOLD "Warn: " STYLE_NRM STYLE_YEL, stdout);
             vfprintf(stdout, format, args);
-            fputc('\n', stdout);
             fputs(STYLE_NRM, stdout);
+            fputc('\n', stdout);
+            break;
+        case LOG_TYPE_SUCCESS:
+            fputs(STYLE_GRN STYLE_BOLD "Success: " STYLE_NRM STYLE_GRN, stdout);
+            vfprintf(stdout, format, args);
+            fputs(STYLE_NRM, stdout);
+            fputc('\n', stdout);
             break;
         case LOG_TYPE_INFO:
             fputs(STYLE_BOLD "Info: " STYLE_NRM, stdout);
             vfprintf(stdout, format, args);
             fputc('\n', stdout);
             break;
-        case LOG_TYPE_SUCCESS:
-            fputs(STYLE_GRN STYLE_BOLD "Success: " STYLE_NRM STYLE_GRN, stdout);
-            vfprintf(stdout, format, args);
-            fputc('\n', stdout);
-            fputs(STYLE_NRM, stdout);
+        default:
+            break;
         }
     }
 }
