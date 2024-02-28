@@ -60,7 +60,7 @@ typedef struct
             LogError("[%s] The other party send ERROR_STOP_NOTIFY: %s",    \
                      current_stage,                                        \
                      GetCltlsErrorMessage(                                 \
-                         CLTLS_REMAINING_HEADER(receive_buffer.data[0]))); \
+                         CLTLS_REMAINING_HEADER(receive_buffer.data)[0])); \
             HANDSHAKE_FREE_RETURN_FALSE;                                   \
         }                                                                  \
     } while (false)

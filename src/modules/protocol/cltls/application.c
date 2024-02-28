@@ -5,20 +5,20 @@ bool SendApplicationData(const int socket_fd,
                          const bool is_client,
                          const ByteVec *data)
 {
-    ByteVec send_buffer;
+    ByteVec buffer;
 
     const char *current_stage = "SEND Application Data";
 
-    ByteVecInitWithCapacity(&send_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
+    ByteVecInitWithCapacity(&buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
 
-    ByteVecResize(&send_buffer,
+    ByteVecResize(&buffer,
                   CLTLS_COMMON_HEADER_LENGTH + data->size + MAX_ENC_EXTRA_SIZE);
 
     size_t encrypted_length = 0;
 
     if (!handshake_result->aead->Encrypt(
             data->data, data->size,
-            CLTLS_REMAINING_HEADER(send_buffer.data), &encrypted_length,
+            CLTLS_REMAINING_HEADER(buffer.data), &encrypted_length,
             NULL, 0,
             is_client
                 ? handshake_result->client_key
@@ -30,26 +30,26 @@ bool SendApplicationData(const int socket_fd,
     {
         LogError("[%s] Encryption of Application Data failed",
                  current_stage);
-        APPLICATION_SEND_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+        APPLICATION_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
             CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
-    ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
+    ByteVecResize(&buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
 
-    CLTLS_SET_COMMON_HEADER(send_buffer.data,
+    CLTLS_SET_COMMON_HEADER(buffer.data,
                             CLTLS_MSG_TYPE_APPLICATION_DATA,
                             encrypted_length);
 
     if (!TcpSend(socket_fd,
-                 send_buffer.data,
-                 send_buffer.size))
+                 buffer.data,
+                 buffer.size))
     {
         LogError("[%s] Failed to send Application Data",
                  current_stage);
-        APPLICATION_SEND_FREE_RETURN_FALSE;
+        APPLICATION_FREE_RETURN_FALSE;
     }
 
-    ByteVecFree(&send_buffer);
+    ByteVecFree(&buffer);
     return true;
 }
 
@@ -58,57 +58,57 @@ bool ReceiveApplicationData(const int socket_fd,
                             const bool is_client,
                             ByteVec *data)
 {
-    ByteVec receive_buffer;
+    ByteVec buffer;
 
-    ByteVecInitWithCapacity(&receive_buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
+    ByteVecInitWithCapacity(&buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
 
     size_t receive_remaining_length = 0;
 
     const char *current_stage = "RECEIVE Application Data";
 
-    ByteVecResize(&receive_buffer, CLTLS_COMMON_HEADER_LENGTH);
+    ByteVecResize(&buffer, CLTLS_COMMON_HEADER_LENGTH);
 
     if (!TcpRecv(socket_fd,
-                 receive_buffer.data,
+                 buffer.data,
                  CLTLS_COMMON_HEADER_LENGTH))
     {
         LogError("[%s] Failed to receive common header of Application Data",
                  current_stage);
-        ByteVecFree(&receive_buffer);
+        ByteVecFree(&buffer);
         return false;
     }
 
-    if (CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_APPLICATION_DATA &&
-        CLTLS_MSG_TYPE(receive_buffer.data) != CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)
+    if (CLTLS_MSG_TYPE(buffer.data) != CLTLS_MSG_TYPE_APPLICATION_DATA &&
+        CLTLS_MSG_TYPE(buffer.data) != CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)
     {
         LogError("[%s] Invalid message type received",
                  current_stage);
-        APPLICATION_RECEIVE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+        APPLICATION_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
             CLTLS_ERROR_UNEXPECTED_MSG_TYPE);
     }
 
-    receive_remaining_length = CLTLS_REMAINING_LENGTH(receive_buffer.data);
+    receive_remaining_length = CLTLS_REMAINING_LENGTH(buffer.data);
 
-    ByteVecResizeBy(&receive_buffer, receive_remaining_length);
+    ByteVecResizeBy(&buffer, receive_remaining_length);
 
     if (!TcpRecv(socket_fd,
-                 CLTLS_REMAINING_HEADER(receive_buffer.data),
+                 CLTLS_REMAINING_HEADER(buffer.data),
                  receive_remaining_length))
     {
         LogError("[%s] Failed to receive message remaining part",
                  current_stage);
 
-        APPLICATION_RECEIVE_FREE_RETURN_FALSE;
+        APPLICATION_FREE_RETURN_FALSE;
     }
 
-    if (CLTLS_MSG_TYPE(receive_buffer.data) == CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)
+    if (CLTLS_MSG_TYPE(buffer.data) == CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)
     {
         LogError("[%s] The other party send ERROR_STOP_NOTIFY: %s",
                  current_stage,
                  GetCltlsErrorMessage(
-                     CLTLS_REMAINING_HEADER(receive_buffer.data[0])));
+                     CLTLS_REMAINING_HEADER(buffer.data[0])));
 
-        APPLICATION_RECEIVE_FREE_RETURN_FALSE;
+        APPLICATION_FREE_RETURN_FALSE;
     }
 
     ByteVecResize(data, receive_remaining_length);
@@ -116,7 +116,7 @@ bool ReceiveApplicationData(const int socket_fd,
     size_t decrypted_length = 0;
 
     if (!handshake_result->aead->Decrypt(
-            CLTLS_REMAINING_HEADER(receive_buffer.data),
+            CLTLS_REMAINING_HEADER(buffer.data),
             receive_remaining_length,
             data->data, &decrypted_length,
             NULL, 0,
@@ -130,13 +130,13 @@ bool ReceiveApplicationData(const int socket_fd,
     {
         LogError("[%s] Decryption of Application Data failed",
                  current_stage);
-        APPLICATION_RECEIVE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
+        APPLICATION_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
             CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }
 
     ByteVecResize(data, decrypted_length);
 
-    ByteVecFree(&receive_buffer);
+    ByteVecFree(&buffer);
 
     return true;
 }

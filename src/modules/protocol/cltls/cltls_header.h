@@ -287,7 +287,7 @@
             [CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH] = {0};        \
         CLTLS_SET_COMMON_HEADER(error_stop_notify_send_data,      \
                                 CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY, \
-                                2);                               \
+                                CLTLS_ERROR_CODE_LENGTH);         \
         error_stop_notify_send_data[3] = ERROR_CODE;              \
         TcpSend(FD,                                               \
                 error_stop_notify_send_data,                      \
