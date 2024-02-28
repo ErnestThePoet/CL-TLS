@@ -36,6 +36,8 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    LogInfo("Client started on port %hu", client_args.listen_port);
+
     TcpRunServer(server_socket_fd,
                  ClientTcpRequestHandler,
                  &client_args);

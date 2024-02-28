@@ -35,6 +35,10 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    LogInfo("Server started in %s mode on port %hu",
+            server_args.mode == SERVER_MODE_KGC ? "KGC" : "PROXY",
+            server_args.listen_port);
+
     TcpRunServer(server_socket_fd,
                  ServerTcpRequestHandler,
                  &server_args);
