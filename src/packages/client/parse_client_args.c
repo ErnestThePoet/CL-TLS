@@ -35,6 +35,36 @@ void ParseClientArgs(
                       NULL);
     argparse_parse(&arg_parse, argc, (const char **)argv);
 
+    if (log_level == NULL || !strcmp(log_level, "WARN"))
+    {
+        kLogLevel = LOG_LEVEL_WARN;
+    }
+    else if (!strcmp(log_level, "ERROR"))
+    {
+        kLogLevel = LOG_LEVEL_ERROR;
+    }
+    else if (!strcmp(log_level, "INFO"))
+    {
+        kLogLevel = LOG_LEVEL_INFO;
+    }
+    else
+    {
+        PRINT_ERROR_INVALID_OPTION_VALUE("%s", log_level, "'log'('l')");
+    }
+
+    if (config_file_path == NULL)
+    {
+        strcpy(client_args_ret->config_file_path, "config.conf");
+    }
+    else if (strlen(config_file_path) >= MAX_PATH_LENGTH)
+    {
+        PRINT_ERROR_INVALID_OPTION_VALUE("%s", config_file_path, "'config'('c')");
+    }
+    else
+    {
+        strcpy(client_args_ret->config_file_path, config_file_path);
+    }
+
     if (register_client)
     {
         client_args_ret->register_client = true;
@@ -71,35 +101,5 @@ void ParseClientArgs(
     else
     {
         client_args_ret->listen_port = listen_port;
-    }
-
-    if (log_level == NULL || !strcmp(log_level, "WARN"))
-    {
-        kLogLevel = LOG_LEVEL_WARN;
-    }
-    else if (!strcmp(log_level, "ERROR"))
-    {
-        kLogLevel = LOG_LEVEL_ERROR;
-    }
-    else if (!strcmp(log_level, "INFO"))
-    {
-        kLogLevel = LOG_LEVEL_INFO;
-    }
-    else
-    {
-        PRINT_ERROR_INVALID_OPTION_VALUE("%s", log_level, "'log'('l')");
-    }
-
-    if (config_file_path == NULL)
-    {
-        strcpy(client_args_ret->config_file_path, "config.conf");
-    }
-    else if (strlen(config_file_path) >= MAX_PATH_LENGTH)
-    {
-        PRINT_ERROR_INVALID_OPTION_VALUE("%s", config_file_path, "'config'('c')");
-    }
-    else
-    {
-        strcpy(client_args_ret->config_file_path, config_file_path);
     }
 }

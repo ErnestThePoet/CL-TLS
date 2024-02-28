@@ -41,6 +41,58 @@ void ParseServerArgs(
                       NULL);
     argparse_parse(&arg_parse, argc, (const char **)argv);
 
+    if (log_level == NULL || !strcmp(log_level, "WARN"))
+    {
+        kLogLevel = LOG_LEVEL_WARN;
+    }
+    else if (!strcmp(log_level, "ERROR"))
+    {
+        kLogLevel = LOG_LEVEL_ERROR;
+    }
+    else if (!strcmp(log_level, "INFO"))
+    {
+        kLogLevel = LOG_LEVEL_INFO;
+    }
+    else
+    {
+        PRINT_ERROR_INVALID_OPTION_VALUE("%s", log_level, "'log'('l')");
+    }
+
+    if (preferred_cipher_suite == NULL ||
+        !strcmp(preferred_cipher_suite, "ASCON128A_ASCONHASHA"))
+    {
+        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_ASCON128A_ASCONHASHA;
+    }
+    else if (!strcmp(preferred_cipher_suite, "ASCON128A_ASCONHASHA"))
+    {
+        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_ASCON128A_SHA256;
+    }
+    else if (!strcmp(preferred_cipher_suite, "AES128GCM_ASCONHASHA"))
+    {
+        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_AES128GCM_ASCONHASHA;
+    }
+    else if (!strcmp(preferred_cipher_suite, "AES128GCM_SHA256"))
+    {
+        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_AES128GCM_SHA256;
+    }
+    else
+    {
+        PRINT_ERROR_INVALID_OPTION_VALUE("%s", preferred_cipher_suite, "'cipher'");
+    }
+
+    if (config_file_path == NULL)
+    {
+        strcpy(server_args_ret->config_file_path, "config.conf");
+    }
+    else if (strlen(config_file_path) >= MAX_PATH_LENGTH)
+    {
+        PRINT_ERROR_INVALID_OPTION_VALUE("%s", config_file_path, "'config'('c')");
+    }
+    else
+    {
+        strcpy(server_args_ret->config_file_path, config_file_path);
+    }
+
     if (register_server)
     {
         server_args_ret->register_server = true;
@@ -109,57 +161,5 @@ void ParseServerArgs(
     else if (server_args_ret->mode == SERVER_MODE_KGC)
     {
         server_args_ret->listen_port = kKgcListenPort;
-    }
-
-    if (log_level == NULL || !strcmp(log_level, "WARN"))
-    {
-        kLogLevel = LOG_LEVEL_WARN;
-    }
-    else if (!strcmp(log_level, "ERROR"))
-    {
-        kLogLevel = LOG_LEVEL_ERROR;
-    }
-    else if (!strcmp(log_level, "INFO"))
-    {
-        kLogLevel = LOG_LEVEL_INFO;
-    }
-    else
-    {
-        PRINT_ERROR_INVALID_OPTION_VALUE("%s", log_level, "'log'('l')");
-    }
-
-    if (preferred_cipher_suite == NULL ||
-        !strcmp(preferred_cipher_suite, "ASCON128A_ASCONHASHA"))
-    {
-        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_ASCON128A_ASCONHASHA;
-    }
-    else if (!strcmp(preferred_cipher_suite, "ASCON128A_ASCONHASHA"))
-    {
-        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_ASCON128A_SHA256;
-    }
-    else if (!strcmp(preferred_cipher_suite, "AES128GCM_ASCONHASHA"))
-    {
-        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_AES128GCM_ASCONHASHA;
-    }
-    else if (!strcmp(preferred_cipher_suite, "AES128GCM_SHA256"))
-    {
-        server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_AES128GCM_SHA256;
-    }
-    else
-    {
-        PRINT_ERROR_INVALID_OPTION_VALUE("%s", preferred_cipher_suite, "'cipher'");
-    }
-
-    if (config_file_path == NULL)
-    {
-        strcpy(server_args_ret->config_file_path, "config.conf");
-    }
-    else if (strlen(config_file_path) >= MAX_PATH_LENGTH)
-    {
-        PRINT_ERROR_INVALID_OPTION_VALUE("%s", config_file_path, "'config'('c')");
-    }
-    else
-    {
-        strcpy(server_args_ret->config_file_path, config_file_path);
     }
 }
