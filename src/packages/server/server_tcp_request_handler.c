@@ -406,7 +406,7 @@ static bool AddClientServe(const int socket_fd,
         ADD_CLIENT_SERVE_SEND_RESPONSE_FAILURE;
     }
 
-    if (fprintf(permitted_ids_fp, "%s\n", new_id_hex) != 1)
+    if (fprintf(permitted_ids_fp, "%s\n", new_id_hex) != ENTITY_IDENTITY_HEX_LENGTH + 1)
     {
         LogError("Failed to append new entry into permitted IDs database file %s",
                  kServerPermittedIdsDatabasePath);
