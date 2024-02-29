@@ -60,7 +60,7 @@ void *ClientTcpRequestHandler(void *arg)
         .client_private_key = kClientPrivateKey,
         .client_public_key = kClientPublicKey,
         .kgc_public_key = kKgcPublicKey,
-        .client_identity = kKgcIdentity};
+        .server_identity = server_idip->key.id};
 
     HandshakeResult client_handshake_result;
 
