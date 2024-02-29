@@ -4,7 +4,7 @@ static void VLog(const LogType log_type,
                  const char *format,
                  va_list args)
 {
-    if ((int)kLogLevel >= (int)log_type)
+    if ((int)kLogLevel <= (int)log_type)
     {
         switch (log_type)
         {

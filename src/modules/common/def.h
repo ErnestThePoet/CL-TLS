@@ -19,17 +19,17 @@ int CipherSuiteCmp(CipherSuite *a, CipherSuite *b);
 // More severe the level, greater the value
 typedef enum
 {
-    LOG_LEVEL_ERROR,
-    LOG_LEVEL_WARN,
-    LOG_LEVEL_INFO
+    LOG_LEVEL_INFO = 0,
+    LOG_LEVEL_WARN = 10,
+    LOG_LEVEL_ERROR = 20
 } LogLevel;
 
 typedef enum
 {
-    LOG_TYPE_ERROR,
-    LOG_TYPE_WARN,
+    LOG_TYPE_INFO = 0,
     LOG_TYPE_SUCCESS,
-    LOG_TYPE_INFO
+    LOG_TYPE_WARN = 10,
+    LOG_TYPE_ERROR = 20
 } LogType;
 
 extern LogLevel kLogLevel;
