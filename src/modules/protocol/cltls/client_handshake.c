@@ -345,7 +345,7 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
         ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
 
         CLTLS_SET_COMMON_HEADER(send_buffer.data,
-                                CLTLS_MSG_TYPE_SERVER_PUBKEY,
+                                CLTLS_MSG_TYPE_CLIENT_PUBKEY,
                                 encrypted_length);
 
         if (!TcpSend(ctx->socket_fd,
@@ -397,7 +397,7 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
         ByteVecResize(&send_buffer, CLTLS_COMMON_HEADER_LENGTH + encrypted_length);
 
         CLTLS_SET_COMMON_HEADER(send_buffer.data,
-                                CLTLS_MSG_TYPE_SERVER_PUBKEY_VERIFY,
+                                CLTLS_MSG_TYPE_CLIENT_PUBKEY_VERIFY,
                                 encrypted_length);
 
         if (!TcpSend(ctx->socket_fd,
