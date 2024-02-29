@@ -31,7 +31,7 @@ bool InitializeGlobals(const ServerArgs *server_args)
         return false;
     }
 
-    char server_id_hex[ENTITY_IDENTITY_LENGTH * 2 + 1] = {0};
+    char server_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
 
     if (fscanf(config_file_fp,
                "IDENTITY=%64s\n",
