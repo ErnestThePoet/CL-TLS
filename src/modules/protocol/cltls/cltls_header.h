@@ -172,7 +172,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length(0)                 |  2B
+ * | Remaining Length(0)                 |  4B
  * ---------------------------------------
  *
  ******************************************************/
@@ -244,7 +244,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length(0)                 |  2B
+ * | Remaining Length(0)                 |  4B
  * ---------------------------------------
  *
  ******************************************************/
@@ -270,7 +270,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length(1)                 |  2B
+ * | Remaining Length(1)                 |  4B
  * ---------------------------------------
  * | Error Code                          |  1B
  * ---------------------------------------
@@ -288,7 +288,8 @@
         CLTLS_SET_COMMON_HEADER(error_stop_notify_send_data,      \
                                 CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY, \
                                 CLTLS_ERROR_CODE_LENGTH);         \
-        error_stop_notify_send_data[3] = ERROR_CODE;              \
+        CLTLS_REMAINING_HEADER(error_stop_notify_send_data)       \
+        [0] = ERROR_CODE;                                         \
         TcpSend(FD,                                               \
                 error_stop_notify_send_data,                      \
                 CLTLS_ERROR_STOP_NOTIFY_HEADER_LENGTH);           \
