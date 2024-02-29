@@ -56,8 +56,9 @@ void *MqttServerTcpRequestHandler(void *arg)
         remaining_size += multiplier * (current_byte & 0x7FU);
 
         uint8_t msg_type = MQTT_MSG_TYPE(receive_fixed_header[0]);
-        LogInfo("Received %s with remaining length %u",
+        LogInfo("Received %s (0x%02hhX) with remaining length %u",
                 GetMqttMessageType(msg_type),
+                msg_type,
                 remaining_size);
 
         uint8_t *msg = malloc(remaining_size);

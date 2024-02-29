@@ -243,8 +243,9 @@ static bool MqttProxyServe(const int socket_fd,
 
         uint8_t mqtt_msg_type = MQTT_MSG_TYPE(buffer.data[0]);
 
-        LogInfo("Received %s with remaining length %zu from client",
+        LogInfo("Received %s (0x%02hhX) with remaining length %zu from client",
                 GetMqttMessageType(mqtt_msg_type),
+                mqtt_msg_type,
                 mqtt_remaining_length);
 
         size_t remaining_read_size = mqtt_remaining_length - buffer.size;
@@ -289,8 +290,9 @@ static bool MqttProxyServe(const int socket_fd,
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
 
-        LogInfo("Received %s from server",
-                GetMqttMessageType(MQTT_MSG_TYPE(buffer.data[0])));
+        LogInfo("Received %s (0x%02hhX) from server",
+                GetMqttMessageType(MQTT_MSG_TYPE(buffer.data[0])),
+                MQTT_MSG_TYPE(buffer.data[0]));
 
         // Decode MQTT remaining length
         uint8_t current_byte = buffer.data[1];

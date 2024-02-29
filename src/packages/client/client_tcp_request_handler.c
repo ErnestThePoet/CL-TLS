@@ -123,8 +123,9 @@ void *ClientTcpRequestHandler(void *arg)
         mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
 
         uint8_t mqtt_msg_type = MQTT_MSG_TYPE(buffer.data[0]);
-        LogInfo("Received %s with remaining length %zu from client",
+        LogInfo("Received %s (0x%02hhX) with remaining length %zu from client",
                 GetMqttMessageType(mqtt_msg_type),
+                mqtt_msg_type,
                 mqtt_remaining_length);
 
         size_t remaining_read_size = mqtt_remaining_length;
@@ -184,8 +185,9 @@ void *ClientTcpRequestHandler(void *arg)
 
         mqtt_remaining_length = DecodeMqttRemainingLength(buffer.data + 1);
 
-        LogInfo("Received %s with remaining length %zu from server",
+        LogInfo("Received %s (0x%02hhX) with remaining length %zu from server",
                 GetMqttMessageType(MQTT_MSG_TYPE(buffer.data[0])),
+                MQTT_MSG_TYPE(buffer.data[0]),
                 mqtt_remaining_length);
 
         if (!TcpSend(ctx->client_socket_fd, buffer.data, buffer.size))
