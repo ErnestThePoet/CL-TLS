@@ -17,7 +17,7 @@ void *ClientTcpRequestHandler(void *arg)
                  buffer.data,
                  CONNCTL_CONNECT_REQUEST_HEADER_LENGTH))
     {
-        LogError("Failed to receive CONNCTL Connect Request");
+        LogError("Failed to receive CONNCTL connect request");
         CLIENT_CLOSE_C_FREE_RETURN;
     }
 
@@ -25,6 +25,8 @@ void *ClientTcpRequestHandler(void *arg)
     Bin2Hex(buffer.data + CONNCTL_MSG_TYPE_LENGTH,
             server_id_hex,
             ENTITY_IDENTITY_LENGTH);
+
+    LogInfo("Received CONNCTL connection request to server %s", server_id_hex);
 
     IdIp server_idip_key;
     memcpy(server_idip_key.id,
@@ -67,8 +69,7 @@ void *ClientTcpRequestHandler(void *arg)
     if (!ClientHandshake(&client_handshake_ctx,
                          &client_handshake_result))
     {
-        LogError("CL-TLS handshake failed with server %s",
-                 server_id_hex);
+        LogError("CL-TLS handshake failed with server");
         CLIENT_SEND_CONNECT_FAILURE_CLOSE_CS_FREE_RETURN;
     }
 
@@ -79,7 +80,7 @@ void *ClientTcpRequestHandler(void *arg)
                  buffer.data,
                  CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH))
     {
-        LogError("Failed to send CONNCTL Connect Response");
+        LogError("Failed to send CONNCTL connect response");
         CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(
             CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
     }

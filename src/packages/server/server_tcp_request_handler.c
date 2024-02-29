@@ -78,17 +78,20 @@ static bool KgcServe(const int socket_fd,
             uint16_t current_port =
                 ntohs(*((uint16_t *)(current_identity + ENTITY_IDENTITY_LENGTH)));
 
+            char current_identity_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
+            Bin2Hex(current_identity,
+                    current_identity_hex,
+                    ENTITY_IDENTITY_LENGTH);
+
+            LogInfo("Sending KGC add client request to belonging server %s",
+                    current_identity_hex);
+
             IdIp belonging_server_id_ip_key;
             memcpy(belonging_server_id_ip_key.id,
                    current_identity,
                    ENTITY_IDENTITY_LENGTH);
             set_IdIp_node *belonging_server_id_ip =
                 set_IdIp_find(&kServerIdIpTable, belonging_server_id_ip_key);
-
-            char current_identity_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
-            Bin2Hex(current_identity,
-                    current_identity_hex,
-                    ENTITY_IDENTITY_LENGTH);
 
             if (belonging_server_id_ip == set_IdIp_end(&kServerIdIpTable))
             {
@@ -123,8 +126,7 @@ static bool KgcServe(const int socket_fd,
             if (!ClientHandshake(&client_handshake_ctx,
                                  &client_handshake_result))
             {
-                LogError("CL-TLS handshake failed with belonging server %s",
-                         current_identity_hex);
+                LogError("CL-TLS handshake failed with server");
                 KGC_SERVE_BS_CLOSE_SEND_FAILURE;
             }
 
