@@ -110,15 +110,6 @@ void *MqttServerTcpRequestHandler(void *arg)
             msg[1 + rl_byte_count + i] = counter--;
         }
 
-        if (remaining_size <= MAX_PRINT_LENGTH)
-        {
-            for (uint32_t i = 0; i < remaining_size; i++)
-            {
-                printf("%02hhX ", msg[1 + rl_byte_count + i]);
-            }
-            putchar('\n');
-        }
-
         // Block send
         size_t sent_size = 0;
         while (sent_size < total_size)
@@ -133,6 +124,15 @@ void *MqttServerTcpRequestHandler(void *arg)
         }
 
         LogInfo("PUBLISH Message delivered");
+
+        if (remaining_size <= MAX_PRINT_LENGTH)
+        {
+            for (uint32_t i = 0; i < remaining_size; i++)
+            {
+                printf("%02hhX ", msg[1 + rl_byte_count + i]);
+            }
+            putchar('\n');
+        }
     }
 
     MQTT_SERVER_CLOSE_FREE_RETURN;

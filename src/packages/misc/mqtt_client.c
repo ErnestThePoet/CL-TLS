@@ -96,17 +96,9 @@ int main(int argc, char *argv[])
                     msg[1 + rl_byte_count + i] = counter++;
                 }
 
-                if (remaining_size <= MAX_PRINT_LENGTH)
-                {
-                    for (uint32_t i = 0; i < remaining_size; i++)
-                    {
-                        printf("%02hhX ", msg[1 + rl_byte_count + i]);
-                    }
-                    putchar('\n');
-                }
-
                 // Block send
                 size_t sent_size = 0;
+                bool should_continue = false;
                 while (sent_size < total_size)
                 {
                     size_t current_send_size =
@@ -115,12 +107,27 @@ int main(int argc, char *argv[])
                     {
                         TcpClose(socket_fd);
                         connected = false;
-                        continue;
+                        should_continue = true;
+                        break;
                     }
                     sent_size += current_send_size;
                 }
 
+                if (should_continue)
+                {
+                    continue;
+                }
+
                 LogInfo("PUBLISH Message delivered");
+
+                if (remaining_size <= MAX_PRINT_LENGTH)
+                {
+                    for (uint32_t i = 0; i < remaining_size; i++)
+                    {
+                        printf("%02hhX ", msg[1 + rl_byte_count + i]);
+                    }
+                    putchar('\n');
+                }
 
                 uint8_t receive_fixed_header[MQTT_FIXED_HEADER_LENGTH] = {0};
 
@@ -137,6 +144,7 @@ int main(int argc, char *argv[])
                 remaining_size = 0;
                 size_t multiplier = 1;
 
+                should_continue = false;
                 while (current_byte & 0x80U)
                 {
                     remaining_size += multiplier * (current_byte & 0x7FU);
@@ -147,8 +155,14 @@ int main(int argc, char *argv[])
                     {
                         TcpClose(socket_fd);
                         connected = false;
-                        continue;
+                        should_continue = true;
+                        break;
                     }
+                }
+
+                if (should_continue)
+                {
+                    continue;
                 }
 
                 remaining_size += multiplier * (current_byte & 0x7FU);
