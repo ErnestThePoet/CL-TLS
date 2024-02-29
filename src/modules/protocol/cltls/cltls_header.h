@@ -59,15 +59,15 @@
 #define CLTLS_ERROR_APPLICATION_LAYER_ERROR 0x20
 
 ////////// Helper Macros
-#define CLTLS_COMMON_HEADER_LENGTH 3
+#define CLTLS_COMMON_HEADER_LENGTH 5
 #define CLTLS_MSG_TYPE(H) ((H)[0])
-#define CLTLS_REMAINING_LENGTH(H) (ntohs(*(uint16_t *)((H) + 1)))
+#define CLTLS_REMAINING_LENGTH(H) (ntohl(*(uint32_t *)((H) + 1)))
 #define CLTLS_REMAINING_HEADER(H) ((H) + CLTLS_COMMON_HEADER_LENGTH)
 #define CLTLS_SET_COMMON_HEADER(H, MT, RL)  \
     do                                      \
     {                                       \
         (H)[0] = (MT);                      \
-        *(uint16_t *)((H) + 1) = htons(RL); \
+        *(uint32_t *)((H) + 1) = htonl(RL); \
     } while (false)
 
 #define CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH 1
@@ -97,7 +97,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length                    |  2B
+ * | Remaining Length                    |  4B
  * ---------------------------------------
  * | Application Layer Protocol          |  1B
  * ---------------------------------------
@@ -120,7 +120,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length                    |  2B
+ * | Remaining Length                    |  4B
  * ---------------------------------------
  * | Selected Cipher Suite               |  1B
  * ---------------------------------------
@@ -142,7 +142,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length                    |  2B
+ * | Remaining Length                    |  4B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
  * | | Server Public Key            | 32B|
@@ -157,7 +157,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length                    |  2B
+ * | Remaining Length                    |  4B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
  * | | Traffic Signature            | 64B|
@@ -184,7 +184,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length                    |  2B
+ * | Remaining Length                    |  4B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
  * | | Traffic HMAC Verify Data     |    |
@@ -199,7 +199,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length                    |  2B
+ * | Remaining Length                    |  4B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
  * | | Client Public Key            | 32B|
@@ -214,7 +214,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length                    |  2B
+ * | Remaining Length                    |  4B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
  * | | Traffic Signature            | 64B|
@@ -229,7 +229,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length                    |  2B
+ * | Remaining Length                    |  4B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
  * | | Traffic HMAC Verify Data     |    |
@@ -255,7 +255,7 @@
  * ---------------------------------------
  * | Message Type                        |  1B
  * ---------------------------------------
- * | Remaining Length                    |  2B
+ * | Remaining Length                    |  4B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
  * | | Application Data             |    |
