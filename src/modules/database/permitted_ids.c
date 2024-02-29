@@ -41,6 +41,8 @@ bool CreatePermittedIdSetFromFile(const char *file_path, set_Id *set_ret)
                 return false;
             }
         }
+
+        set_Id_insert(&set_, current);
     }
 
     fclose(permitted_ids_database_fp);
