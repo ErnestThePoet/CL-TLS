@@ -177,7 +177,7 @@ bool ClientRegister(const char *belonging_servers_file_path)
         .client_private_key = NULL, // Empty
         .client_public_key = NULL,  // Empty
         .kgc_public_key = kKgcPublicKey,
-        .client_identity = kKgcIdentity};
+        .server_identity = kKgcIdentity};
 
     HandshakeResult client_handshake_result;
 
