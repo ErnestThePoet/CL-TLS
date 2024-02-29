@@ -96,9 +96,10 @@ typedef struct
                 CLTLS_MSG_TYPE_ERROR_STOP_NOTIFY)                      \
         {                                                              \
             LogError("[%s] Invalid message type received (0x%02hhX), " \
-                     "expecting " #MSG_TYPE,                           \
+                     "expecting " #MSG_TYPE " (0x%02hhX)",             \
                      current_stage,                                    \
-                     CLTLS_MSG_TYPE(receive_buffer.data));             \
+                     CLTLS_MSG_TYPE(receive_buffer.data),              \
+                     CLTLS_MSG_TYPE_##MSG_TYPE);                       \
             HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(        \
                 CLTLS_ERROR_UNEXPECTED_MSG_TYPE);                      \
         }                                                              \
