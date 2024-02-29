@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     char id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
     Bin2Hex(kClientIdentity, id_hex, ENTITY_IDENTITY_LENGTH);
-    LogInfo("Client started on port %hu", client_args.listen_port);
+    LogInfo("CL-TLS Client proxy started on port %hu", client_args.listen_port);
     LogInfo("Client ID is %s", id_hex);
 
     TcpRunServer(server_socket_fd,

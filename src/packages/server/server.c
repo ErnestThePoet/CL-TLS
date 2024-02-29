@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
     char id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
     Bin2Hex(kServerIdentity, id_hex, ENTITY_IDENTITY_LENGTH);
-    LogInfo("Server started in %s mode on port %hu",
+    LogInfo("CL-TLS Server started in %s mode on port %hu",
             server_args.mode == SERVER_MODE_KGC ? "KGC" : "PROXY",
             server_args.listen_port);
     LogInfo("Server ID is %s", id_hex);
