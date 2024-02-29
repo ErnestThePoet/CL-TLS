@@ -54,7 +54,7 @@ void *ClientTcpRequestHandler(void *arg)
 
     ClientHandshakeCtx client_handshake_ctx = {
         .socket_fd = server_socket_fd,
-        .application_layer_protocol = CLTLS_PROTOCOL_KGC_REGISTER_REQUEST,
+        .application_layer_protocol = CLTLS_PROTOCOL_MQTT,
         .client_cipher_suite_set = &kClientCipherSuiteSet,
         .client_identity = kClientIdentity,
         .client_private_key = kClientPrivateKey,
