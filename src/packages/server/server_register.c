@@ -115,8 +115,8 @@ bool ServerRegister()
         .application_layer_protocol = CLTLS_PROTOCOL_KGC_REGISTER_REQUEST,
         .client_cipher_suite_set = &kServerCipherSuiteSet,
         .client_identity = kServerIdentity,
-        .client_private_key = kServerPrivateKey, // Empty
-        .client_public_key = kServerPublicKey,   // Empty
+        .client_private_key = NULL, // Empty
+        .client_public_key = NULL,  // Empty
         .kgc_public_key = kKgcPublicKey,
         .server_identity = kKgcIdentity};
 
