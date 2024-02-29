@@ -458,11 +458,17 @@ void *ServerTcpRequestHandler(void *arg)
         .socket_fd = ctx->client_socket_fd};
 
     HandshakeResult handshake_result;
+    uint8_t client_identity[ENTITY_IDENTITY_LENGTH] = {0};
     uint8_t application_layer_protocol = 0;
     if (!ServerHandshake(&server_handshake_ctx,
                          &handshake_result,
+                         client_identity,
                          &application_layer_protocol))
     {
+        char client_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
+        Bin2Hex(client_identity, client_id_hex, ENTITY_IDENTITY_LENGTH);
+
+        LogError("CL-TLS handshake failed with client %s", client_id_hex);
         SERVER_CLOSE_FREE_RETURN;
     }
 

@@ -57,6 +57,7 @@ static uint8_t ChooseCipherSuite(set_CipherSuite *server_cipher_suite_set,
 
 bool ServerHandshake(const ServerHandshakeCtx *ctx,
                      HandshakeResult *handshake_result_ret,
+                     uint8_t *client_identity_ret,
                      uint8_t *application_layer_protocol_ret)
 {
     ByteVec receive_buffer;
@@ -76,9 +77,14 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     HANDSHAKE_RECEIVE(CLIENT_HELLO, true);
 
+    uint8_t client_identity[ENTITY_IDENTITY_LENGTH] = {0};
+    memcpy(client_identity,
+           CLTLS_REMAINING_HEADER(receive_buffer.data) +
+               CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH,
+           ENTITY_IDENTITY_LENGTH);
+
     char client_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
-    Bin2Hex(CLTLS_REMAINING_HEADER(receive_buffer.data) +
-                CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH,
+    Bin2Hex(client_identity,
             client_id_hex, ENTITY_IDENTITY_LENGTH);
 
     LogInfo("Client identity is %s", client_id_hex);
@@ -96,12 +102,6 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     }
 
     *application_layer_protocol_ret = application_layer_protocol;
-
-    uint8_t client_identity[ENTITY_IDENTITY_LENGTH] = {0};
-    memcpy(client_identity,
-           CLTLS_REMAINING_HEADER(receive_buffer.data) +
-               CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH,
-           ENTITY_IDENTITY_LENGTH);
 
     // In proxy mode, check KGC/client identity
     if (ctx->mode == SERVER_MODE_PROXY)
@@ -640,6 +640,8 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     handshake_result_ret->aead = (AeadScheme *)aead;
     handshake_result_ret->iv_length = iv_length;
+
+    memcpy(client_identity_ret, client_identity, ENTITY_IDENTITY_LENGTH);
 
     ByteVecFree(&receive_buffer);
     ByteVecFree(&send_buffer);
