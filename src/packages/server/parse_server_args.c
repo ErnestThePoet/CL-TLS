@@ -63,7 +63,7 @@ void ParseServerArgs(
     {
         server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_ASCON128A_ASCONHASHA;
     }
-    else if (!strcmp(preferred_cipher_suite, "ASCON128A_ASCONHASHA"))
+    else if (!strcmp(preferred_cipher_suite, "ASCON128A_SHA256"))
     {
         server_args_ret->preferred_cipher_suite = CLTLS_CIPHER_ASCON128A_SHA256;
     }
