@@ -648,7 +648,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     ByteVecFree(&traffic_buffer);
     ByteVecFree(&decryption_buffer);
 
-    LogSuccess("Handshake successful");
+    LogSuccess("Server handshake successful");
 
     return true;
 }

@@ -506,7 +506,7 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     ByteVecFree(&traffic_buffer);
     ByteVecFree(&decryption_buffer);
 
-    LogSuccess("Handshake successful");
+    LogSuccess("Client handshake successful");
 
     return true;
 }
