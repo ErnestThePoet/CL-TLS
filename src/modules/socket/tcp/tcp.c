@@ -63,6 +63,18 @@ bool TcpConnectToServer(const char *ip4_address,
         return false;
     }
 
+    // Socket address can be reused immediately after closing
+    const int reuseaddr_option_value = 1;
+    if (setsockopt(server_socket_fd,
+                   SOL_SOCKET,
+                   SO_REUSEADDR,
+                   &reuseaddr_option_value,
+                   sizeof(reuseaddr_option_value)) == -1)
+    {
+        LogError("setsockopt() error: %s", STR_ERRNO);
+        return false;
+    }
+
     struct sockaddr_in server_sockaddr;
     const in_addr_t server_addr = inet_addr(ip4_address);
     if (server_addr == (in_addr_t)-1)
