@@ -160,12 +160,12 @@ int main(int argc, char *argv[])
                     }
                 }
 
+                remaining_size += multiplier * (current_byte & 0x7FU);
+
                 if (should_continue)
                 {
                     continue;
                 }
-
-                remaining_size += multiplier * (current_byte & 0x7FU);
 
                 LogInfo("Received %s (0x%02hhX) with remaining length %u in %.03fms",
                         GetMqttMessageType(MQTT_MSG_TYPE(receive_fixed_header[0])),
