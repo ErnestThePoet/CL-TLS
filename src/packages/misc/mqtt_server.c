@@ -135,6 +135,8 @@ void *MqttServerTcpRequestHandler(void *arg)
         }
     }
 
+    LogInfo("Disconnected");
+
     MQTT_SERVER_CLOSE_FREE_RETURN;
 }
 
