@@ -12,8 +12,37 @@
 #include <protocol/connctl/connctl_header.h>
 #include <protocol/mqtt/mqtt_header.h>
 
-#define MAX_PRINT_LENGTH 1024
+#define MAX_FULL_PRINT_LENGTH 1024
+#define HEAD_TAIL_PRINT_LENGTH 16
 #define MAX_SOCKET_BLOCK_SIZE (4 * 1024 * 1024)
+
+void PrintBytes(const uint8_t *data, const size_t length)
+{
+    for (size_t i = 0; i < length; i++)
+    {
+        printf("%02hhX ", data[i]);
+    }
+    putchar('\n');
+}
+
+void PrintHeadTailBytes(const uint8_t *data,
+                        const size_t length,
+                        const size_t print_count)
+{
+    printf("First %zu bytes:\n", print_count);
+    for (size_t i = 0; i < print_count; i++)
+    {
+        printf("%02hhX ", data[i]);
+    }
+    putchar('\n');
+
+    printf("Last %zu bytes:\n", print_count);
+    for (size_t i = 0; i < print_count; i++)
+    {
+        printf("%02hhX ", data[i + length - print_count + i]);
+    }
+    putchar('\n');
+}
 
 #define MQTT_SERVER_CLOSE_FREE_RETURN \
     do                                \
@@ -74,13 +103,13 @@ void *MqttServerTcpRequestHandler(void *arg)
             MQTT_SERVER_CLOSE_FREE_RETURN;
         }
 
-        if (remaining_size <= MAX_PRINT_LENGTH)
+        if (remaining_size <= MAX_FULL_PRINT_LENGTH)
         {
-            for (uint32_t i = 0; i < remaining_size; i++)
-            {
-                printf("%02hhX ", msg[i]);
-            }
-            putchar('\n');
+            PrintBytes(msg, remaining_size);
+        }
+        else
+        {
+            PrintHeadTailBytes(msg, remaining_size, HEAD_TAIL_PRINT_LENGTH);
         }
 
         if (msg_type == MQTT_MSG_TYPE_DISCONNECT)
@@ -128,13 +157,15 @@ void *MqttServerTcpRequestHandler(void *arg)
 
         LogInfo("PUBLISH Message delivered");
 
-        if (remaining_size <= MAX_PRINT_LENGTH)
+        if (remaining_size <= MAX_FULL_PRINT_LENGTH)
         {
-            for (uint32_t i = 0; i < remaining_size; i++)
-            {
-                printf("%02hhX ", msg[1 + rl_byte_count + i]);
-            }
-            putchar('\n');
+            PrintBytes(msg + 1 + rl_byte_count, remaining_size);
+        }
+        else
+        {
+            PrintHeadTailBytes(msg + 1 + rl_byte_count,
+                               remaining_size,
+                               HEAD_TAIL_PRINT_LENGTH);
         }
     }
 
