@@ -53,7 +53,6 @@ int main(int argc, char *argv[])
             {
                 uint8_t msg[2] = {0xe0, 0x00};
                 TcpSend(socket_fd, msg, 2);
-                TcpClose(socket_fd);
                 connected = false;
                 LogInfo("Disconnected");
             }
