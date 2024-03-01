@@ -305,7 +305,7 @@ static bool MqttProxyServe(const int socket_fd,
         {
             mqtt_remaining_length += multiplier * (current_byte & 0x7FU);
             multiplier *= 128;
-            if (!TcpRecv(socket_fd,
+            if (!TcpRecv(forward_socket_fd,
                          &current_byte,
                          1))
             {
