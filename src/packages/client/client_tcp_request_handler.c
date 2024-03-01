@@ -13,64 +13,70 @@ void *ClientTcpRequestHandler(void *arg)
 
     ByteVecResize(&buffer, CONNCTL_CONNECT_REQUEST_HEADER_LENGTH);
 
-    if (!TcpRecv(ctx->client_socket_fd,
-                 buffer.data,
-                 CONNCTL_CONNECT_REQUEST_HEADER_LENGTH))
-    {
-        LogError("Failed to receive CONNCTL connect request");
-        CLIENT_CLOSE_C_FREE_RETURN;
-    }
-
-    char server_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
-    Bin2Hex(buffer.data + CONNCTL_MSG_TYPE_LENGTH,
-            server_id_hex,
-            ENTITY_IDENTITY_LENGTH);
-
-    LogInfo("Received CONNCTL connection request to server %s", server_id_hex);
-
-    IdIp server_idip_key;
-    memcpy(server_idip_key.id,
-           buffer.data + CONNCTL_MSG_TYPE_LENGTH,
-           ENTITY_IDENTITY_LENGTH);
-
-    set_IdIp_node *server_idip = set_IdIp_find(&kClientIdIpTable, server_idip_key);
-    if (server_idip == set_IdIp_end(&kClientIdIpTable))
-    {
-        LogError("Server ID %s not in ID/IP table",
-                 server_id_hex);
-        CLIENT_SEND_CONNECT_FAILURE_CLOSE_C_FREE_RETURN;
-    }
-
-    uint16_t server_port = ntohs(
-        *((uint16_t *)(buffer.data +
-                       CONNCTL_MSG_TYPE_LENGTH +
-                       ENTITY_IDENTITY_LENGTH)));
-
     int server_socket_fd = 0;
-    if (!TcpConnectToServer(server_idip->key.ip, server_port, &server_socket_fd))
-    {
-        LogError("Failed to connect to server %s",
-                 server_id_hex);
-        CLIENT_SEND_CONNECT_FAILURE_CLOSE_C_FREE_RETURN;
-    }
-
-    ClientHandshakeCtx client_handshake_ctx = {
-        .socket_fd = server_socket_fd,
-        .application_layer_protocol = CLTLS_PROTOCOL_MQTT,
-        .client_cipher_suite_set = &kClientCipherSuiteSet,
-        .client_identity = kClientIdentity,
-        .client_private_key = kClientPrivateKey,
-        .client_public_key = kClientPublicKey,
-        .kgc_public_key = kKgcPublicKey,
-        .server_identity = server_idip->key.id};
-
     HandshakeResult client_handshake_result;
 
-    if (!ClientHandshake(&client_handshake_ctx,
-                         &client_handshake_result))
+    // Keep client connection until connected to server
+    while (true)
     {
-        LogError("CL-TLS handshake failed with server");
-        CLIENT_SEND_CONNECT_FAILURE_CLOSE_CS_FREE_RETURN;
+        if (!TcpRecv(ctx->client_socket_fd,
+                     buffer.data,
+                     CONNCTL_CONNECT_REQUEST_HEADER_LENGTH))
+        {
+            LogError("Failed to receive CONNCTL connect request");
+            CLIENT_CLOSE_C_FREE_RETURN;
+        }
+
+        char server_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
+        Bin2Hex(buffer.data + CONNCTL_MSG_TYPE_LENGTH,
+                server_id_hex,
+                ENTITY_IDENTITY_LENGTH);
+
+        LogInfo("Received CONNCTL connection request to server %s", server_id_hex);
+
+        IdIp server_idip_key;
+        memcpy(server_idip_key.id,
+               buffer.data + CONNCTL_MSG_TYPE_LENGTH,
+               ENTITY_IDENTITY_LENGTH);
+
+        set_IdIp_node *server_idip = set_IdIp_find(&kClientIdIpTable, server_idip_key);
+        if (server_idip == set_IdIp_end(&kClientIdIpTable))
+        {
+            LogError("Server ID %s not in ID/IP table",
+                     server_id_hex);
+            CLIENT_SEND_CONNECT_FAILURE_CONTINUE;
+        }
+
+        uint16_t server_port = ntohs(
+            *((uint16_t *)(buffer.data +
+                           CONNCTL_MSG_TYPE_LENGTH +
+                           ENTITY_IDENTITY_LENGTH)));
+
+        if (!TcpConnectToServer(server_idip->key.ip, server_port, &server_socket_fd))
+        {
+            LogError("Failed to connect to server %s",
+                     server_id_hex);
+            CLIENT_SEND_CONNECT_FAILURE_CONTINUE;
+        }
+
+        ClientHandshakeCtx client_handshake_ctx = {
+            .socket_fd = server_socket_fd,
+            .application_layer_protocol = CLTLS_PROTOCOL_MQTT,
+            .client_cipher_suite_set = &kClientCipherSuiteSet,
+            .client_identity = kClientIdentity,
+            .client_private_key = kClientPrivateKey,
+            .client_public_key = kClientPublicKey,
+            .kgc_public_key = kKgcPublicKey,
+            .server_identity = server_idip->key.id};
+
+        if (!ClientHandshake(&client_handshake_ctx,
+                             &client_handshake_result))
+        {
+            LogError("CL-TLS handshake failed with server");
+            CLIENT_SEND_CONNECT_FAILURE_CLOSE_S_CONTINUE;
+        }
+
+        break;
     }
 
     ByteVecResize(&buffer, CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH);

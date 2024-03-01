@@ -268,7 +268,6 @@ int main(int argc, char *argv[])
                 CONNCTL_CONNECT_STATUS_FAILURE)
             {
                 LogError("CL-TLS Client reports connection failed");
-                TcpClose(socket_fd);
                 continue;
             }
 

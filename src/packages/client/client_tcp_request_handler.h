@@ -19,15 +19,15 @@
         return NULL;                     \
     } while (false)
 
-#define CLIENT_SEND_CONNECT_FAILURE                              \
-    do                                                           \
-    {                                                            \
+#define CLIENT_SEND_CONNECT_FAILURE                                     \
+    do                                                                  \
+    {                                                                   \
         ByteVecResize(&buffer, CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH); \
-        buffer.data[0] = CONNCTL_MSG_TYPE_CONNECT_RESPONSE;      \
-        buffer.data[CONNCTL_MSG_TYPE_LENGTH] =                   \
-            CONNCTL_CONNECT_STATUS_FAILURE;                      \
-        TcpSend(ctx->client_socket_fd,                           \
-                buffer.data,                                     \
+        buffer.data[0] = CONNCTL_MSG_TYPE_CONNECT_RESPONSE;             \
+        buffer.data[CONNCTL_MSG_TYPE_LENGTH] =                          \
+            CONNCTL_CONNECT_STATUS_FAILURE;                             \
+        TcpSend(ctx->client_socket_fd,                                  \
+                buffer.data,                                            \
                 CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH);                \
     } while (false)
 
@@ -38,19 +38,14 @@
         CLIENT_CLOSE_C_FREE_RETURN; \
     } while (false)
 
-#define CLIENT_SEND_CONNECT_FAILURE_CLOSE_C_FREE_RETURN \
-    do                                                  \
-    {                                                   \
-        CLIENT_SEND_CONNECT_FAILURE;                    \
-        CLIENT_CLOSE_C_FREE_RETURN;                     \
-    } while (false)
+#define CLIENT_SEND_CONNECT_FAILURE_CONTINUE \
+    CLIENT_SEND_CONNECT_FAILURE;             \
+    continue
 
-#define CLIENT_SEND_CONNECT_FAILURE_CLOSE_CS_FREE_RETURN \
-    do                                                   \
-    {                                                    \
-        CLIENT_SEND_CONNECT_FAILURE;                     \
-        CLIENT_CLOSE_CS_FREE_RETURN;                     \
-    } while (false)
+#define CLIENT_SEND_CONNECT_FAILURE_CLOSE_S_CONTINUE \
+    CLIENT_SEND_CONNECT_FAILURE;                     \
+    TcpClose(server_socket_fd);                      \
+    continue
 
 #define CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(ERROR_CODE) \
     do                                                                 \
