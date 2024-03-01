@@ -198,8 +198,9 @@ int main(int argc, char *argv[])
             }
             else
             {
-                LogError("Invalid messaeg type; "
-                         "currently we support PUBLISH and DISCONNECT");
+                LogError("Invalid messaeg type '%s'; "
+                         "currently we support PUBLISH and DISCONNECT",
+                         command);
                 continue;
             }
         }
@@ -207,7 +208,8 @@ int main(int argc, char *argv[])
         {
             if (strcmp(command, "CONN"))
             {
-                LogError("Invalid command; type 'CONN <Server ID> <Server Port>'");
+                LogError("Invalid command '%s'; type 'CONN <Server ID> <Server Port>'",
+                         command);
                 continue;
             }
 
@@ -254,8 +256,10 @@ int main(int argc, char *argv[])
 
             if (connect_response[0] != CONNCTL_MSG_TYPE_CONNECT_RESPONSE)
             {
-                LogError("Invalid response message type received; "
-                         "expecting CONNCTL_MSG_TYPE_CONNECT_RESPONSE");
+                LogError("Invalid response message type (0x%02hhX) received; "
+                         "expecting CONNCTL_MSG_TYPE_CONNECT_RESPONSE (0x%02hhX)",
+                         connect_response[0],
+                         CONNCTL_MSG_TYPE_CONNECT_RESPONSE);
                 TcpClose(socket_fd);
                 continue;
             }
