@@ -333,27 +333,8 @@ static bool MqttProxyServe(const int socket_fd,
         remaining_read_size = mqtt_remaining_length;
 
         // Forward client data in blocks
-        size_t current_read_size = MIN(
-            remaining_read_size,
-            kSocketBlockSize - buffer.size);
-
-        // Used in first block receive to append data after MQTT header.
-        // Always be 0 when receiving further blocks.
-        size_t receive_buffer_offset = buffer.size;
-
-        ByteVecResizeBy(&buffer, current_read_size);
-
-        while (remaining_read_size > 0)
+        if (remaining_read_size == 0)
         {
-            if (!TcpRecv(forward_socket_fd,
-                         buffer.data + receive_buffer_offset,
-                         current_read_size))
-            {
-                LogError("Failed to receive MQTT packet from server");
-                MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_CLOSE_FREE_RETURN_FALSE(
-                    CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
-            }
-
             if (!SendApplicationData(socket_fd,
                                      handshake_result,
                                      false,
@@ -362,12 +343,45 @@ static bool MqttProxyServe(const int socket_fd,
                 LogError("Failed to forward MQTT packet to client");
                 MQTT_PROXY_SERVE_CLOSE_FREE_RETURN_FALSE;
             }
+        }
+        else
+        {
+            size_t current_read_size = MIN(
+                remaining_read_size,
+                kSocketBlockSize - buffer.size);
 
-            remaining_read_size -= current_read_size;
-            current_read_size = MIN(remaining_read_size, kSocketBlockSize);
-            ByteVecResize(&buffer, current_read_size);
+            // Used in first block receive to append data after MQTT header.
+            // Always be 0 when receiving further blocks.
+            size_t receive_buffer_offset = buffer.size;
 
-            receive_buffer_offset = 0;
+            ByteVecResizeBy(&buffer, current_read_size);
+
+            while (remaining_read_size > 0)
+            {
+                if (!TcpRecv(forward_socket_fd,
+                             buffer.data + receive_buffer_offset,
+                             current_read_size))
+                {
+                    LogError("Failed to receive MQTT packet from server");
+                    MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_CLOSE_FREE_RETURN_FALSE(
+                        CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+                }
+
+                if (!SendApplicationData(socket_fd,
+                                         handshake_result,
+                                         false,
+                                         &buffer))
+                {
+                    LogError("Failed to forward MQTT packet to client");
+                    MQTT_PROXY_SERVE_CLOSE_FREE_RETURN_FALSE;
+                }
+
+                remaining_read_size -= current_read_size;
+                current_read_size = MIN(remaining_read_size, kSocketBlockSize);
+                ByteVecResize(&buffer, current_read_size);
+
+                receive_buffer_offset = 0;
+            }
         }
 
         LogInfo("Forwarded %s (0x%02hhX) to client",
