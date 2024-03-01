@@ -53,7 +53,7 @@ int Aes128GcmEncrypt(const uint8_t *m, size_t mlen,
      * Provide the message to be encrypted, and obtain the encrypted output.
      * EVP_EncryptUpdate can be called multiple times if necessary
      */
-    if (1 != EVP_EncryptUpdate(ctx, c, &current_length, m, mlen))
+    if (!EVP_EncryptUpdate(ctx, c, &current_length, m, mlen))
     {
         ERROR_EVP_CTX_FREE_RETURN;
     }
@@ -64,7 +64,7 @@ int Aes128GcmEncrypt(const uint8_t *m, size_t mlen,
      * Finalise the encryption. Normally ciphertext bytes may be written at
      * this stage, but this does not occur in GCM mode
      */
-    if (1 != EVP_EncryptFinal_ex(ctx, c + cipher_length, &current_length))
+    if (!EVP_EncryptFinal_ex(ctx, c + cipher_length, &current_length))
     {
         ERROR_EVP_CTX_FREE_RETURN;
     }
@@ -72,7 +72,7 @@ int Aes128GcmEncrypt(const uint8_t *m, size_t mlen,
     cipher_length += current_length;
 
     /* Get the tag and concatenate to the end of ciphertext */
-    if (1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, c + cipher_length))
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, c + cipher_length))
     {
         ERROR_EVP_CTX_FREE_RETURN;
     }
