@@ -250,7 +250,11 @@ static bool MqttProxyServe(const int socket_fd,
                 mqtt_msg_type,
                 mqtt_remaining_length);
 
-        size_t remaining_read_size = mqtt_remaining_length - buffer.size;
+        size_t remaining_read_size =
+            mqtt_remaining_length +
+            1 +
+            GetMqttRemainingLengthByteCount(mqtt_remaining_length) -
+            buffer.size;
 
         while (remaining_read_size > 0)
         {

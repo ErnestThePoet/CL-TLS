@@ -204,7 +204,11 @@ void *ClientTcpRequestHandler(void *arg)
                 CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
         }
 
-        remaining_read_size = mqtt_remaining_length - buffer.size;
+        remaining_read_size =
+            mqtt_remaining_length +
+            1 +
+            GetMqttRemainingLengthByteCount(mqtt_remaining_length) -
+            buffer.size;
 
         while (remaining_read_size > 0)
         {
