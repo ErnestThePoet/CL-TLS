@@ -127,6 +127,7 @@ int main(int argc, char *argv[])
                 // Block send
                 size_t sent_size = 0;
                 bool should_continue = false;
+                clock_t time_send_start = clock();
                 while (sent_size < total_size)
                 {
                     size_t current_send_size =
@@ -163,7 +164,6 @@ int main(int argc, char *argv[])
 
                 uint8_t receive_fixed_header[MQTT_FIXED_HEADER_LENGTH] = {0};
 
-                clock_t time_send_end = clock();
                 if (!TcpRecv(socket_fd, receive_fixed_header, 2))
                 {
                     TcpClose(socket_fd);
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
                         GetMqttMessageType(MQTT_MSG_TYPE(receive_fixed_header[0])),
                         MQTT_MSG_TYPE(receive_fixed_header[0]),
                         remaining_size,
-                        1000 * ((time_receive - time_send_end) / (float)CLOCKS_PER_SEC));
+                        1000 * ((time_receive - time_send_start) / (float)CLOCKS_PER_SEC));
 
                 msg = realloc(msg, remaining_size == 0 ? 1 : remaining_size);
                 if (msg == NULL)
@@ -270,6 +270,7 @@ int main(int argc, char *argv[])
                            CONNCTL_MSG_TYPE_LENGTH +
                            ENTITY_IDENTITY_LENGTH)) = htons(server_port);
 
+            clock_t time_send_start = clock();
             if (!TcpSend(socket_fd,
                          connect_request,
                          CONNCTL_CONNECT_REQUEST_HEADER_LENGTH))
@@ -279,7 +280,7 @@ int main(int argc, char *argv[])
             }
 
             uint8_t connect_response[CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH] = {0};
-            clock_t time_send_end = clock();
+
             if (!TcpRecv(socket_fd,
                          connect_response,
                          CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH))
@@ -307,7 +308,7 @@ int main(int argc, char *argv[])
             }
 
             LogSuccess("Successfully connected in %.03fms",
-                       1000 * ((time_receive - time_send_end) / (float)CLOCKS_PER_SEC));
+                       1000 * ((time_receive - time_send_start) / (float)CLOCKS_PER_SEC));
             connected = true;
         }
     }
