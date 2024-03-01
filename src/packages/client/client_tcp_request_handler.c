@@ -169,6 +169,10 @@ void *ClientTcpRequestHandler(void *arg)
             receive_buffer_offset = 0;
         }
 
+        LogInfo("Forwarded %s (0x%02hhX) to server",
+                GetMqttMessageType(mqtt_msg_type),
+                mqtt_msg_type);
+
         if (mqtt_msg_type == MQTT_MSG_TYPE_DISCONNECT)
         {
             break;
@@ -186,9 +190,11 @@ void *ClientTcpRequestHandler(void *arg)
 
         mqtt_remaining_length = DecodeMqttRemainingLength(buffer.data + 1);
 
+        mqtt_msg_type = MQTT_MSG_TYPE(buffer.data[0]);
+
         LogInfo("Received %s (0x%02hhX) with remaining length %zu from server",
-                GetMqttMessageType(MQTT_MSG_TYPE(buffer.data[0])),
-                MQTT_MSG_TYPE(buffer.data[0]),
+                GetMqttMessageType(mqtt_msg_type),
+                mqtt_msg_type,
                 mqtt_remaining_length);
 
         if (!TcpSend(ctx->client_socket_fd, buffer.data, buffer.size))
@@ -220,6 +226,10 @@ void *ClientTcpRequestHandler(void *arg)
 
             remaining_read_size -= buffer.size;
         }
+
+        LogInfo("Forwarded %s (0x%02hhX) to client",
+                GetMqttMessageType(mqtt_msg_type),
+                mqtt_msg_type);
     }
 
     LogSuccess("MQTT proxy service successfully finished");
