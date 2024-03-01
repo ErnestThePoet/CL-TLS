@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
                     if (!TcpSend(socket_fd, msg + sent_size, current_send_size))
                     {
                         TcpClose(socket_fd);
+                        free(msg);
                         connected = false;
                         should_continue = true;
                         break;
@@ -114,6 +115,7 @@ int main(int argc, char *argv[])
 
                 if (should_continue)
                 {
+                    free(msg);
                     continue;
                 }
 
@@ -134,6 +136,7 @@ int main(int argc, char *argv[])
                 if (!TcpRecv(socket_fd, receive_fixed_header, 2))
                 {
                     TcpClose(socket_fd);
+                    free(msg);
                     connected = false;
                     continue;
                 }
@@ -153,6 +156,7 @@ int main(int argc, char *argv[])
                                  1))
                     {
                         TcpClose(socket_fd);
+                        free(msg);
                         connected = false;
                         should_continue = true;
                         break;
@@ -172,7 +176,7 @@ int main(int argc, char *argv[])
                         remaining_size,
                         1000 * ((time_receive - time_send_end) / (float)CLOCKS_PER_SEC));
 
-                msg = realloc(msg, remaining_size);
+                msg = realloc(msg, remaining_size == 0 ? 1 : remaining_size);
                 if (msg == NULL)
                 {
                     LogError("Memory reallocation for |msg| failed");
@@ -182,6 +186,7 @@ int main(int argc, char *argv[])
                 if (!TcpRecv(socket_fd, msg, remaining_size))
                 {
                     TcpClose(socket_fd);
+                    free(msg);
                     connected = false;
                     continue;
                 }

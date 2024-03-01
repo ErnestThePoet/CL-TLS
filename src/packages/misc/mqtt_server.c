@@ -61,7 +61,7 @@ void *MqttServerTcpRequestHandler(void *arg)
                 msg_type,
                 remaining_size);
 
-        uint8_t *msg = malloc(remaining_size);
+        uint8_t *msg = malloc(remaining_size == 0 ? 1 : remaining_size);
         if (msg == NULL)
         {
             LogError("Memory allocation for |msg| failed");
@@ -70,6 +70,7 @@ void *MqttServerTcpRequestHandler(void *arg)
 
         if (!TcpRecv(socket_fd, msg, remaining_size))
         {
+            free(msg);
             MQTT_SERVER_CLOSE_FREE_RETURN;
         }
 
@@ -84,6 +85,7 @@ void *MqttServerTcpRequestHandler(void *arg)
 
         if (msg_type == MQTT_MSG_TYPE_DISCONNECT)
         {
+            free(msg);
             break;
         }
 
@@ -118,6 +120,7 @@ void *MqttServerTcpRequestHandler(void *arg)
                 MIN(MAX_SOCKET_BLOCK_SIZE, total_size - sent_size);
             if (!TcpSend(socket_fd, msg + sent_size, current_send_size))
             {
+                free(msg);
                 MQTT_SERVER_CLOSE_FREE_RETURN;
             }
             sent_size += current_send_size;
