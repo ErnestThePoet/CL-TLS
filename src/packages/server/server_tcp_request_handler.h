@@ -6,6 +6,7 @@
 #include <protocol/cltls/application.h>
 
 #include <protocol/kgc/kgc_header.h>
+#include <protocol/connctl/connctl_header.h>
 #include <protocol/mqtt/mqtt_header.h>
 
 #include "server_args.h"
@@ -82,13 +83,6 @@
     {                                            \
         TcpClose(forward_socket_fd);             \
         MQTT_PROXY_SERVE_FREE_RETURN_FALSE;      \
-    } while (false)
-
-#define MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(ERROR_CODE) \
-    do                                                                        \
-    {                                                                         \
-        CLTLS_SEND_ERROR_STOP_NOTIFY(socket_fd, ERROR_CODE);                  \
-        MQTT_PROXY_SERVE_FREE_RETURN_FALSE;                                   \
     } while (false)
 
 #define MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_CLOSE_FREE_RETURN_FALSE(ERROR_CODE) \

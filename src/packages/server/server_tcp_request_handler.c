@@ -212,12 +212,35 @@ static bool MqttProxyServe(const int socket_fd,
 
     ByteVecInitWithCapacity(&buffer, INITIAL_SOCKET_BUFFER_CAPACITY);
 
+    // Send a CONNCTL Connect Response to indicate whether we successfully
+    // connected to proxy forward server
+    ByteVecResize(&buffer, CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH);
+    buffer.data[0] = CONNCTL_MSG_TYPE_CONNECT_RESPONSE;
+
     int forward_socket_fd = 0;
     if (!TcpConnectToServer(forward_ip, forward_port, &forward_socket_fd))
     {
         LogError("Failed to connect to proxy forward server");
-        MQTT_PROXY_SERVE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
-            CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+
+        buffer.data[CONNCTL_MSG_TYPE_LENGTH] = CONNCTL_CONNECT_STATUS_FAILURE;
+        SendApplicationData(socket_fd,
+                            handshake_result,
+                            false,
+                            &buffer);
+
+        MQTT_PROXY_SERVE_FREE_RETURN_FALSE;
+    }
+
+    LogInfo("Connected to proxy forward server");
+
+    buffer.data[CONNCTL_MSG_TYPE_LENGTH] = CONNCTL_CONNECT_STATUS_SUCCESS;
+    if (!SendApplicationData(socket_fd,
+                             handshake_result,
+                             false,
+                             &buffer))
+    {
+        LogError("Failed to send CONNCTL connect response to client");
+        MQTT_PROXY_SERVE_CLOSE_FREE_RETURN_FALSE;
     }
 
     // Loop until we receive MQTT DISCONNECT

@@ -47,6 +47,10 @@
     TcpClose(server_socket_fd);                      \
     continue
 
+#define CLIENT_SEND_ERROR_STOP_NOTIFY_SEND_CONNECT_FAILURE_CLOSE_S_CONTINUE(ERROR_CODE) \
+    CLTLS_SEND_ERROR_STOP_NOTIFY(server_socket_fd, ERROR_CODE);                         \
+    CLIENT_SEND_CONNECT_FAILURE_CLOSE_S_CONTINUE
+
 #define CLIENT_SEND_ERROR_STOP_NOTIFY_CLOSE_CS_FREE_RETURN(ERROR_CODE) \
     do                                                                 \
     {                                                                  \

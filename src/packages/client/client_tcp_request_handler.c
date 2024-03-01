@@ -77,8 +77,35 @@ void *ClientTcpRequestHandler(void *arg)
         }
 
         ByteVecResize(&buffer, CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH);
+
+        if (!ReceiveApplicationData(server_socket_fd,
+                                    &client_handshake_result,
+                                    true,
+                                    &buffer))
+        {
+            LogError("Failed to receive CONNCTL connect response from server");
+            CLIENT_SEND_CONNECT_FAILURE_CLOSE_S_CONTINUE;
+        }
+
+        if (buffer.data[0] != CONNCTL_MSG_TYPE_CONNECT_RESPONSE)
+        {
+            LogError("Unexpected message type received from server; "
+                     "CONNECT_RESPONSE expected");
+            CLIENT_SEND_ERROR_STOP_NOTIFY_SEND_CONNECT_FAILURE_CLOSE_S_CONTINUE(
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        }
+
+        if (buffer.data[CONNCTL_MSG_TYPE_LENGTH] == CONNCTL_CONNECT_STATUS_FAILURE)
+        {
+            LogError("Server reports it failed to connect to proxy forward server");
+            CLIENT_SEND_ERROR_STOP_NOTIFY_SEND_CONNECT_FAILURE_CLOSE_S_CONTINUE(
+                CLTLS_ERROR_INTERNAL_EXECUTION_ERROR);
+        }
+
+        LogInfo("Server reports it successfully connected to proxy forward server");
+
         buffer.data[0] = CONNCTL_MSG_TYPE_CONNECT_RESPONSE;
-        buffer.data[1] = CONNCTL_CONNECT_STATUS_SUCCESS;
+        buffer.data[CONNCTL_MSG_TYPE_LENGTH] = CONNCTL_CONNECT_STATUS_SUCCESS;
         if (!TcpSend(ctx->client_socket_fd,
                      buffer.data,
                      CONNCTL_CONNECT_RESPONSE_HEADER_LENGTH))
