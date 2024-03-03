@@ -125,6 +125,17 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
 
     CALCULATE_HANDSHAKE_KEY;
 
+    const bool should_send_public_key =
+        ShouldRequestClientPublicKey(ctx->application_layer_protocol);
+
+    if (should_send_public_key)
+    {
+        // [Receive] Server Public Key Request
+        current_stage = "RECEIVE Server Public Key Request";
+
+        HANDSHAKE_RECEIVE(SERVER_PUBKEY_REQUEST, true);
+    }
+
     // [Receive] Server Public Key
     current_stage = "RECEIVE Server Public Key";
 
@@ -231,17 +242,6 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
                  current_stage);
         HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
             CLTLS_ERROR_TRAFFIC_SIGNATURE_VERIFY_FAILED);
-    }
-
-    const bool should_send_public_key =
-        ShouldRequestClientPublicKey(ctx->application_layer_protocol);
-
-    if (should_send_public_key)
-    {
-        // [Receive] Server Public Key Request
-        current_stage = "RECEIVE Server Public Key Request";
-
-        HANDSHAKE_RECEIVE(SERVER_PUBKEY_REQUEST, true);
     }
 
     // [Receive] Server Handshake Finished

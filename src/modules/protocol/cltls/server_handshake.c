@@ -250,6 +250,30 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     CALCULATE_HANDSHAKE_KEY;
 
+    const bool should_request_public_key =
+        ShouldRequestClientPublicKey(application_layer_protocol);
+    if (should_request_public_key)
+    {
+        // [Send] Server Public Key Request
+        current_stage = "SEND Server Public Key Request";
+
+        ByteVecResize(&send_buffer, CLTLS_SERVER_PUBKEY_REQUEST_HEADER_LENGTH);
+        CLTLS_SET_COMMON_HEADER(send_buffer.data,
+                                CLTLS_MSG_TYPE_SERVER_PUBKEY_REQUEST,
+                                0);
+
+        if (!TcpSend(ctx->socket_fd,
+                     send_buffer.data,
+                     CLTLS_SERVER_PUBKEY_REQUEST_HEADER_LENGTH))
+        {
+            LogError("[%s] Failed to send SERVER_PUBKEY_REQUEST",
+                     current_stage);
+            HANDSHAKE_FREE_RETURN_FALSE;
+        }
+
+        ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
+    }
+
     // [Send] Server Public Key
     current_stage = "SEND Server Public Key";
 
@@ -348,30 +372,6 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     }
 
     ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
-
-    const bool should_request_public_key =
-        ShouldRequestClientPublicKey(application_layer_protocol);
-    if (should_request_public_key)
-    {
-        // [Send] Server Public Key Request
-        current_stage = "SEND Server Public Key Request";
-
-        ByteVecResize(&send_buffer, CLTLS_SERVER_PUBKEY_REQUEST_HEADER_LENGTH);
-        CLTLS_SET_COMMON_HEADER(send_buffer.data,
-                                CLTLS_MSG_TYPE_SERVER_PUBKEY_REQUEST,
-                                0);
-
-        if (!TcpSend(ctx->socket_fd,
-                     send_buffer.data,
-                     CLTLS_SERVER_PUBKEY_REQUEST_HEADER_LENGTH))
-        {
-            LogError("[%s] Failed to send SERVER_PUBKEY_REQUEST",
-                     current_stage);
-            HANDSHAKE_FREE_RETURN_FALSE;
-        }
-
-        ByteVecPushBackBlockFromByteVec(&traffic_buffer, &send_buffer);
-    }
 
     // [Send] Server Handshake Finished
     current_stage = "SEND Server Handshake Finished";
