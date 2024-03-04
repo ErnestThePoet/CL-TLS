@@ -50,47 +50,47 @@ CL-TLS使用基于CLPKC的方案进行身份认证。每个设备均拥有自己
 
 #### 设备注册流程
 - 新服务端设备注册流程
-  1. 设备选取$Seed_A\gets\{0,1\}^{256}$；
-  2. 设备生成部分秘钥$(PK_A,SK_A):=\text{ED25519\_GenKeypair}(Seed_A)$；
-  3. 设备将自身身份$ID$和$PK_A$发送给KGC；
-  4. KGC选取$Seed_B\gets\{0,1\}^{256}$；
-  5. KGC生成部分秘钥$(PK_B,SK_B):=\text{ED25519\_GenKeypair}(Seed_B)$；
-  6. KGC计算$S:=\text{Sign}_{SK_{KGC}}(ID||PK_A||PK_B)$；
-  7. KGC将$(PK_B,SK_B,S)$发回设备；
-  8. 设备保存公钥$PK:=PK_A||PK_B||S$，私钥$SK:=SK_A||SK_B$
+  1. 设备选取 $Seed_A\gets\{0,1\}^{256}$ ；
+  2. 设备生成部分秘钥 $(PK_A,SK_A):=ED25519GenKeypair(Seed_A)$ ；
+  3. 设备将自身身份 $ID$ 和 $PK_A$ 发送给KGC；
+  4. KGC选取 $Seed_B\gets\{0,1\}^{256}$ ；
+  5. KGC生成部分秘钥 $(PK_B,SK_B):=ED25519GenKeypair(Seed_B)$ ；
+  6. KGC计算 $S:=Sign_{SK_{KGC}}(ID||PK_A||PK_B)$ ；
+  7. KGC将 $(PK_B,SK_B,S)$ 发回设备；
+  8. 设备保存公钥 $PK:=PK_A||PK_B||S$ ，私钥 $SK:=SK_A||SK_B$ 
 
 - 新客户端设备注册流程
-  1. 设备选取$Seed_A\gets\{0,1\}^{256}$；
-  2. 设备生成部分秘钥$(PK_A,SK_A):=\text{ED25519\_GenKeypair}(Seed_A)$；
-  3. 设备将自身身份$ID$和$PK_A$发送给KGC；
-  4. 设备将自身所属的所有服务端的身份集合$ID_S$发送给KGC；
-  5. KGC选取$Seed_B\gets\{0,1\}^{256}$；
-  6. KGC生成部分秘钥$(PK_B,SK_B):=\text{ED25519\_GenKeypair}(Seed_B)$；
-  7. KGC计算$S:=\text{Sign}_{SK_{KGC}}(ID||PK_A||PK_B)$；
-  8. KGC通知$ID_S$中的每一个服务端，添加$ID$到其允许来访的身份列表中；
-  9. KGC将$(PK_B,SK_B,S)$发回设备；
-  10. 设备保存公钥$PK:=PK_A||PK_B||S$，私钥$SK:=SK_A||SK_B$
+  1. 设备选取 $Seed_A\gets\{0,1\}^{256}$ ；
+  2. 设备生成部分秘钥 $(PK_A,SK_A):=ED25519GenKeypair(Seed_A)$ ；
+  3. 设备将自身身份 $ID$ 和 $PK_A$ 发送给KGC；
+  4. 设备将自身所属的所有服务端的身份集合 $ID_S$ 发送给KGC；
+  5. KGC选取 $Seed_B\gets\{0,1\}^{256}$ ；
+  6. KGC生成部分秘钥 $(PK_B,SK_B):=ED25519GenKeypair(Seed_B)$ ；
+  7. KGC计算 $S:=Sign_{SK_{KGC}}(ID||PK_A||PK_B)$ ；
+  8. KGC通知 $ID_S$ 中的每一个服务端，添加 $ID$ 到其允许来访的身份列表中；
+  9. KGC将 $(PK_B,SK_B,S)$ 发回设备；
+  10. 设备保存公钥 $PK:=PK_A||PK_B||S$ ，私钥 $SK:=SK_A||SK_B$ 
 
 特别地，当整个系统从零开始部署时，KGC的公私钥对通过以下流程生成：
 - KGC公私钥对初始化生成流程
-  1. KGC选取$Seed_A\gets\{0,1\}^{256}$；
-  2. KGC生成部分秘钥$(PK_A,SK_A):=\text{ED25519\_GenKeypair}(Seed_A)$；
-  3. KGC选取$Seed_B\gets\{0,1\}^{256}$；
-  4. KGC生成部分秘钥$(PK_B,SK_B):=\text{ED25519\_GenKeypair}(Seed_B)$；
-  5. KGC计算$S:=\text{Sign}_{SK_A||SK_B}(ID||PK_A||PK_B)$
-  6. KGC保存公钥$PK:=PK_A||PK_B||S$，私钥$SK:=SK_A||SK_B$
+  1. KGC选取 $Seed_A\gets\{0,1\}^{256}$ ；
+  2. KGC生成部分秘钥 $(PK_A,SK_A):=ED25519GenKeypair(Seed_A)$ ；
+  3. KGC选取 $Seed_B\gets\{0,1\}^{256}$ ；
+  4. KGC生成部分秘钥 $(PK_B,SK_B):=ED25519GenKeypair(Seed_B)$ ；
+  5. KGC计算 $S:=Sign_{SK_A||SK_B}(ID||PK_A||PK_B)$ 
+  6. KGC保存公钥 $PK:=PK_A||PK_B||S$ ，私钥 $SK:=SK_A||SK_B$ 
 
 #### 签名和验签算法
-- $\text{Sign}_{SK}(m)$：$S_1:=\text{ED25519\_Sign}_{SK_A}(m),S_2:=\text{ED25519\_Sign}_{SK_B}(m),输出S:=S_1||S_2$
-- $\text{Vrfy}_{PK}(m,S_1||S_2)$：$输出\text{ED25519\_Vrfy}_{PK_A}(m,S_1)\wedge \text{ED25519\_Vrfy}_{SK_B}(m,S_2)$
+-  $Sign_{SK}(m)$ ： $S_1:=ED25519Sign_{SK_A}(m),S_2:=ED25519Sign_{SK_B}(m),输出S:=S_1||S_2$ 
+-  $Vrfy_{PK}(m,S_1||S_2)$ ： $输出ED25519Vrfy_{PK_A}(m,S_1)\wedge ED25519Vrfy_{SK_B}(m,S_2)$ 
 
 #### 访问控制
 除了KGC以外，每个服务端都维护一个允许对自己进行访问的设备ID列表。属于某个服务器的客户端在进行注册时，KGC将会通知该服务器添加新客户端的设备ID到自己的允许访问列表中。  
 `ClientHello`消息中包含客户端的ID，服务端可以在收到后立即进行检查。
 
 #### 身份验证
-客户端和服务端在`PublicKey`消息中发送自己的公钥$PK$，对方收到后通过计算$\text{Vrfy}_{PK_{KGC}}(ID||PK_A||PK_B,S)$来验证公钥属于具有该$ID$的设备。  
-客户端和服务端在`PublicKeyVerify`消息中发送使用自己的私钥$SK$签名的通信数据摘要$S_{traffic}:=\text{Sign}_{SK}(Hash(traffic))$，对方收到后通过计算$\text{Vrfy}_{PK}(Hash(traffic),S_{traffic})$来确定对方为公钥的持有者。  
+客户端和服务端在`PublicKey`消息中发送自己的公钥 $PK$ ，对方收到后通过计算 $Vrfy_{PK_{KGC}}(ID||PK_A||PK_B,S)$ 来验证公钥属于具有该 $ID$ 的设备。  
+客户端和服务端在`PublicKeyVerify`消息中发送使用自己的私钥 $SK$ 签名的通信数据摘要 $S_{traffic}:=Sign_{SK}(Hash(traffic))$ ，对方收到后通过计算 $Vrfy_{PK}(Hash(traffic),S_{traffic})$ 来确定对方为公钥的持有者。  
 除了新设备向KGC注册时不需要发送`PublicKey`和`PublicKeyVerify`以外，其余所有情况下连接握手时都需要验证双方身份。
 
 ### 错误处理
