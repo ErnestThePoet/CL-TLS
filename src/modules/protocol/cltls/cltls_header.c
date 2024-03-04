@@ -47,3 +47,35 @@ void BindIdPkaPkb(const uint8_t *identity,
            pkb,
            CLTLS_ENTITY_PKB_LENGTH);
 }
+
+int CltlsSign(uint8_t *out,
+              const uint8_t *message,
+              const size_t message_len,
+              const uint8_t *private_key)
+{
+    int result = ED25519_sign(out, message, message_len, private_key);
+    if (!result)
+    {
+        return result;
+    }
+    return ED25519_sign(out + ED25519_SIGNATURE_LEN,
+                        message,
+                        message_len,
+                        private_key + CLTLS_ENTITY_SKA_LENGTH);
+}
+
+int CltlsVerify(const uint8_t *message,
+                const size_t message_len,
+                const uint8_t *signature,
+                const uint8_t *public_key)
+{
+    int result = ED25519_verify(message, message_len, signature, public_key);
+    if (!result)
+    {
+        return result;
+    }
+    return ED25519_verify(message,
+                          message_len,
+                          signature + ED25519_SIGNATURE_LEN,
+                          public_key + CLTLS_ENTITY_PKA_LENGTH);
+}

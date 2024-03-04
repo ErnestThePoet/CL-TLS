@@ -70,10 +70,14 @@
         *(uint32_t *)((H) + 1) = htonl(RL); \
     } while (false)
 
+#define CLTLS_SIGNATURE_LENGTH \
+    (ED25519_SIGNATURE_LEN +   \
+     ED25519_SIGNATURE_LEN)
+
 #define CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH 1
 #define CLTLS_ENTITY_PKA_LENGTH ED25519_PUBLIC_KEY_LEN
 #define CLTLS_ENTITY_PKB_LENGTH ED25519_PUBLIC_KEY_LEN
-#define CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH ED25519_SIGNATURE_LEN
+#define CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH CLTLS_SIGNATURE_LENGTH
 #define CLTLS_ENTITY_PUBLIC_KEY_LENGTH \
     (CLTLS_ENTITY_PKA_LENGTH +         \
      CLTLS_ENTITY_PKB_LENGTH +         \
@@ -302,6 +306,14 @@ const char *GetCltlsErrorMessage(const uint8_t error_code);
 void BindIdPkaPkb(const uint8_t *identity,
                   const uint8_t *pka,
                   const uint8_t *pkb, uint8_t *out);
+int CltlsSign(uint8_t *out,
+              const uint8_t *message,
+              const size_t message_len,
+              const uint8_t *private_key);
+int CltlsVerify(const uint8_t *message,
+                const size_t message_len,
+                const uint8_t *signature,
+                const uint8_t *public_key);
 inline bool ShouldRequestClientPublicKey(const uint8_t application_layer_protocol)
 {
     return application_layer_protocol != CLTLS_PROTOCOL_KGC_REGISTER_REQUEST;
