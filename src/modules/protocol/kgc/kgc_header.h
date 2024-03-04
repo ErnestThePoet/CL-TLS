@@ -47,7 +47,7 @@
     (KGC_MSG_TYPE_LENGTH +                        \
      KGC_ENTITY_TYPE_LENGTH +                     \
      ENTITY_IDENTITY_LENGTH +                     \
-     CLTLS_ENTITY_PUBLIC_KEY_LENGTH)
+     CLTLS_ENTITY_PKA_LENGTH)
 
 /******************************************************
  * Register Request(Client)
@@ -72,7 +72,7 @@
     (KGC_MSG_TYPE_LENGTH +                              \
      KGC_ENTITY_TYPE_LENGTH +                           \
      ENTITY_IDENTITY_LENGTH +                           \
-     CLTLS_ENTITY_PUBLIC_KEY_LENGTH +                   \
+     CLTLS_ENTITY_PKA_LENGTH +                          \
      KGC_BELONGING_SERVER_COUNT_LENGTH)
 
 /******************************************************
