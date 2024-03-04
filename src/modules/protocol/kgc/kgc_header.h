@@ -95,7 +95,7 @@
 #define KGC_REGISTER_RESPONSE_SUCCESS_HEADER_LENGTH \
     (KGC_MSG_TYPE_LENGTH +                          \
      KGC_STATUS_CODE_LENGTH +                       \
-     CLTLS_ENTITY_PKA_LENGTH +                      \
+     CLTLS_ENTITY_PKB_LENGTH +                      \
      CLTLS_ENTITY_SKB_LENGTH +                      \
      CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH)
 
