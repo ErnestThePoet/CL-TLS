@@ -28,7 +28,7 @@ void ParseServerArgs(
             OPT_STRING('\0', "fwd-ip", &forward_ip, "proxy forward ip", NULL, 0, 0),
             OPT_INTEGER('\0', "fwd-port", &forward_port, "proxy forward port", NULL, 0, 0),
             OPT_GROUP("Optional options"),
-            OPT_STRING('l', "log", &log_level, "log level(ERROR|WARN|INFO), defaults to 'WARN'", NULL, 0, 0),
+            OPT_STRING('l', "log", &log_level, "log level(ERROR|WARN|INFO), defaults to 'INFO'", NULL, 0, 0),
             OPT_STRING('\0', "cipher", &preferred_cipher_suite, "preferred cipher suite(ASCON128A_ASCONHASHA|ASCON128A_SHA256|AES128GCM_ASCONHASHA|AES128GCM_SHA256), defaults to 'ASCON128A_ASCONHASHA'", NULL, 0, 0),
             OPT_STRING('c', "config", &config_file_path, "server config file path, defaults to 'config.conf'", NULL, 0, 0),
             OPT_END(),
@@ -41,17 +41,17 @@ void ParseServerArgs(
                       NULL);
     argparse_parse(&arg_parse, argc, (const char **)argv);
 
-    if (log_level == NULL || !strcmp(log_level, "WARN"))
+    if (log_level == NULL || !strcmp(log_level, "INFO"))
+    {
+        kLogLevel = LOG_LEVEL_INFO;
+    }
+    else if (!strcmp(log_level, "WARN"))
     {
         kLogLevel = LOG_LEVEL_WARN;
     }
     else if (!strcmp(log_level, "ERROR"))
     {
         kLogLevel = LOG_LEVEL_ERROR;
-    }
-    else if (!strcmp(log_level, "INFO"))
-    {
-        kLogLevel = LOG_LEVEL_INFO;
     }
     else
     {

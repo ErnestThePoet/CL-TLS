@@ -23,7 +23,7 @@ void ParseClientArgs(
             OPT_GROUP("Mandatory options to run client"),
             OPT_INTEGER('p', "port", &listen_port, "listen port", NULL, 0, 0),
             OPT_GROUP("Optional options"),
-            OPT_STRING('l', "log", &log_level, "log level(ERROR|WARN|INFO), defaults to 'WARN'", NULL, 0, 0),
+            OPT_STRING('l', "log", &log_level, "log level(ERROR|WARN|INFO), defaults to 'INFO'", NULL, 0, 0),
             OPT_STRING('c', "config", &config_file_path, "server config file path, defaults to 'config.conf'", NULL, 0, 0),
             OPT_END(),
         };
@@ -35,17 +35,17 @@ void ParseClientArgs(
                       NULL);
     argparse_parse(&arg_parse, argc, (const char **)argv);
 
-    if (log_level == NULL || !strcmp(log_level, "WARN"))
+    if (log_level == NULL || !strcmp(log_level, "INFO"))
+    {
+        kLogLevel = LOG_LEVEL_INFO;
+    }
+    else if (!strcmp(log_level, "WARN"))
     {
         kLogLevel = LOG_LEVEL_WARN;
     }
     else if (!strcmp(log_level, "ERROR"))
     {
         kLogLevel = LOG_LEVEL_ERROR;
-    }
-    else if (!strcmp(log_level, "INFO"))
-    {
-        kLogLevel = LOG_LEVEL_INFO;
     }
     else
     {

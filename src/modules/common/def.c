@@ -7,7 +7,7 @@ int CipherSuiteCmp(CipherSuite *a, CipherSuite *b)
                : (a->cipher_suite > b->cipher_suite ? 1 : -1);
 }
 
-LogLevel kLogLevel = LOG_LEVEL_WARN;
+LogLevel kLogLevel = LOG_LEVEL_INFO;
 
 uint8_t kKgcIdentity[ENTITY_IDENTITY_LENGTH] = {
     0xEC,
