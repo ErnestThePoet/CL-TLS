@@ -226,7 +226,8 @@ SOCKET_BLOCK_SIZE=2097152
 CL-TLS服务端还支持的可选选项是：
 - `-l, --log=<str>`：日志打印级别，可为`ERROR|WARN|INFO`之一，默认为`INFO`；
 - `--cipher=<str>`：优先使用的密码学算法族，可为`ASCON128A_ASCONHASHA|ASCON128A_SHA256|AES128GCM_ASCONHASHA|AES128GCM_SHA256`之一，默认为`ASCON128A_ASCONHASHA`。服务端设备可以通过此选项选择在自身平台上性能或资源占用最佳的算法族；
-- `-c, --config=<str>`：配置文件路径，默认为`config.conf`。
+- `-c, --config=<str>`：配置文件路径，默认为`config.conf`；
+- `-t, --timing`：是否打印握手和MQTT代理转发耗时，默认不打印。
 
 #### 注册并启动客户端设备
 编辑客户端的配置文件`cltls/client/config.conf`：
@@ -248,7 +249,8 @@ BB00000000000000000000000000000000000000000000000000000000000000 22600
 回到`cltls`目录，启动MQTT客户端程序：`./cltls_misc_mqtt_client 127.0.0.1 23600`  
 CL-TLS客户端还支持的可选选项是：
 - `-l, --log=<str>`：日志打印级别，可为`ERROR|WARN|INFO`之一，默认为`INFO`；
-- `-c, --config=<str>`：配置文件路径，默认为`config.conf`。
+- `-c, --config=<str>`：配置文件路径，默认为`config.conf`；
+- `-t, --timing`：是否打印握手和MQTT代理转发耗时，默认不打印。
 
 #### 进行安全通信
 在MQTT客户端内，输入`CONN BB00000000000000000000000000000000000000000000000000000000000000 22600`并回车。MQTT客户端会给CL-TLS客户端发送一个`CONNCTL`协议的`Connect Request`消息，CL-TLS客户端会在ID/IP表中查找到服务器IP后与CL-TLS服务端建立TCP连接并进行握手，完成后CL-TLS服务端会与本地MQTT服务端建立连接。上述流程均成功后，CL-TLS服务端会发回`CONNCTL`协议的`Connect Response`消息，状态代码为成功。CL-TLS客户端收到后，会向MQTT客户端发送一个`CONNCTL`协议的`Connect Response`消息，状态代码为成功。然后即可开始在MQTT客户端内传输数据了。  
