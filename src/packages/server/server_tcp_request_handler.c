@@ -31,26 +31,33 @@ static bool KgcServe(const int socket_fd,
     LogInfo("Register entity type is %s",
             client_entity_type == KGC_ENTITY_TYPE_CLIENT ? "CLIENT" : "SERVER");
 
+    uint8_t pkb[CLTLS_ENTITY_PKB_LENGTH] = {0};
+    uint8_t skb[CLTLS_ENTITY_SKB_LENGTH] = {0};
+
+    ED25519_keypair(pkb, skb);
+
     uint8_t *client_identity = receive_buffer.data +
                                KGC_MSG_TYPE_LENGTH +
                                KGC_ENTITY_TYPE_LENGTH;
 
-    uint8_t binded_id_pka[CLTLS_ID_PKAB_LENGTH] = {0};
+    uint8_t id_pkab[CLTLS_ID_PKAB_LENGTH] = {0};
 
-    BindIdentityPka(client_identity,
-                    receive_buffer.data +
-                        KGC_MSG_TYPE_LENGTH +
-                        KGC_ENTITY_TYPE_LENGTH +
-                        ENTITY_IDENTITY_LENGTH,
-                    binded_id_pka);
+    BindIdPkaPkb(client_identity,
+                 receive_buffer.data +
+                     KGC_MSG_TYPE_LENGTH +
+                     KGC_ENTITY_TYPE_LENGTH +
+                     ENTITY_IDENTITY_LENGTH,
+                 pkb,
+                 id_pkab);
 
-    uint8_t binded_id_pka_signature[CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH] = {0};
+    uint8_t id_pkab_signature[CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH] = {0};
 
-    if (!ED25519_sign(binded_id_pka_signature,
-                      binded_id_pka, CLTLS_ID_PKAB_LENGTH,
+    if (!ED25519_sign(id_pkab_signature,
+                      id_pkab,
+                      CLTLS_ID_PKAB_LENGTH,
                       kServerPrivateKey))
     {
-        LogError("ED25519_sign() for |binded_id_pka_signature| failed: %s",
+        LogError("ED25519_sign() for |id_pkab_signature| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;
     }
@@ -182,8 +189,26 @@ static bool KgcServe(const int socket_fd,
     ByteVecResize(&send_buffer, KGC_REGISTER_RESPONSE_SUCCESS_HEADER_LENGTH);
     send_buffer.data[0] = KGC_MSG_TYPE_RESIGTER_RESPONSE;
     send_buffer.data[KGC_MSG_TYPE_LENGTH] = KGC_REGISTER_STATUS_SUCCESS;
-    memcpy(send_buffer.data + KGC_MSG_TYPE_LENGTH + KGC_STATUS_CODE_LENGTH,
-           binded_id_pka_signature,
+
+    memcpy(send_buffer.data +
+               KGC_MSG_TYPE_LENGTH +
+               KGC_STATUS_CODE_LENGTH,
+           pkb,
+           CLTLS_ENTITY_PKB_LENGTH);
+
+    memcpy(send_buffer.data +
+               KGC_MSG_TYPE_LENGTH +
+               KGC_STATUS_CODE_LENGTH +
+               CLTLS_ENTITY_PKB_LENGTH,
+           skb,
+           CLTLS_ENTITY_SKB_LENGTH);
+
+    memcpy(send_buffer.data +
+               KGC_MSG_TYPE_LENGTH +
+               KGC_STATUS_CODE_LENGTH +
+               CLTLS_ENTITY_PKB_LENGTH +
+               CLTLS_ENTITY_SKB_LENGTH,
+           id_pkab_signature,
            CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH);
 
     if (!SendApplicationData(socket_fd,
