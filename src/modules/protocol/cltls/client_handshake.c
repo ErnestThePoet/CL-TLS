@@ -172,22 +172,23 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
             CLTLS_ERROR_INVALID_PUBLIC_KEY_LENGTH);
     }
 
-    uint8_t server_public_key_pkf[CLTLS_ENTITY_PKA_LENGTH] = {0};
-    memcpy(server_public_key_pkf,
+    uint8_t server_public_key[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
+    memcpy(server_public_key,
            decryption_buffer.data,
-           CLTLS_ENTITY_PKA_LENGTH);
+           CLTLS_ENTITY_PUBLIC_KEY_LENGTH);
 
-    uint8_t server_binded_identity_pka[CLTLS_ID_PKAB_LENGTH] = {0};
-    BindIdentityPka(ctx->server_identity,
-                    decryption_buffer.data + CLTLS_ENTITY_PKA_LENGTH,
-                    server_binded_identity_pka);
+    uint8_t server_id_pkab[CLTLS_ID_PKAB_LENGTH] = {0};
+    BindIdPkaPkb(ctx->server_identity,
+                 decryption_buffer.data,
+                 decryption_buffer.data + CLTLS_ENTITY_PKA_LENGTH,
+                 server_id_pkab);
     // Verify Public Key
-    if (!ED25519_verify(server_binded_identity_pka,
-                        CLTLS_ID_PKAB_LENGTH,
-                        decryption_buffer.data +
-                            CLTLS_ENTITY_PKA_LENGTH +
-                            CLTLS_ENTITY_PKB_LENGTH,
-                        ctx->kgc_public_key))
+    if (!CltlsVerify(server_id_pkab,
+                     CLTLS_ID_PKAB_LENGTH,
+                     decryption_buffer.data +
+                         CLTLS_ENTITY_PKA_LENGTH +
+                         CLTLS_ENTITY_PKB_LENGTH,
+                     ctx->kgc_public_key))
     {
         LogError("[%s] Server public key verification failed, is he an adversary?",
                  current_stage);
@@ -234,9 +235,9 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     // Append traffic after calculating traffic hash
     ByteVecPushBackBlockFromByteVec(&traffic_buffer, &receive_buffer);
 
-    if (!ED25519_verify(traffic_hash, hash->hash_size,
-                        decryption_buffer.data,
-                        server_public_key_pkf))
+    if (!CltlsVerify(traffic_hash, hash->hash_size,
+                     decryption_buffer.data,
+                     server_public_key))
     {
         LogError("[%s] Server traffic signature verification failed, is there an MiTM?",
                  current_stage);
@@ -364,12 +365,12 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
 
         hash->Hash(traffic_buffer.data, traffic_buffer.size, traffic_hash);
 
-        if (!ED25519_sign(traffic_signature,
-                          traffic_hash,
-                          hash->hash_size,
-                          ctx->client_private_key))
+        if (!CltlsSign(traffic_signature,
+                       traffic_hash,
+                       hash->hash_size,
+                       ctx->client_private_key))
         {
-            LogError("[%s] ED25519_sign() for |traffic_hash| failed: %s",
+            LogError("[%s] CltlsSign() for |traffic_hash| failed: %s",
                      current_stage,
                      ERR_error_string(ERR_get_error(), NULL));
             HANDSHAKE_SEND_ERROR_STOP_NOTIFY_FREE_RETURN_FALSE(
