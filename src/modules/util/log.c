@@ -82,3 +82,15 @@ void LogSuccess(const char *format,
     VLog(LOG_TYPE_SUCCESS, format, args);
     va_end(args);
 }
+
+void LogTiming(const char *format,
+               ...)
+{
+    va_list args;
+    va_start(args, format);
+    fputs(STYLE_BLU STYLE_BOLD "<Timing> " STYLE_NRM STYLE_BLU, stdout);
+    vfprintf(stdout, format, args);
+    fputs(STYLE_NRM, stdout);
+    fputc('\n', stdout);
+    va_end(args);
+}

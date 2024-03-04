@@ -32,4 +32,7 @@ void LogInfo(const char *format,
 void LogSuccess(const char *format,
                 ...);
 
+void LogTiming(const char *format,
+               ...);
+
 #endif
