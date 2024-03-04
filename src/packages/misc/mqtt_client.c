@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <time.h>
 
 #include <common/def.h>
 #include <util/log.h>
@@ -127,7 +126,7 @@ int main(int argc, char *argv[])
                 // Block send
                 size_t sent_size = 0;
                 bool should_continue = false;
-                clock_t time_send_start = clock();
+                
                 while (sent_size < total_size)
                 {
                     size_t current_send_size =
@@ -171,7 +170,6 @@ int main(int argc, char *argv[])
                     connected = false;
                     continue;
                 }
-                clock_t time_receive = clock();
 
                 uint8_t current_byte = receive_fixed_header[1];
                 remaining_size = 0;
@@ -201,11 +199,10 @@ int main(int argc, char *argv[])
                     continue;
                 }
 
-                LogInfo("Received %s (0x%02hhX) with remaining length %u in %.03fms",
+                LogInfo("Received %s (0x%02hhX) with remaining length %u",
                         GetMqttMessageType(MQTT_MSG_TYPE(receive_fixed_header[0])),
                         MQTT_MSG_TYPE(receive_fixed_header[0]),
-                        remaining_size,
-                        1000 * ((time_receive - time_send_start) / (float)CLOCKS_PER_SEC));
+                        remaining_size);
 
                 msg = realloc(msg, remaining_size == 0 ? 1 : remaining_size);
                 if (msg == NULL)
@@ -270,7 +267,6 @@ int main(int argc, char *argv[])
                            CONNCTL_MSG_TYPE_LENGTH +
                            ENTITY_IDENTITY_LENGTH)) = htons(server_port);
 
-            clock_t time_send_start = clock();
             if (!TcpSend(socket_fd,
                          connect_request,
                          CONNCTL_CONNECT_REQUEST_HEADER_LENGTH))
@@ -288,7 +284,6 @@ int main(int argc, char *argv[])
                 TcpClose(socket_fd);
                 continue;
             }
-            clock_t time_receive = clock();
 
             if (connect_response[0] != CONNCTL_MSG_TYPE_CONNECT_RESPONSE)
             {
@@ -307,8 +302,8 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            LogSuccess("Successfully connected in %.03fms",
-                       1000 * ((time_receive - time_send_start) / (float)CLOCKS_PER_SEC));
+            LogSuccess("Successfully connected");
+            
             connected = true;
         }
     }
