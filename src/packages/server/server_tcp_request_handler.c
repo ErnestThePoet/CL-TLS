@@ -92,7 +92,8 @@ static bool KgcServe(const int socket_fd,
                     current_identity_hex,
                     ENTITY_IDENTITY_LENGTH);
 
-            LogInfo("Sending KGC add client request to belonging server %s on port %hu",
+            LogInfo("Connecting to belonging server %s on port %hu "
+                    "and sending KGC add client request",
                     current_identity_hex,
                     current_port);
 
