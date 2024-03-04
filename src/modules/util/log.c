@@ -88,7 +88,7 @@ void LogTiming(const char *format,
 {
     va_list args;
     va_start(args, format);
-    fputs(STYLE_BLU STYLE_BOLD "<Timing> " STYLE_NRM STYLE_BLU, stdout);
+    fputs(STYLE_CYN STYLE_BOLD "<Timing> " STYLE_NRM STYLE_CYN, stdout);
     vfprintf(stdout, format, args);
     fputs(STYLE_NRM, stdout);
     fputc('\n', stdout);
