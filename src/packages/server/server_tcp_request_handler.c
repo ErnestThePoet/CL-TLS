@@ -52,12 +52,12 @@ static bool KgcServe(const int socket_fd,
 
     uint8_t id_pkab_signature[CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH] = {0};
 
-    if (!ED25519_sign(id_pkab_signature,
+    if (!CltlsSign(id_pkab_signature,
                       id_pkab,
                       CLTLS_ID_PKAB_LENGTH,
                       kServerPrivateKey))
     {
-        LogError("ED25519_sign() for |id_pkab_signature| failed: %s",
+        LogError("CltlsSign() for |id_pkab_signature| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
         KGC_SERVE_SEND_REGISTER_RESPONSE_FAILURE;
     }
