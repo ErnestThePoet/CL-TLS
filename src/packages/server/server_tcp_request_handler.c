@@ -53,9 +53,9 @@ static bool KgcServe(const int socket_fd,
     uint8_t id_pkab_signature[CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH] = {0};
 
     if (!CltlsSign(id_pkab_signature,
-                      id_pkab,
-                      CLTLS_ID_PKAB_LENGTH,
-                      kServerPrivateKey))
+                   id_pkab,
+                   CLTLS_ID_PKAB_LENGTH,
+                   kServerPrivateKey))
     {
         LogError("CltlsSign() for |id_pkab_signature| failed: %s",
                  ERR_error_string(ERR_get_error(), NULL));
@@ -68,10 +68,12 @@ static bool KgcServe(const int socket_fd,
             receive_buffer.data + KGC_MSG_TYPE_LENGTH +
             KGC_ENTITY_TYPE_LENGTH +
             ENTITY_IDENTITY_LENGTH +
-            CLTLS_ENTITY_PUBLIC_KEY_LENGTH;
+            CLTLS_ENTITY_PKA_LENGTH;
 
         uint16_t belonging_server_count = ntohs(
             *((uint16_t *)(belonging_server_count_ptr)));
+
+        LogInfo("Client has %hu belonging server(s)", belonging_server_count);
 
         uint8_t *belonging_server_identities =
             belonging_server_count_ptr + KGC_BELONGING_SERVER_COUNT_LENGTH;
