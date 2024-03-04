@@ -8,6 +8,7 @@ int CipherSuiteCmp(CipherSuite *a, CipherSuite *b)
 }
 
 LogLevel kLogLevel = LOG_LEVEL_INFO;
+bool kPrintTiming = false;
 
 uint8_t kKgcIdentity[ENTITY_IDENTITY_LENGTH] = {
     0xEC,

@@ -11,6 +11,7 @@ void ParseServerArgs(
     const char *log_level = NULL;
     const char *preferred_cipher_suite = NULL;
     const char *config_file_path = NULL;
+    int print_timing = 0;
 
     const char *usages[] = {
         "cltls_server [options]",
@@ -31,6 +32,7 @@ void ParseServerArgs(
             OPT_STRING('l', "log", &log_level, "log level(ERROR|WARN|INFO), defaults to 'INFO'", NULL, 0, 0),
             OPT_STRING('\0', "cipher", &preferred_cipher_suite, "preferred cipher suite(ASCON128A_ASCONHASHA|ASCON128A_SHA256|AES128GCM_ASCONHASHA|AES128GCM_SHA256), defaults to 'ASCON128A_ASCONHASHA'", NULL, 0, 0),
             OPT_STRING('c', "config", &config_file_path, "server config file path, defaults to 'config.conf'", NULL, 0, 0),
+            OPT_BOOLEAN('t', "timing", &print_timing, "print handshake and application service timing", NULL, 0, 0),
             OPT_END(),
         };
 
@@ -92,6 +94,8 @@ void ParseServerArgs(
     {
         strcpy(server_args_ret->config_file_path, config_file_path);
     }
+
+    kPrintTiming = (bool)print_timing;
 
     if (register_server)
     {

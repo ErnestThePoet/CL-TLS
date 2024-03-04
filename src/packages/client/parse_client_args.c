@@ -8,6 +8,7 @@ void ParseClientArgs(
     int listen_port = -1;
     const char *log_level = NULL;
     const char *config_file_path = NULL;
+    int print_timing = 0;
 
     const char *usages[] = {
         "cltls_client [options]",
@@ -25,6 +26,7 @@ void ParseClientArgs(
             OPT_GROUP("Optional options"),
             OPT_STRING('l', "log", &log_level, "log level(ERROR|WARN|INFO), defaults to 'INFO'", NULL, 0, 0),
             OPT_STRING('c', "config", &config_file_path, "server config file path, defaults to 'config.conf'", NULL, 0, 0),
+            OPT_BOOLEAN('t', "timing", &print_timing, "print handshake and application service timing", NULL, 0, 0),
             OPT_END(),
         };
 
@@ -64,6 +66,8 @@ void ParseClientArgs(
     {
         strcpy(client_args_ret->config_file_path, config_file_path);
     }
+
+    kPrintTiming = (bool)print_timing;
 
     if (register_client)
     {

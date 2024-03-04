@@ -3,6 +3,8 @@
 bool ClientHandshake(const ClientHandshakeCtx *ctx,
                      HandshakeResult *handshake_result_ret)
 {
+    clock_t start_time = clock();
+
     ByteVec receive_buffer;
     ByteVec send_buffer;
     ByteVec traffic_buffer;
@@ -507,7 +509,15 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     ByteVecFree(&traffic_buffer);
     ByteVecFree(&decryption_buffer);
 
+    clock_t end_time = clock();
+
     LogSuccess("Client handshake successful");
+
+    if (kPrintTiming)
+    {
+        LogTiming("Client handshake finished in %.03fms",
+                  MS(end_time - start_time));
+    }
 
     return true;
 }

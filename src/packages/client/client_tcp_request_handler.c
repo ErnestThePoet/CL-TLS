@@ -118,6 +118,8 @@ void *ClientTcpRequestHandler(void *arg)
         // Loop until we receive MQTT DISCONNECT
         while (true)
         {
+            clock_t start_time = clock();
+
             // Receive client MQTT fixed header
             ByteVecResize(&buffer, MQTT_FIXED_HEADER_LENGTH);
 
@@ -275,9 +277,17 @@ void *ClientTcpRequestHandler(void *arg)
                 remaining_read_size -= buffer.size;
             }
 
+            clock_t end_time = clock();
+
             LogInfo("Forwarded %s (0x%02hhX) to client",
                     GetMqttMessageType(mqtt_msg_type),
                     mqtt_msg_type);
+
+            if (kPrintTiming)
+            {
+                LogTiming("Client proxy forwarding finished in %.03fms",
+                          MS(end_time - start_time));
+            }
         }
 
         TcpClose(server_socket_fd);

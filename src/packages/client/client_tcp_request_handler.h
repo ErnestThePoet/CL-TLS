@@ -1,6 +1,8 @@
 #ifndef CLIENT_TCP_REQUEST_HANDLER_H_
 #define CLIENT_TCP_REQUEST_HANDLER_H_
 
+#include <time.h>
+
 #include <protocol/cltls/client_handshake.h>
 #include <protocol/cltls/application.h>
 

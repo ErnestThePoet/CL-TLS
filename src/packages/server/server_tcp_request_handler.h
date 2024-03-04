@@ -1,6 +1,8 @@
 #ifndef SERVER_TCP_REQUEST_HANDLER_H_
 #define SERVER_TCP_REQUEST_HANDLER_H_
 
+#include <time.h>
+
 #include <protocol/cltls/client_handshake.h>
 #include <protocol/cltls/server_handshake.h>
 #include <protocol/cltls/application.h>

@@ -273,6 +273,8 @@ static bool MqttProxyServe(const int socket_fd,
     // Loop until we receive MQTT DISCONNECT
     while (true)
     {
+        clock_t start_time = clock();
+
         // Forward client data in blocks
         if (!ReceiveApplicationData(socket_fd,
                                     handshake_result,
@@ -435,9 +437,17 @@ static bool MqttProxyServe(const int socket_fd,
             }
         }
 
+        clock_t end_time = clock();
+
         LogInfo("Forwarded %s (0x%02hhX) to client",
                 GetMqttMessageType(mqtt_msg_type),
                 mqtt_msg_type);
+
+        if (kPrintTiming)
+        {
+            LogTiming("Server proxy forwarding finished in %.03fms",
+                      MS(end_time - start_time));
+        }
     }
 
     LogSuccess("MQTT proxy service successfully finished");

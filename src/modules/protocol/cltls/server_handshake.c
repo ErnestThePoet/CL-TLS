@@ -60,6 +60,8 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                      uint8_t *client_identity_ret,
                      uint8_t *application_layer_protocol_ret)
 {
+    clock_t start_time = clock();
+
     ByteVec receive_buffer;
     ByteVec send_buffer;
     ByteVec traffic_buffer;
@@ -649,7 +651,15 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
     ByteVecFree(&traffic_buffer);
     ByteVecFree(&decryption_buffer);
 
+    clock_t end_time = clock();
+
     LogSuccess("Server handshake successful");
+
+    if (kPrintTiming)
+    {
+        LogTiming("Server handshake finished in %.03fms",
+                  MS(end_time - start_time));
+    }
 
     return true;
 }

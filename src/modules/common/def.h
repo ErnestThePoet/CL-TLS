@@ -2,7 +2,9 @@
 #define DEF_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
+#include <time.h>
 #include <errno.h>
 #include <arpa/inet.h>
 
@@ -33,6 +35,7 @@ typedef enum
 } LogType;
 
 extern LogLevel kLogLevel;
+extern bool kPrintTiming;
 
 #define ENTITY_IDENTITY_LENGTH 32
 #define ENTITY_IDENTITY_HEX_LENGTH (ENTITY_IDENTITY_LENGTH * 2)
