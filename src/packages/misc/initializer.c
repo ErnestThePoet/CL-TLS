@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     }
 
     if (!BN_rand(pka_bn,
-                 CLTLS_ENTITY_PKA_LENGTH * 8,
+                 CLTLS_ENTITY_PKB_LENGTH * 8,
                  BN_RAND_TOP_ANY,
                  BN_RAND_BOTTOM_ANY))
     {
@@ -47,10 +47,10 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    uint8_t pka[CLTLS_ENTITY_PKA_LENGTH] = {0};
+    uint8_t pka[CLTLS_ENTITY_PKB_LENGTH] = {0};
 
     if (!BN_bn2bin_padded(pka,
-                          CLTLS_ENTITY_PKA_LENGTH,
+                          CLTLS_ENTITY_PKB_LENGTH,
                           pka_bn))
     {
         LogError("BN_bn2bin_padded() for |pka| failed");
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
     BN_free(pka_bn);
 
-    uint8_t binded_id_pka[CLTLS_BINDED_IDENTITY_PKA_LENGTH] = {0};
+    uint8_t binded_id_pka[CLTLS_ID_PKAB_LENGTH] = {0};
 
     BindIdentityPka(kKgcIdentity, pka, binded_id_pka);
 
@@ -69,11 +69,11 @@ int main(int argc, char *argv[])
 
     ED25519_keypair(public_key, private_key);
 
-    memcpy(public_key + CLTLS_ENTITY_PKF_LENGTH, pka, CLTLS_ENTITY_PKA_LENGTH);
+    memcpy(public_key + CLTLS_ENTITY_PKA_LENGTH, pka, CLTLS_ENTITY_PKB_LENGTH);
 
-    if (!ED25519_sign(public_key + CLTLS_ENTITY_PKF_LENGTH + CLTLS_ENTITY_PKA_LENGTH,
+    if (!ED25519_sign(public_key + CLTLS_ENTITY_PKA_LENGTH + CLTLS_ENTITY_PKB_LENGTH,
                       binded_id_pka,
-                      CLTLS_BINDED_IDENTITY_PKA_LENGTH,
+                      CLTLS_ID_PKAB_LENGTH,
                       private_key))
     {
         LogError("ED25519_sign() for |binded_id_pka| failed");

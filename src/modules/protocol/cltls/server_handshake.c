@@ -478,21 +478,21 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                 CLTLS_ERROR_INVALID_PUBLIC_KEY_LENGTH);
         }
 
-        uint8_t client_public_key_pkf[CLTLS_ENTITY_PKF_LENGTH] = {0};
+        uint8_t client_public_key_pkf[CLTLS_ENTITY_PKA_LENGTH] = {0};
         memcpy(client_public_key_pkf,
                decryption_buffer.data,
-               CLTLS_ENTITY_PKF_LENGTH);
+               CLTLS_ENTITY_PKA_LENGTH);
 
-        uint8_t client_binded_identity_pka[CLTLS_BINDED_IDENTITY_PKA_LENGTH] = {0};
+        uint8_t client_binded_identity_pka[CLTLS_ID_PKAB_LENGTH] = {0};
         BindIdentityPka(client_identity,
-                        decryption_buffer.data + CLTLS_ENTITY_PKF_LENGTH,
+                        decryption_buffer.data + CLTLS_ENTITY_PKA_LENGTH,
                         client_binded_identity_pka);
         // Verify Public Key
         if (!ED25519_verify(client_binded_identity_pka,
-                            CLTLS_BINDED_IDENTITY_PKA_LENGTH,
+                            CLTLS_ID_PKAB_LENGTH,
                             decryption_buffer.data +
-                                CLTLS_ENTITY_PKF_LENGTH +
-                                CLTLS_ENTITY_PKA_LENGTH,
+                                CLTLS_ENTITY_PKA_LENGTH +
+                                CLTLS_ENTITY_PKB_LENGTH,
                             ctx->kgc_public_key))
         {
             LogError("[%s] Client public key verification failed, is he an adversary?",

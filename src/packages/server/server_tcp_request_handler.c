@@ -35,7 +35,7 @@ static bool KgcServe(const int socket_fd,
                                KGC_MSG_TYPE_LENGTH +
                                KGC_ENTITY_TYPE_LENGTH;
 
-    uint8_t binded_id_pka[CLTLS_BINDED_IDENTITY_PKA_LENGTH] = {0};
+    uint8_t binded_id_pka[CLTLS_ID_PKAB_LENGTH] = {0};
 
     BindIdentityPka(client_identity,
                     receive_buffer.data +
@@ -44,10 +44,10 @@ static bool KgcServe(const int socket_fd,
                         ENTITY_IDENTITY_LENGTH,
                     binded_id_pka);
 
-    uint8_t binded_id_pka_signature[CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH] = {0};
+    uint8_t binded_id_pka_signature[CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH] = {0};
 
     if (!ED25519_sign(binded_id_pka_signature,
-                      binded_id_pka, CLTLS_BINDED_IDENTITY_PKA_LENGTH,
+                      binded_id_pka, CLTLS_ID_PKAB_LENGTH,
                       kServerPrivateKey))
     {
         LogError("ED25519_sign() for |binded_id_pka_signature| failed: %s",
@@ -184,7 +184,7 @@ static bool KgcServe(const int socket_fd,
     send_buffer.data[KGC_MSG_TYPE_LENGTH] = KGC_REGISTER_STATUS_SUCCESS;
     memcpy(send_buffer.data + KGC_MSG_TYPE_LENGTH + KGC_STATUS_CODE_LENGTH,
            binded_id_pka_signature,
-           CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH);
+           CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH);
 
     if (!SendApplicationData(socket_fd,
                              handshake_result,

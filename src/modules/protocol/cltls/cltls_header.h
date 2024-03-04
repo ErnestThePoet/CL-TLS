@@ -71,18 +71,21 @@
     } while (false)
 
 #define CLTLS_APPLICATION_LAYER_PROTOCOL_LENGTH 1
-#define CLTLS_ENTITY_PKF_LENGTH ED25519_PUBLIC_KEY_LEN
-#define CLTLS_ENTITY_PKA_LENGTH 32
-#define CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH ED25519_SIGNATURE_LEN
+#define CLTLS_ENTITY_PKA_LENGTH ED25519_PUBLIC_KEY_LEN
+#define CLTLS_ENTITY_PKB_LENGTH ED25519_PUBLIC_KEY_LEN
+#define CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH ED25519_SIGNATURE_LEN
 #define CLTLS_ENTITY_PUBLIC_KEY_LENGTH \
-    (CLTLS_ENTITY_PKF_LENGTH +         \
-     CLTLS_ENTITY_PKA_LENGTH +         \
-     CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH)
-#define CLTLS_ENTITY_SKA_LENGTH 32
-#define CLTLS_ENTITY_PRIVATE_KEY_LENGTH ED25519_PRIVATE_KEY_LEN
-#define CLTLS_BINDED_IDENTITY_PKA_LENGTH \
-    (ENTITY_IDENTITY_LENGTH +            \
-     CLTLS_ENTITY_PKA_LENGTH)
+    (CLTLS_ENTITY_PKA_LENGTH +         \
+     CLTLS_ENTITY_PKB_LENGTH +         \
+     CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH)
+#define CLTLS_ENTITY_SKA_LENGTH ED25519_PRIVATE_KEY_LEN
+#define CLTLS_ENTITY_SKB_LENGTH ED25519_PRIVATE_KEY_LEN
+#define CLTLS_ENTITY_PRIVATE_KEY_LENGTH \
+    (CLTLS_ENTITY_SKA_LENGTH + CLTLS_ENTITY_SKB_LENGTH)
+#define CLTLS_ID_PKAB_LENGTH   \
+    (ENTITY_IDENTITY_LENGTH +  \
+     CLTLS_ENTITY_PKA_LENGTH + \
+     CLTLS_ENTITY_PKB_LENGTH)
 #define CLTLS_KE_PUBLIC_KEY_LENGTH X25519_PUBLIC_VALUE_LEN
 #define CLTLS_KE_PRIVATE_KEY_LENGTH X25519_PRIVATE_KEY_LEN
 #define CLTLS_KE_RANDOM_LENGTH 32
@@ -145,7 +148,7 @@
  * | Remaining Length                    |  4B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
- * | | Server Public Key            | 32B|
+ * | | Server Public Key            |    |
  * | |------------------------------|    |
  * ---------------------------------------
  *
@@ -202,7 +205,7 @@
  * | Remaining Length                    |  4B
  * ---------------------------------------
  * | |------------------------------|    | (Encrypted)
- * | | Client Public Key            | 32B|
+ * | | Client Public Key            |    |
  * | |------------------------------|    |
  * ---------------------------------------
  *

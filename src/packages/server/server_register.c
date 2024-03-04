@@ -24,7 +24,7 @@ bool ServerRegister()
     }
 
     if (!BN_rand(pka_bn,
-                 CLTLS_ENTITY_PKA_LENGTH * 8,
+                 CLTLS_ENTITY_PKB_LENGTH * 8,
                  BN_RAND_TOP_ANY,
                  BN_RAND_BOTTOM_ANY))
     {
@@ -47,12 +47,12 @@ bool ServerRegister()
         SERVER_REGISTER_FREE_RETURN_FALSE;
     }
 
-    uint8_t pka[CLTLS_ENTITY_PKA_LENGTH] = {0};
-    uint8_t sign_ska[CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH +
+    uint8_t pka[CLTLS_ENTITY_PKB_LENGTH] = {0};
+    uint8_t sign_ska[CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH +
                      CLTLS_ENTITY_SKA_LENGTH] = {0};
 
     if (!BN_bn2bin_padded(pka,
-                          CLTLS_ENTITY_PKA_LENGTH,
+                          CLTLS_ENTITY_PKB_LENGTH,
                           pka_bn))
     {
         LogError("BN_bn2bin_padded() for |pka| failed: %s",
@@ -62,7 +62,7 @@ bool ServerRegister()
         SERVER_REGISTER_FREE_RETURN_FALSE;
     }
 
-    if (!BN_bn2bin_padded(sign_ska + CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH,
+    if (!BN_bn2bin_padded(sign_ska + CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH,
                           CLTLS_ENTITY_SKA_LENGTH,
                           ska_bn))
     {
@@ -90,7 +90,7 @@ bool ServerRegister()
                KGC_ENTITY_TYPE_LENGTH +
                ENTITY_IDENTITY_LENGTH,
            pka,
-           CLTLS_ENTITY_PKA_LENGTH);
+           CLTLS_ENTITY_PKB_LENGTH);
 
     IdIp kgc_idip_key;
     memcpy(kgc_idip_key.id, kKgcIdentity, ENTITY_IDENTITY_LENGTH);
@@ -162,7 +162,7 @@ bool ServerRegister()
 
     memcpy(sign_ska,
            receive_buffer.data + KGC_MSG_TYPE_LENGTH + KGC_ENTITY_TYPE_LENGTH,
-           CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH);
+           CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH);
 
     uint8_t keypair_seed[32] = {0};
     uint8_t hkdf_salt[32] = {0};
@@ -170,7 +170,7 @@ bool ServerRegister()
     if (!HKDF(keypair_seed, 32,
               EVP_AsconHash(),
               sign_ska,
-              CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH + CLTLS_ENTITY_SKA_LENGTH,
+              CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH + CLTLS_ENTITY_SKA_LENGTH,
               hkdf_salt, 32,
               (const uint8_t *)"Server Keypair Seed", 19))
     {
@@ -184,12 +184,12 @@ bool ServerRegister()
     uint8_t private_key[CLTLS_ENTITY_PRIVATE_KEY_LENGTH] = {0};
     ED25519_keypair_from_seed(public_key, private_key, keypair_seed);
 
-    memcpy(public_key + CLTLS_ENTITY_PKF_LENGTH,
+    memcpy(public_key + CLTLS_ENTITY_PKA_LENGTH,
            pka,
-           CLTLS_ENTITY_PKA_LENGTH);
-    memcpy(public_key + CLTLS_ENTITY_PKF_LENGTH + CLTLS_ENTITY_PKA_LENGTH,
+           CLTLS_ENTITY_PKB_LENGTH);
+    memcpy(public_key + CLTLS_ENTITY_PKA_LENGTH + CLTLS_ENTITY_PKB_LENGTH,
            sign_ska,
-           CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH);
+           CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH);
 
     FILE *public_key_file = fopen(kServerPublicKeyPath, "wb");
     if (public_key_file == NULL)

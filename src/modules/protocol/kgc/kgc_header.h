@@ -38,7 +38,7 @@
  * ---------------------------------------
  * | Identity                            |  32B
  * ---------------------------------------
- * | Public Key A                        |  32B
+ * | Public Key A                        |
  * ---------------------------------------
  *
  ******************************************************/
@@ -59,7 +59,7 @@
  * ---------------------------------------
  * | Identity                            |  32B
  * ---------------------------------------
- * | Public Key A                        |  32B
+ * | Public Key A                        |
  * ---------------------------------------
  * | Belonging Server Count              |  2B
  * ---------------------------------------
@@ -83,6 +83,10 @@
  * ---------------------------------------
  * | Status Code                         |  1B
  * ---------------------------------------
+ * | Public Key B                        |
+ * ---------------------------------------
+ * | Private Key B                       |
+ * ---------------------------------------
  * | Signature                           |  64B
  * ---------------------------------------
  *
@@ -91,7 +95,9 @@
 #define KGC_REGISTER_RESPONSE_SUCCESS_HEADER_LENGTH \
     (KGC_MSG_TYPE_LENGTH +                          \
      KGC_STATUS_CODE_LENGTH +                       \
-     CLTLS_ENTITY_PKA_ID_SIGNATURE_LENGTH)
+     CLTLS_ENTITY_PKA_LENGTH +                      \
+     CLTLS_ENTITY_SKB_LENGTH +                      \
+     CLTLS_ENTITY_ID_PKAB_SIGNATURE_LENGTH)
 
 /******************************************************
  * Register Response(Failure)
