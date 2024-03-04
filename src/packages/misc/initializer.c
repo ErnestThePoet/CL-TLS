@@ -30,53 +30,27 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    BIGNUM *pka_bn = BN_new();
-    if (pka_bn == NULL)
-    {
-        LogError("Memory allocation for |pka_bn| failed");
-        return EXIT_FAILURE;
-    }
-
-    if (!BN_rand(pka_bn,
-                 CLTLS_ENTITY_PKB_LENGTH * 8,
-                 BN_RAND_TOP_ANY,
-                 BN_RAND_BOTTOM_ANY))
-    {
-        LogError("BN_rand() for |pka_bn| failed");
-        BN_free(pka_bn);
-        return EXIT_FAILURE;
-    }
-
-    uint8_t pka[CLTLS_ENTITY_PKB_LENGTH] = {0};
-
-    if (!BN_bn2bin_padded(pka,
-                          CLTLS_ENTITY_PKB_LENGTH,
-                          pka_bn))
-    {
-        LogError("BN_bn2bin_padded() for |pka| failed");
-        BN_free(pka_bn);
-        return EXIT_FAILURE;
-    }
-
-    BN_free(pka_bn);
-
-    uint8_t binded_id_pka[CLTLS_ID_PKAB_LENGTH] = {0};
-
-    BindIdentityPka(kKgcIdentity, pka, binded_id_pka);
-
+    // pre allocate space for full public key and private key
     uint8_t public_key[CLTLS_ENTITY_PUBLIC_KEY_LENGTH] = {0};
     uint8_t private_key[CLTLS_ENTITY_PRIVATE_KEY_LENGTH] = {0};
 
     ED25519_keypair(public_key, private_key);
+    ED25519_keypair(public_key + CLTLS_ENTITY_PKA_LENGTH,
+                    private_key + CLTLS_ENTITY_SKA_LENGTH);
 
-    memcpy(public_key + CLTLS_ENTITY_PKA_LENGTH, pka, CLTLS_ENTITY_PKB_LENGTH);
+    uint8_t id_pkab[CLTLS_ID_PKAB_LENGTH] = {0};
 
-    if (!ED25519_sign(public_key + CLTLS_ENTITY_PKA_LENGTH + CLTLS_ENTITY_PKB_LENGTH,
-                      binded_id_pka,
-                      CLTLS_ID_PKAB_LENGTH,
-                      private_key))
+    BindIdPkaPkb(kKgcIdentity,
+                 public_key,
+                 public_key + CLTLS_ENTITY_PKA_LENGTH,
+                 id_pkab);
+
+    if (!CltlsSign(public_key + CLTLS_ENTITY_PKA_LENGTH + CLTLS_ENTITY_PKB_LENGTH,
+                   id_pkab,
+                   CLTLS_ID_PKAB_LENGTH,
+                   private_key))
     {
-        LogError("ED25519_sign() for |binded_id_pka| failed");
+        LogError("CltlsSign() for |id_pkab| failed");
         return EXIT_FAILURE;
     }
 
