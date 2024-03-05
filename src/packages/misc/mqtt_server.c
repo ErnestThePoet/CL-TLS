@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <time.h>
 
 #include <common/def.h>
 #include <util/log.h>
@@ -155,7 +154,10 @@ void *MqttServerTcpRequestHandler(void *arg)
             sent_size += current_send_size;
         }
 
-        LogInfo("PUBLISH Message delivered");
+        LogInfo("%s (0x%02hhX) with remaining length %u delivered",
+                GetMqttMessageType(MQTT_MSG_TYPE_PUBLISH),
+                MQTT_MSG_TYPE_PUBLISH,
+                remaining_size);
 
         if (remaining_size <= MAX_FULL_PRINT_LENGTH)
         {

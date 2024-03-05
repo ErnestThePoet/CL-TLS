@@ -148,7 +148,10 @@ int main(int argc, char *argv[])
                     continue;
                 }
 
-                LogInfo("PUBLISH Message delivered");
+                LogInfo("%s (0x%02hhX) with remaining length %u delivered",
+                        GetMqttMessageType(MQTT_MSG_TYPE_PUBLISH),
+                        MQTT_MSG_TYPE_PUBLISH,
+                        remaining_size);
 
                 if (remaining_size <= MAX_FULL_PRINT_LENGTH)
                 {
