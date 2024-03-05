@@ -8,10 +8,12 @@
 
 ### 应用层协议
 使用CL-TLS协议的系统运行时，需要使用到如下应用层协议：
-- KGC协议
+- KGC协议  
+
 在本实现中，CL-TLS以MQTT代理服务器的形式运行，使用了下列应用层协议：
 - MQTT协议
-- CONNCTL协议
+- CONNCTL协议  
+
 KGC协议和CONNCTL协议的详细作用将在后面说明。
 
 ### CL-TLS握手流程
@@ -50,21 +52,21 @@ CL-TLS使用基于CLPKC的方案进行身份认证。每个设备均拥有自己
 
 #### 设备注册流程
 - 新服务端设备注册流程
-  1. 设备选取 $Seed_A\gets\{0,1\}^{256}$ ；
+  1. 设备选取 $Seed_A\gets\\{0,1\\}^{256}$ ；
   2. 设备生成部分秘钥 $(PK_A,SK_A):=ED25519GenKeypair(Seed_A)$ ；
   3. 设备将自身身份 $ID$ 和 $PK_A$ 发送给KGC；
-  4. KGC选取 $Seed_B\gets\{0,1\}^{256}$ ；
+  4. KGC选取 $Seed_B\gets\\{0,1\\}^{256}$ ；
   5. KGC生成部分秘钥 $(PK_B,SK_B):=ED25519GenKeypair(Seed_B)$ ；
   6. KGC计算 $S:=Sign_{SK_{KGC}}(ID||PK_A||PK_B)$ ；
   7. KGC将 $(PK_B,SK_B,S)$ 发回设备；
   8. 设备保存公钥 $PK:=PK_A||PK_B||S$ ，私钥 $SK:=SK_A||SK_B$ 
 
 - 新客户端设备注册流程
-  1. 设备选取 $Seed_A\gets\{0,1\}^{256}$ ；
+  1. 设备选取 $Seed_A\gets\\{0,1\\}^{256}$ ；
   2. 设备生成部分秘钥 $(PK_A,SK_A):=ED25519GenKeypair(Seed_A)$ ；
   3. 设备将自身身份 $ID$ 和 $PK_A$ 发送给KGC；
   4. 设备将自身所属的所有服务端的身份集合 $ID_S$ 发送给KGC；
-  5. KGC选取 $Seed_B\gets\{0,1\}^{256}$ ；
+  5. KGC选取 $Seed_B\gets\\{0,1\\}^{256}$ ；
   6. KGC生成部分秘钥 $(PK_B,SK_B):=ED25519GenKeypair(Seed_B)$ ；
   7. KGC计算 $S:=Sign_{SK_{KGC}}(ID||PK_A||PK_B)$ ；
   8. KGC通知 $ID_S$ 中的每一个服务端，添加 $ID$ 到其允许来访的身份列表中；
@@ -73,9 +75,9 @@ CL-TLS使用基于CLPKC的方案进行身份认证。每个设备均拥有自己
 
 特别地，当整个系统从零开始部署时，KGC的公私钥对通过以下流程生成：
 - KGC公私钥对初始化生成流程
-  1. KGC选取 $Seed_A\gets\{0,1\}^{256}$ ；
+  1. KGC选取 $Seed_A\gets\\{0,1\\}^{256}$ ；
   2. KGC生成部分秘钥 $(PK_A,SK_A):=ED25519GenKeypair(Seed_A)$ ；
-  3. KGC选取 $Seed_B\gets\{0,1\}^{256}$ ；
+  3. KGC选取 $Seed_B\gets\\{0,1\\}^{256}$ ；
   4. KGC生成部分秘钥 $(PK_B,SK_B):=ED25519GenKeypair(Seed_B)$ ；
   5. KGC计算 $S:=Sign_{SK_A||SK_B}(ID||PK_A||PK_B)$ 
   6. KGC保存公钥 $PK:=PK_A||PK_B||S$ ，私钥 $SK:=SK_A||SK_B$ 
