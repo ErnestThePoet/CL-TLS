@@ -77,14 +77,14 @@ int main(int argc, char *argv[])
         if (connected)
         {
             // All MQTT Packets contain random bytes after remaining length
-            if (!strcmp(command, "DISCONNECT"))
+            if (!strcmp(command, "DISCONNECT") || !strcmp(command, "D"))
             {
                 uint8_t msg[2] = {0xe0, 0x00};
                 TcpSend(socket_fd, msg, 2);
                 connected = false;
                 LogInfo("Disconnected");
             }
-            else if (!strcmp(command, "PUBLISH"))
+            else if (!strcmp(command, "PUBLISH") || !strcmp(command, "P"))
             {
                 uint32_t remaining_size = 0;
                 const uint32_t max_remaining_size = 256U * 1024 * 1024 - 1;
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
             else
             {
                 LogError("Invalid message type '%s'; "
-                         "currently we support PUBLISH and DISCONNECT",
+                         "currently we support PUBLISH(P) and DISCONNECT(D)",
                          command);
                 continue;
             }
