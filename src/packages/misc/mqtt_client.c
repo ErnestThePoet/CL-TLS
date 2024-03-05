@@ -39,7 +39,7 @@ void PrintHeadTailBytes(const uint8_t *data,
     printf("Last %zu bytes:\n", print_count);
     for (size_t i = 0; i < print_count; i++)
     {
-        printf("%02hhX ", data[i + length - print_count + i]);
+        printf("%02hhX ", data[length - print_count + i]);
     }
     putchar('\n');
 }
