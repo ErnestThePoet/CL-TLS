@@ -260,3 +260,9 @@ CL-TLS客户端还支持的可选选项是：
 输入`PUBLISH 32`并回车，客户端将发出一个载荷大小为32字节的MQTT PUBLISH消息并打印载荷内容。收到服务端的MQTT PUBLISH响应后，消息载荷也会被打印出来。可以对比服务端所打印的载荷内容，验证消息被正确传输。  
 然后再输入`PUBLISH 268435455`并回车，将发送一个载荷大小为`256MB-1`的MQTT PUBLISH消息，这也是单个MQTT消息能承载的最大载荷大小，将会打印消息首尾16字节的数据。CL-TLS客户端和服务端配置文件中的`SOCKET_BLOCK_SIZE`选项指定了套接字收发时的最大块长度，超过此长度的消息将被分成多块收发，以控制收发双方用于套接字收发的缓冲区大小。  
 最后，输入`DISCONNECT`并回车，整个会话将结束。
+
+## 使用到的开源项目
+- [ascon/ascon-c](https://github.com/ascon/ascon-c)
+- [boringssl/boringssl](https://boringssl.googlesource.com/boringssl)
+- [cofyc/argparse](https://github.com/cofyc/argparse)
+- [glouw/ctl](https://github.com/glouw/ctl)
