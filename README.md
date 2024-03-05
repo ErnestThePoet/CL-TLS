@@ -1,5 +1,5 @@
 # CL-TLS
-## A lightweight certificateless TLS protocol based on TLSv1.3 -- My Graduation Project
+## 基于ASCON的工业互联网轻量级认证协议设计与实现【我的毕业设计】
 
 ## 介绍
 工业互联网环境中，终端设备计算资源有限、终端设备拓扑变化复杂，为了满足传输安全的需要，在[TLSv1.3](https://datatracker.ietf.org/doc/html/rfc8446)协议的基础之上，设计了轻量级的CL-TLS协议。CL-TLS协议简化了报文结构，引入了轻量级的ASCON-AEAD加密算法和ASCON-Hash哈希算法，同时使用无证书公钥密码体制(CLPKC)取代PKI机制进行身份认证。
