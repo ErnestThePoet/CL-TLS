@@ -11,38 +11,9 @@
 #include <protocol/connctl/connctl_header.h>
 #include <protocol/mqtt/mqtt_header.h>
 
+#include "mqtt_common.h"
+
 #define MAX_COMMAND_LENGTH 50
-#define MAX_FULL_PRINT_LENGTH 1024
-#define HEAD_TAIL_PRINT_LENGTH 16
-#define MAX_SOCKET_BLOCK_SIZE (4 * 1024 * 1024)
-
-void PrintBytes(const uint8_t *data, const size_t length)
-{
-    for (size_t i = 0; i < length; i++)
-    {
-        printf("%02hhX ", data[i]);
-    }
-    putchar('\n');
-}
-
-void PrintHeadTailBytes(const uint8_t *data,
-                        const size_t length,
-                        const size_t print_count)
-{
-    printf("First %zu bytes:\n", print_count);
-    for (size_t i = 0; i < print_count; i++)
-    {
-        printf("%02hhX ", data[i]);
-    }
-    putchar('\n');
-
-    printf("Last %zu bytes:\n", print_count);
-    for (size_t i = 0; i < print_count; i++)
-    {
-        printf("%02hhX ", data[length - print_count + i]);
-    }
-    putchar('\n');
-}
 
 int main(int argc, char *argv[])
 {
