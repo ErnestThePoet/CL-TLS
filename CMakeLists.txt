@@ -43,11 +43,15 @@ endforeach()
 
 set(MISC_EXECUTABLE_LIST initializer mqtt_client mqtt_server)
 
-add_executable(cltls_misc_initializer ${SRC_MODULES} src/packages/misc/initializer.c)
-add_executable(cltls_misc_mqtt_client ${SRC_MODULES} src/packages/misc/mqtt_client.c src/packages/misc/mqtt_common.c)
-add_executable(cltls_misc_mqtt_server ${SRC_MODULES} src/packages/misc/mqtt_server.c src/packages/misc/mqtt_common.c)
-
 foreach(MISC_EXECUTABLE ${MISC_EXECUTABLE_LIST})
+    file(GLOB SRC_MISC_EXECUTABLE "src/packages/misc/${MISC_EXECUTABLE}.c")
+
+    if(MISC_EXECUTABLE MATCHES "^mqtt_.*")
+        set(SRC_MISC_EXTRA "src/packages/misc/mqtt_common.c")
+    endif()
+
+    add_executable(cltls_misc_${MISC_EXECUTABLE} ${SRC_MODULES} ${SRC_MISC_EXECUTABLE} ${SRC_MISC_EXTRA})
+
     target_link_libraries(cltls_misc_${MISC_EXECUTABLE} PRIVATE crypto_aead_ascon128av12_${LIB_SUFFIX_ASCON})
     target_link_libraries(cltls_misc_${MISC_EXECUTABLE} PRIVATE crypto_hash_asconhashav12_${LIB_SUFFIX_ASCON})
     target_link_libraries(cltls_misc_${MISC_EXECUTABLE} PRIVATE crypto_boringssl_${LIB_SUFFIX_BORINGSSL})
