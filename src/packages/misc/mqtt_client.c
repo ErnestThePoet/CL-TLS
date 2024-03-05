@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
                 // Block send
                 size_t sent_size = 0;
                 bool should_continue = false;
-                
+
                 while (sent_size < total_size)
                 {
                     size_t current_send_size =
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                LogError("Invalid messaeg type '%s'; "
+                LogError("Invalid message type '%s'; "
                          "currently we support PUBLISH and DISCONNECT",
                          command);
                 continue;
@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
             }
 
             LogSuccess("Successfully connected");
-            
+
             connected = true;
         }
     }
