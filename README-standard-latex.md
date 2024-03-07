@@ -83,8 +83,8 @@ CL-TLS使用基于CLPKC的方案进行身份认证。每个设备均拥有自己
   6. KGC保存公钥$PK:=PK_A||PK_B||S$，私钥$SK:=SK_A||SK_B$
 
 #### 签名和验签算法
-- $\text{Sign}_{SK}(m)$：$S_1:=\text{ED25519\_Sign}_{SK_A}(m),S_2:=\text{ED25519\_Sign}_{SK_B}(m),输出S:=S_1||S_2$
-- $\text{Vrfy}_{PK}(m,S_1||S_2)$：$输出\text{ED25519\_Vrfy}_{PK_A}(m,S_1)\wedge \text{ED25519\_Vrfy}_{SK_B}(m,S_2)$
+- $\text{Sign}_{SK_A||SK_B}(m)$：$S_1:=\text{ED25519\_Sign}_{SK_A}(m),S_2:=\text{ED25519\_Sign}_{SK_B}(m),输出S:=S_1||S_2$
+- $\text{Vrfy}_{PK_A||PK_B}(m,S_1||S_2)$：$输出\text{ED25519\_Vrfy}_{PK_A}(m,S_1)\wedge \text{ED25519\_Vrfy}_{SK_B}(m,S_2)$
 
 #### 访问控制
 除了KGC以外，每个服务端都维护一个允许对自己进行访问的设备ID列表。属于某个服务器的客户端在进行注册时，KGC将会通知该服务器添加新客户端的设备ID到自己的允许访问列表中。  
