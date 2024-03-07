@@ -1,6 +1,6 @@
 set -e
 
-for arch in x86_64 arm32; do
+for arch in x86_64 armv7_a; do
     build_dir=build/$arch
 
     mkdir -p $build_dir
