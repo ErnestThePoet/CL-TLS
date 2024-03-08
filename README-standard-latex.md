@@ -228,7 +228,7 @@ SOCKET_BLOCK_SIZE=2097152
 然后进入`cltls/server`，启动CL-TLS服务端：`./cltls_server -m PROXY -p 22600 --fwd-ip 127.0.0.1 --fwd-port 22601`  
 CL-TLS服务端还支持的可选选项是：
 - `-l, --log=<str>`：日志打印级别，可为`ERROR|WARN|INFO`之一，默认为`INFO`；
-- `--cipher=<str>`：优先使用的密码学算法族，可为`ASCON128A_ASCONHASHA|ASCON128A_SHA256|AES128GCM_ASCONHASHA|AES128GCM_SHA256`之一，默认为`ASCON128A_ASCONHASHA`。服务端设备可以通过此选项选择在自身平台上性能或资源占用最佳的算法族；
+- `--cipher=<str>`：优先使用的密码学算法套件，可为`ASCON128A_ASCONHASHA|ASCON128A_SHA256|AES128GCM_ASCONHASHA|AES128GCM_SHA256`之一，默认为`ASCON128A_ASCONHASHA`。服务端设备可以通过此选项选择在自身平台上性能或资源占用最佳的算法套件；
 - `-c, --config=<str>`：配置文件路径，默认为`config.conf`；
 - `-t, --timing`：是否打印握手和MQTT代理转发耗时，默认不打印。
 
