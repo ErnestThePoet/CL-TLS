@@ -188,7 +188,7 @@ typedef struct
         if (!HKDF(derived_secret, hash->hash_size,                                   \
                   md_hmac_hkdf,                                                      \
                   early_secret_secret_salt, hash->hash_size,                         \
-                  early_secret_secret_salt, hash->hash_size,                         \
+                  early_secret_secret_salt, 1,                                       \
                   secret_info, hash->hash_size + 7))                                 \
         {                                                                            \
             LogError("[%s] HKDF() for |derived_secret| failed: %s",                  \
