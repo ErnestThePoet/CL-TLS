@@ -92,7 +92,7 @@
      CLTLS_ENTITY_PKB_LENGTH)
 #define CLTLS_KE_PUBLIC_KEY_LENGTH X25519_PUBLIC_VALUE_LEN
 #define CLTLS_KE_PRIVATE_KEY_LENGTH X25519_PRIVATE_KEY_LEN
-#define CLTLS_KE_RANDOM_LENGTH 32
+#define CLTLS_HANDSHAKE_RANDOM_LENGTH 32
 #define CLTLS_TRAFFIC_SIGNATURE_LENGTH CLTLS_SIGNATURE_LENGTH
 #define CLTLS_CIPHER_SUITE_COUNT_LENGTH 1
 #define CLTLS_CIPHER_SUITE_LENGTH 1
@@ -116,7 +116,7 @@
  * ---------------------------------------
  * | Client KE Public Key                |  32B
  * ---------------------------------------
- * | Client KE Random                    |  32B
+ * | Client Handshake Random             |  32B
  * ---------------------------------------
  *
  ******************************************************/
@@ -133,7 +133,7 @@
  * ---------------------------------------
  * | Server KE Public Key                |  32B
  * ---------------------------------------
- * | Server KE Random                    |  32B
+ * | Server Handshake Random             |  32B
  * ---------------------------------------
  *
  ******************************************************/
@@ -141,7 +141,7 @@
     (CLTLS_COMMON_HEADER_LENGTH +        \
      CLTLS_CIPHER_SUITE_LENGTH +         \
      CLTLS_KE_PUBLIC_KEY_LENGTH +        \
-     CLTLS_KE_RANDOM_LENGTH)
+     CLTLS_HANDSHAKE_RANDOM_LENGTH)
 
 /******************************************************
  * Server Public Key

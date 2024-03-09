@@ -22,7 +22,7 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
 
     uint8_t self_ke_public_key[CLTLS_KE_PUBLIC_KEY_LENGTH] = {0};
     uint8_t self_ke_private_key[CLTLS_KE_PRIVATE_KEY_LENGTH] = {0};
-    uint8_t self_ke_random[CLTLS_KE_RANDOM_LENGTH] = {0};
+    uint8_t self_handshake_random[CLTLS_HANDSHAKE_RANDOM_LENGTH] = {0};
 
     GENERATE_KE_KEY_RANDOM;
 
@@ -35,8 +35,12 @@ bool ClientHandshake(const ClientHandshakeCtx *ctx,
     {
         ByteVecPushBack(&send_buffer, cipher_suite.ref->cipher_suite);
     }
-    ByteVecPushBackBlock(&send_buffer, self_ke_public_key, CLTLS_KE_PUBLIC_KEY_LENGTH);
-    ByteVecPushBackBlock(&send_buffer, self_ke_random, CLTLS_KE_RANDOM_LENGTH);
+    ByteVecPushBackBlock(&send_buffer,
+                         self_ke_public_key,
+                         CLTLS_KE_PUBLIC_KEY_LENGTH);
+    ByteVecPushBackBlock(&send_buffer,
+                         self_handshake_random,
+                         CLTLS_HANDSHAKE_RANDOM_LENGTH);
 
     CLTLS_SET_COMMON_HEADER(send_buffer.data,
                             CLTLS_MSG_TYPE_CLIENT_HELLO,

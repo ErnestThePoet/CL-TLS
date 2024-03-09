@@ -148,7 +148,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
 
     uint8_t self_ke_public_key[CLTLS_KE_PUBLIC_KEY_LENGTH] = {0};
     uint8_t self_ke_private_key[CLTLS_KE_PRIVATE_KEY_LENGTH] = {0};
-    uint8_t self_ke_random[CLTLS_KE_RANDOM_LENGTH] = {0};
+    uint8_t self_handshake_random[CLTLS_HANDSHAKE_RANDOM_LENGTH] = {0};
 
     GENERATE_KE_KEY_RANDOM;
 
@@ -183,8 +183,12 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
         (CLTLS_SERVER_HELLO_HEADER_LENGTH - CLTLS_COMMON_HEADER_LENGTH));
 
     ByteVecPushBack(&send_buffer, selected_cipher_suite);
-    ByteVecPushBackBlock(&send_buffer, self_ke_public_key, CLTLS_KE_PUBLIC_KEY_LENGTH);
-    ByteVecPushBackBlock(&send_buffer, self_ke_random, CLTLS_KE_RANDOM_LENGTH);
+    ByteVecPushBackBlock(&send_buffer,
+                         self_ke_public_key,
+                         CLTLS_KE_PUBLIC_KEY_LENGTH);
+    ByteVecPushBackBlock(&send_buffer,
+                         self_handshake_random,
+                         CLTLS_HANDSHAKE_RANDOM_LENGTH);
 
     // send_size convention:
     // For fixed length header, use macro;
@@ -208,7 +212,7 @@ bool ServerHandshake(const ServerHandshakeCtx *ctx,
                 self_ke_private_key,
                 receive_buffer.data +
                     receive_buffer.size -
-                    CLTLS_KE_RANDOM_LENGTH - CLTLS_KE_PUBLIC_KEY_LENGTH))
+                    CLTLS_HANDSHAKE_RANDOM_LENGTH - CLTLS_KE_PUBLIC_KEY_LENGTH))
     {
         LogError("[%s] X25519() failed: %s",
                  current_stage,
