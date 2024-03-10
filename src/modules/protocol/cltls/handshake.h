@@ -267,7 +267,7 @@ typedef struct
         if (!HKDF_expand(client_handshake_npub_iv, aead->npub_iv_size,               \
                          md_hmac_hkdf,                                               \
                          client_secret, hash->hash_size,                             \
-                         (const uint8_t *)"iv", 2))                                  \
+                         (const uint8_t *)"npub_iv", 7))                             \
         {                                                                            \
             LogError("[%s] HKDF_expand() for |client_handshake_npub_iv| failed: %s", \
                      current_stage,                                                  \
@@ -279,7 +279,7 @@ typedef struct
         if (!HKDF_expand(server_handshake_npub_iv, aead->npub_iv_size,               \
                          md_hmac_hkdf,                                               \
                          server_secret, hash->hash_size,                             \
-                         (const uint8_t *)"iv", 2))                                  \
+                         (const uint8_t *)"npub_iv", 7))                             \
         {                                                                            \
             LogError("[%s] HKDF_expand() for |server_handshake_npub_iv| failed: %s", \
                      current_stage,                                                  \
@@ -375,7 +375,7 @@ typedef struct
         if (!HKDF_expand(handshake_result_ret->client_npub_iv, aead->npub_iv_size,     \
                          md_hmac_hkdf,                                                 \
                          client_secret, hash->hash_size,                               \
-                         (const uint8_t *)"iv", 2))                                    \
+                         (const uint8_t *)"npub_iv", 7))                               \
         {                                                                              \
             LogError("[%s] HKDF_expand() for |client_application_npub_iv| failed: %s", \
                      current_stage,                                                    \
@@ -387,7 +387,7 @@ typedef struct
         if (!HKDF_expand(handshake_result_ret->server_npub_iv, aead->npub_iv_size,     \
                          md_hmac_hkdf,                                                 \
                          server_secret, hash->hash_size,                               \
-                         (const uint8_t *)"iv", 2))                                    \
+                         (const uint8_t *)"npub_iv", 7))                               \
         {                                                                              \
             LogError("[%s] HKDF_expand() for |server_application_npub_iv| failed: %s", \
                      current_stage,                                                    \
