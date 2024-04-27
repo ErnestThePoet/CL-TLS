@@ -34,7 +34,7 @@ bool InitializeGlobals(const ServerArgs *server_args)
     char server_id_hex[ENTITY_IDENTITY_HEX_STR_LENGTH] = {0};
 
     if (fscanf(config_file_fp,
-               "IDENTITY=%64s\n",
+               "IDENTITY=%16s\n",
                server_id_hex) != 1)
     {
         LogError("Error loading config file: failed to read IDENTITY");
