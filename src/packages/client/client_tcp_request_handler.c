@@ -29,7 +29,14 @@ void *ClientTcpRequestHandler(void *arg)
                 server_id_hex,
                 ENTITY_IDENTITY_LENGTH);
 
-        LogInfo("Received CONNCTL connection request to server %s", server_id_hex);
+        uint16_t server_port = ntohs(
+            *((uint16_t *)(buffer.data +
+                           CONNCTL_MSG_TYPE_LENGTH +
+                           ENTITY_IDENTITY_LENGTH)));
+
+        LogInfo("Received CONNCTL connection request to server %s on port %hu",
+                server_id_hex,
+                server_port);
 
         IdIp server_idip_key;
         memcpy(server_idip_key.id,
@@ -43,11 +50,6 @@ void *ClientTcpRequestHandler(void *arg)
                      server_id_hex);
             CLIENT_SEND_CONNECT_FAILURE_CONTINUE;
         }
-
-        uint16_t server_port = ntohs(
-            *((uint16_t *)(buffer.data +
-                           CONNCTL_MSG_TYPE_LENGTH +
-                           ENTITY_IDENTITY_LENGTH)));
 
         int server_socket_fd = 0;
         if (!TcpConnectToServer(server_idip->key.ip, server_port, &server_socket_fd))
