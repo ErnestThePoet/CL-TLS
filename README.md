@@ -137,7 +137,7 @@ CL-TLS使用基于CLPKC的方案进行身份认证。每个设备均拥有自己
 
 - KGC设备
   - IP地址：`192.168.7.60`
-  - ID：`ECECECECECECECECECECECECECECECECECECECECECECECECECECECECECECECEC`
+  - ID：`ECECECECECECECEC`
   - 目录结构（除可执行文件外，均为空文件）：
 ```
 cltls
@@ -154,7 +154,7 @@ cltls
 
 - 客户端设备
   - IP地址：`192.168.7.120`
-  - ID：`00000000000000000000000000000000000000000000000000000000000000AA`
+  - ID：`AA00000000000001`
   - 目录结构（除可执行文件外，均为空文件）：
 ```
 cltls
@@ -172,7 +172,7 @@ cltls
 
 - 服务端设备
   - IP地址：`192.168.7.180`
-  - ID：`BB00000000000000000000000000000000000000000000000000000000000000`
+  - ID：`BB00000000000001`
   - 目录结构（除可执行文件外，均为空文件）：
 ```
 cltls
@@ -192,16 +192,16 @@ cltls
 在从零部署CL-TLS应用环境时，首先使用的`cltls_misc_initializer`程序为KGC生成公私钥对。在KGC设备的`cltls`目录内，执行`./cltls_misc_initializer kgc`，即可生成KGC公私钥对文件`pubkey.key`和`privkey.key`并把它们存储在`kgc`子目录中。同时，将`pubkey.key`分发到所有其他设备的`cltls/common`目录中，命名为`kgc_pubkey.key`。  
 类似DNS系统，CL-TLS代理服务器使用一个本地维护的数据库文件来存储从设备ID到设备IP地址的映射关系。在每个设备的`cltls/common`目录内，都新建一个`idip.txt`，内容为：
 ```
-ECECECECECECECECECECECECECECECECECECECECECECECECECECECECECECECEC 192.168.7.60
-00000000000000000000000000000000000000000000000000000000000000AA 192.168.7.120
-BB00000000000000000000000000000000000000000000000000000000000000 192.168.7.180
+ECECECECECECECEC 192.168.7.60
+AA00000000000001 192.168.7.120
+BB00000000000001 192.168.7.180
 ```
 虽然在本示例中客户端设备不会被其他设备主动连接，但仍然将其ID/IP映射加入到数据库中，为以后在设备上同时运行服务端的可能做好准备。
 
 #### 启动KGC
 编辑KGC服务器的配置文件`cltls/kgc/config.conf`：
 ```
-IDENTITY=ECECECECECECECECECECECECECECECECECECECECECECECECECECECECECECECEC
+IDENTITY=ECECECECECECECEC
 PUBLIC_KEY=pubkey.key
 PRIVATE_KEY=privkey.key
 KGC_PUBLIC_KEY=pubkey.key
@@ -215,7 +215,7 @@ SOCKET_BLOCK_SIZE=2097152
 #### 注册并启动服务端设备
 编辑服务端的配置文件`cltls/server/config.conf`：
 ```
-IDENTITY=BB00000000000000000000000000000000000000000000000000000000000000
+IDENTITY=BB00000000000001
 PUBLIC_KEY=pubkey.key
 PRIVATE_KEY=privkey.key
 KGC_PUBLIC_KEY=../common/kgc_pubkey.key
@@ -235,7 +235,7 @@ CL-TLS服务端还支持的可选选项是：
 #### 注册并启动客户端设备
 编辑客户端的配置文件`cltls/client/config.conf`：
 ```
-IDENTITY=00000000000000000000000000000000000000000000000000000000000000AA
+IDENTITY=AA00000000000001
 PUBLIC_KEY=pubkey.key
 PRIVATE_KEY=privkey.key
 KGC_PUBLIC_KEY=../common/kgc_pubkey.key
@@ -244,7 +244,7 @@ SOCKET_BLOCK_SIZE=2097152
 ```
 保存配置后，再编辑客户端所属的服务器ID及其代理服务器端口号列表文件`cltls/client/bs.txt`：
 ```
-BB00000000000000000000000000000000000000000000000000000000000000 22600
+BB00000000000001 22600
 ```
 此文件中服务端的代理服务器端口号仅用于注册阶段KGC向服务器发起连接。  
 进入`cltls/client`目录，执行`./cltls_client -r --bs bs.txt`即可完成注册，此时客户端得到的公私钥对已经被存储在了配置文件里指定的文件中，所属的服务端也将本客户端的ID加入到了允许来访的ID列表中。  
@@ -256,10 +256,13 @@ CL-TLS客户端还支持的可选选项是：
 - `-t, --timing`：是否打印握手和MQTT代理转发耗时，默认不打印。
 
 #### 进行安全通信
-在MQTT客户端内，输入`CONN BB00000000000000000000000000000000000000000000000000000000000000 22600`并回车。MQTT客户端会给CL-TLS客户端发送一个`CONNCTL`协议的`Connect Request`消息，CL-TLS客户端会在ID/IP表中查找到服务器IP后与CL-TLS服务端建立TCP连接并进行握手，完成后CL-TLS服务端会与本地MQTT服务端建立连接。上述流程均成功后，CL-TLS服务端会发回`CONNCTL`协议的`Connect Response`消息，状态代码为成功。CL-TLS客户端收到后，会向MQTT客户端发送一个`CONNCTL`协议的`Connect Response`消息，状态代码为成功。然后即可开始在MQTT客户端内传输数据了。  
+在MQTT客户端内，输入`CONN BB00000000000001 22600`并回车。MQTT客户端会给CL-TLS客户端发送一个`CONNCTL`协议的`Connect Request`消息，CL-TLS客户端会在ID/IP表中查找到服务器IP后与CL-TLS服务端建立TCP连接并进行握手，完成后CL-TLS服务端会与本地MQTT服务端建立连接。上述流程均成功后，CL-TLS服务端会发回`CONNCTL`协议的`Connect Response`消息，状态代码为成功。CL-TLS客户端收到后，会向MQTT客户端发送一个`CONNCTL`协议的`Connect Response`消息，状态代码为成功。然后即可开始在MQTT客户端内传输数据了。  
 输入`PUBLISH 32`并回车，客户端将发出一个载荷大小为32字节的MQTT PUBLISH消息并打印载荷内容。收到服务端的MQTT PUBLISH响应后，消息载荷也会被打印出来。可以对比服务端所打印的载荷内容，验证消息被正确传输。  
 然后再输入`PUBLISH 268435455`并回车，将发送一个载荷大小为`256MB-1`的MQTT PUBLISH消息，这也是单个MQTT消息能承载的最大载荷大小，将会打印消息首尾16字节的数据。CL-TLS客户端和服务端配置文件中的`SOCKET_BLOCK_SIZE`选项指定了套接字收发时的最大块长度，超过此长度的消息将被分成多块收发，以控制收发双方用于套接字收发的缓冲区大小。  
 最后，输入`DISCONNECT`并回车，整个会话将结束。
+
+#### 使用MQTT GUI程序进行安全通信
+[CLTLS-MQTT-GUI](https://github.com/ErnestThePoet/CLTLS-MQTT-GUI)是配套CL-TLS代理服务器的MQTT GUI演示程序，可以可视化地进行MQTT数据的安全传输。使用方法请见该仓库内的README。
 
 ## 使用到的开源项目
 - [ascon/ascon-c](https://github.com/ascon/ascon-c)
