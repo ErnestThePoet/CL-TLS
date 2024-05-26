@@ -48,37 +48,37 @@ Auth | {PublicKeyVerify*}
 ```
 
 ### 身份认证方式
-CL-TLS使用基于CLPKC的方案进行身份认证。每个设备均拥有自己的身份ID和公私钥对，其中设备公私钥对由设备自身和KGC共同生成，使用KGC的私钥和设备ID即可验证设备公钥是否属于该设备。
+CL-TLS使用基于CLPKC的方案进行身份认证。每个设备均拥有自己的身份ID和密钥对，其中设备密钥对由设备自身和KGC共同生成，使用KGC的私钥和设备ID即可验证设备公钥是否属于该设备。
 
 #### 设备注册流程
 - 新服务端设备注册流程
   1. 设备选取 $Seed_A\gets\\{0,1\\}^{256}$ ；
-  2. 设备生成部分秘钥 $(PK_A,SK_A):=Ed25519GenKeypair(Seed_A)$ ；
+  2. 设备生成部分密钥 $(PK_A,SK_A):=Ed25519GenKeypair(Seed_A)$ ；
   3. 设备将自身身份 $ID$ 和 $PK_A$ 发送给KGC；
   4. KGC选取 $Seed_B\gets\\{0,1\\}^{256}$ ；
-  5. KGC生成部分秘钥 $(PK_B,SK_B):=Ed25519GenKeypair(Seed_B)$ ；
+  5. KGC生成部分密钥 $(PK_B,SK_B):=Ed25519GenKeypair(Seed_B)$ ；
   6. KGC计算 $S:=Sign_{SK_{KGC}}(ID||PK_A||PK_B)$ ；
   7. KGC将 $(PK_B,SK_B,S)$ 发回设备；
   8. 设备保存公钥 $PK:=PK_A||PK_B||S$ ，私钥 $SK:=SK_A||SK_B$ 
 
 - 新客户端设备注册流程
   1. 设备选取 $Seed_A\gets\\{0,1\\}^{256}$ ；
-  2. 设备生成部分秘钥 $(PK_A,SK_A):=Ed25519GenKeypair(Seed_A)$ ；
+  2. 设备生成部分密钥 $(PK_A,SK_A):=Ed25519GenKeypair(Seed_A)$ ；
   3. 设备将自身身份 $ID$ 和 $PK_A$ 发送给KGC；
   4. 设备将自身所属的所有服务端的身份集合 $ID_S$ 发送给KGC；
   5. KGC选取 $Seed_B\gets\\{0,1\\}^{256}$ ；
-  6. KGC生成部分秘钥 $(PK_B,SK_B):=Ed25519GenKeypair(Seed_B)$ ；
+  6. KGC生成部分密钥 $(PK_B,SK_B):=Ed25519GenKeypair(Seed_B)$ ；
   7. KGC计算 $S:=Sign_{SK_{KGC}}(ID||PK_A||PK_B)$ ；
   8. KGC通知 $ID_S$ 中的每一个服务端，添加 $ID$ 到其允许来访的身份列表中；
   9. KGC将 $(PK_B,SK_B,S)$ 发回设备；
   10. 设备保存公钥 $PK:=PK_A||PK_B||S$ ，私钥 $SK:=SK_A||SK_B$ 
 
-特别地，当整个系统从零开始部署时，KGC的公私钥对通过以下流程生成：
-- KGC公私钥对初始化生成流程
+特别地，当整个系统从零开始部署时，KGC的密钥对通过以下流程生成：
+- KGC密钥对初始化生成流程
   1. KGC选取 $Seed_A\gets\\{0,1\\}^{256}$ ；
-  2. KGC生成部分秘钥 $(PK_A,SK_A):=Ed25519GenKeypair(Seed_A)$ ；
+  2. KGC生成部分密钥 $(PK_A,SK_A):=Ed25519GenKeypair(Seed_A)$ ；
   3. KGC选取 $Seed_B\gets\\{0,1\\}^{256}$ ；
-  4. KGC生成部分秘钥 $(PK_B,SK_B):=Ed25519GenKeypair(Seed_B)$ ；
+  4. KGC生成部分密钥 $(PK_B,SK_B):=Ed25519GenKeypair(Seed_B)$ ；
   5. KGC计算 $S:=Sign_{SK_A||SK_B}(ID||PK_A||PK_B)$ 
   6. KGC保存公钥 $PK:=PK_A||PK_B||S$ ，私钥 $SK:=SK_A||SK_B$ 
 
@@ -105,7 +105,7 @@ CL-TLS使用基于CLPKC的方案进行身份认证。每个设备均拥有自己
 - `cltls_server`：CL-TLS服务端程序，可以代理服务器模式运行或以KGC模式运行
 - `cltls_misc_mqtt_client`：演示用的简单MQTT客户端程序
 - `cltls_misc_mqtt_server`：演示用的简单MQTT服务端程序
-- `cltls_misc_initializer`：KGC公私钥对生成程序
+- `cltls_misc_initializer`：KGC密钥对生成程序
 
 ### 模块结构
 ```
@@ -189,7 +189,7 @@ cltls
 ```
 
 #### 初始化
-在从零部署CL-TLS应用环境时，首先使用的`cltls_misc_initializer`程序为KGC生成公私钥对。在KGC设备的`cltls`目录内，执行`./cltls_misc_initializer kgc`，即可生成KGC公私钥对文件`pubkey.key`和`privkey.key`并把它们存储在`kgc`子目录中。同时，将`pubkey.key`分发到所有其他设备的`cltls/common`目录中，命名为`kgc_pubkey.key`。  
+在从零部署CL-TLS应用环境时，首先使用的`cltls_misc_initializer`程序为KGC生成密钥对。在KGC设备的`cltls`目录内，执行`./cltls_misc_initializer kgc`，即可生成KGC密钥对文件`pubkey.key`和`privkey.key`并把它们存储在`kgc`子目录中。同时，将`pubkey.key`分发到所有其他设备的`cltls/common`目录中，命名为`kgc_pubkey.key`。  
 类似DNS系统，CL-TLS代理服务器使用一个本地维护的数据库文件来存储从设备ID到设备IP地址的映射关系。在每个设备的`cltls/common`目录内，都新建一个`idip.txt`，内容为：
 ```
 ECECECECECECECEC 192.168.7.60
@@ -223,7 +223,7 @@ IDIP_DATABASE=../common/idip.txt
 PERMITTED_IDS_DATABASE=permitted_ids.txt
 SOCKET_BLOCK_SIZE=2097152
 ```
-保存配置后，进入`cltls/server`目录，执行`./cltls_server -r`即可完成注册，此时服务端得到的公私钥对已经被存储在了配置文件里指定的文件中。  
+保存配置后，进入`cltls/server`目录，执行`./cltls_server -r`即可完成注册，此时服务端得到的密钥对已经被存储在了配置文件里指定的文件中。  
 首先启动服务器设备上的MQTT服务端程序。回到`cltls`目录，执行`./cltls_misc_mqtt_server 22601`。  
 然后进入`cltls/server`，启动CL-TLS服务端：`./cltls_server -m PROXY -p 22600 --fwd-ip 127.0.0.1 --fwd-port 22601`  
 CL-TLS服务端还支持的可选选项是：
@@ -247,7 +247,7 @@ SOCKET_BLOCK_SIZE=2097152
 BB00000000000001 22600
 ```
 此文件中服务端的代理服务器端口号仅用于注册阶段KGC向服务器发起连接。  
-进入`cltls/client`目录，执行`./cltls_client -r --bs bs.txt`即可完成注册，此时客户端得到的公私钥对已经被存储在了配置文件里指定的文件中，所属的服务端也将本客户端的ID加入到了允许来访的ID列表中。  
+进入`cltls/client`目录，执行`./cltls_client -r --bs bs.txt`即可完成注册，此时客户端得到的密钥对已经被存储在了配置文件里指定的文件中，所属的服务端也将本客户端的ID加入到了允许来访的ID列表中。  
 然后即可启动CL-TLS客户端：`./cltls_client -p 23600`  
 回到`cltls`目录，启动MQTT客户端程序：`./cltls_misc_mqtt_client 127.0.0.1 23600`  
 CL-TLS客户端还支持的可选选项是：
